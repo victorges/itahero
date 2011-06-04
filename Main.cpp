@@ -1,6 +1,9 @@
 #include <graphics.h>
 #include <windows.h>
 
+#define SIZEX 1366
+#define SIZEY 700
+
 void *AllocateFile (char file_name[]) {
      unsigned int size;
      FILE *file;
@@ -41,8 +44,48 @@ char *ChartPath (char filename[]) {
 }
 
 class highway {
-      
-      
-      
-      //lucas esteve aqui
-      //bizu
+      struct note {
+             char type;
+             int time;
+             int end;
+             bool hit;
+             } chart[5000];
+      int progress, bpm;
+      int left, right;
+      char control[6], pick[3];
+      public:
+        highway (char ChartFileName[], int l=SIZEX/2-175, int r=SIZEX/2+175, char ctrl[]="ZXCVB", char pck[]=0) {
+                FILE *chartfile;
+                char string[100];
+                int i, size;
+                for (i=0;ctrl[i];i++) control[i]=ctrl[i];
+                for (i=0;pck[i];i++) pick[i]=pck[i];
+                left=l;
+                right=r;
+                chartfile=fopen(ChartPath(ChartFileName), "rb");
+                fread (string, sizeof("Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"), 1, chartfile);
+                for (i=0;"Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]&&string[i]=="Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i];i++);
+                if ("Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]) {
+                                                         sprintf (string, "Chart File corrupted");
+                                                         outtextxy(0,0, string);
+                                                         while (kbhit()) getch();
+                                                         getch();
+                                                         exit(1);
+                                                         }
+                fread (&bpm, sizeof(int), 1, chartfile);
+                fread (&size, sizeof(int), 1, chartfile);
+                for (i=0;i<size;i++) {
+                    fread (&chart[i].type, sizeof (char), 1, chartfile);
+                    fread (&chart[i].time, sizeof (int), 1, chartfile);
+                    fread (&chart[i].end, sizeof (int), 1, chartfile);
+                    chart[i].hit=0;
+                    }
+                progress=0;
+                }
+      };
+
+int main () {
+    initwindow(SIZEX, SIZEY, "ITA Hero");
+    closegraph();
+    return 0;
+}

@@ -1,8 +1,8 @@
 [Project]
-FileName=Guitar Hero.dev
+FileName=GuITAr Hero.dev
 Name=Guitar Hero
 UnitCount=1
-Type=1
+Type=0
 Ver=1
 ObjFiles=
 Includes=
@@ -12,7 +12,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=-lbgi_@@_-lgdi32_@@_-lcomdlg32_@@_-luuid_@@_-loleaut32_@@_-lole32_@@_../../../../../Dev-Cpp/lib/libwinmm.a_@@_
+Linker=-lbgi_@@_-lgdi32_@@_-lcomdlg32_@@_-luuid_@@_-loleaut32_@@_-lole32_@@_../../../../../../Dev-Cpp/lib/libwinmm.a_@@_
 IsCpp=1
 Icon=
 ExeOutput=
