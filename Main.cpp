@@ -4,117 +4,20 @@
 #define SIZEX 1366
 #define SIZEY 700
 
-void *AllocateFile (char file_name[]) {
-     size_t size;
-     FILE *file;
-     void *ret;
-     file=fopen(file_name, "rb");
-     if (file==NULL) return NULL;
-     fseek (file, 0, 2);
-     size=ftell(file);
-     ret=malloc(size);
-     if (ret==NULL) return NULL;
-     fseek (file, 0, 0);
-     fread (ret, size, 1, file);
-     fclose(file);
-     return ret;
-}
+#include "Functions.h"
+#include "Classes.h"
 
-void strcat (char destiny[], char add[]) {
-     int i, j;
-     for (i=0;destiny[i]!=0;i++);
-     for (j=0;add[j]!=0;j++) destiny[i+j]=add[j];
-     destiny[i+j]=0;
-}
+void *AllocateFile (char file_name[]);
+void strcat (char destiny[], char add[]);
+char *SoundFilePath (char filename[]);
+char *ChartPath (char filename[]);
 
-char __location[100];
-char *SoundFilePath (char filename[]) {
-     __location[0]=0;
-     strcat (__location, "Sound\\");
-     strcat (__location, filename);
-     strcat (__location, ".wav");
-     return __location;
-}
-char *ChartPath (char filename[]) {
-     __location[0]=0;
-     strcat (__location, "Chart\\");
-     strcat (__location, filename);
-     strcat (__location, ".chart");
-     return __location;
-}
-
-class highway {
-        struct note {
-               char type;
-               int time;
-               int end;
-               bool hit;
-               } *chart;
-        int progress, bpm, size;
-        int left, right;
-        char *fret, *pick;
-      public:
-        highway (char ChartFileName[], char control[]="ZXCVB", char pck[]="", int l=SIZEX/2-175, int r=SIZEX/2+175) {
-                FILE *chartfile;
-                char string[100];
-                int i;
-                for (size=0;control[size];size++);
-                fret=new char[++size];
-                for (i=0;i<size;i++) fret[i]=control[i];
-                for (size=0;pck[size];size++);
-                pick=new char[++size];
-                for (i=0;i<size;i++) pick[i]=pck[i];
-                left=l;
-                right=r;
-                chartfile=fopen(ChartPath(ChartFileName), "rb");
-                if (chartfile==NULL) {
-                                     sprintf (string, "Chart File non-existent");
-                                     outtextxy(SIZEX/2-50,SIZEY/2, string);
-                                     while (kbhit()) getch();
-                                     getch();
-                                     exit(1);
-                                     }
-                fread (string, sizeof("Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"), 1, chartfile);
-                for (i=0;"Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]&&string[i]=="Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i];i++);
-                if ("Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]) {
-                                                         sprintf (string, "Chart File corrupted");
-                                                         outtextxy(SIZEX/2-50,SIZEY/2, string);
-                                                         while (kbhit()) getch();
-                                                         getch();
-                                                         exit(1);
-                                                         }
-                fread (&bpm, sizeof(int), 1, chartfile);
-                fread (&size, sizeof(int), 1, chartfile);
-                chart=new note[(size>50000)?(size=0):(size)];
-                for (i=0;i<size;i++) {
-                    fread (&chart[i].type, sizeof (char), 1, chartfile);
-                    fread (&chart[i].time, sizeof (int), 1, chartfile);
-                    fread (&chart[i].end, sizeof (int), 1, chartfile);
-                    chart[i].hit=0;
-                    }
-                fread (string, sizeof("End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"), 1, chartfile);
-                for (i=0;"End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"[i]&&string[i]=="End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"[i];i++);
-                if ("End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"[i]) {
-                                                         sprintf (string, "Chart File corrupted");
-                                                         outtextxy(SIZEX/2-50,SIZEY/2, string);
-                                                         while (kbhit()) getch();
-                                                         getch();
-                                                         exit(1);
-                                                         }
-                progress=0;
-                }
-        ~highway () {
-                 delete[] fret;
-                 delete[] pick;
-                 delete[] chart;
-                 }
-      };
+highway::highway(char ChartFileName[], char control[], char pck[], int l, int r);
+highway::~highway();
 
 int main () {
     initwindow(SIZEX, SIZEY, "ITA Hero");
-    {
-                      highway &player=*(new highway ("highway"));
-    }
+    highway &player=*(new highway ("highway"));
     closegraph();
     return 0;
 }

@@ -1,7 +1,7 @@
 [Project]
 FileName=ITA Hero.dev
 Name=ITA Hero
-UnitCount=1
+UnitCount=3
 Type=0
 Ver=1
 ObjFiles=
@@ -56,4 +56,24 @@ OriginalFilename=
 ProductName=
 ProductVersion=
 AutoIncBuildNr=0
+
+[Unit2]
+FileName=Classes.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit3]
+FileName=Functions.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
 
