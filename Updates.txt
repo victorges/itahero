@@ -1,4 +1,9 @@
 04/06/2011 00:04
-Created highway class constructor
-Created this file (edit it manually)
+Criado constructor da  classe highway
+Criado esse arquivo (editar manualmente)
 [v1ct04]
+
+05/06/2011 15:20
+Ajeitado constructor (agora usando alocação dinâmica)
+[v1ct04]
+

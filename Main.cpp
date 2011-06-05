@@ -27,39 +27,43 @@ void strcat (char destiny[], char add[]) {
      destiny[i+j]=0;
 }
 
-char location[100];
+char __location[100];
 char *SoundFilePath (char filename[]) {
-     location[0]=0;
-     strcat (location, "Sound\\");
-     strcat (location, filename);
-     strcat (location, ".wav");
-     return location;
+     __location[0]=0;
+     strcat (__location, "Sound\\");
+     strcat (__location, filename);
+     strcat (__location, ".wav");
+     return __location;
 }
 char *ChartPath (char filename[]) {
-     location[0]=0;
-     strcat (location, "Chart\\");
-     strcat (location, filename);
-     strcat (location, ".chart");
-     return location;
+     __location[0]=0;
+     strcat (__location, "Chart\\");
+     strcat (__location, filename);
+     strcat (__location, ".chart");
+     return __location;
 }
 
 class highway {
-      struct note {
-             char type;
-             int time;
-             int end;
-             bool hit;
-             } chart[5000];
-      int progress, bpm;
-      int left, right;
-      char control[6], pick[3];
+        struct note {
+               char type;
+               int time;
+               int end;
+               bool hit;
+               } *chart;
+        int progress, bpm, size;
+        int left, right;
+        char *fret, *pick;
       public:
-        highway (char ChartFileName[], int l=SIZEX/2-175, int r=SIZEX/2+175, char ctrl[]="ZXCVB", char pck[]=0) {
+        highway (char ChartFileName[], char control[]="ZXCVB", char pck[]="", int l=SIZEX/2-175, int r=SIZEX/2+175) {
                 FILE *chartfile;
                 char string[100];
-                int i, size;
-                for (i=0;ctrl[i];i++) control[i]=ctrl[i];
-                for (i=0;pck[i];i++) pick[i]=pck[i];
+                int i;
+                for (size=0;control[size];size++);
+                fret=(char*)malloc(sizeof(char)*(++size));
+                for (i=0;i<size;i++) fret[i]=control[i];
+                for (size=0;pck[size];size++);
+                pick=(char*)malloc(sizeof(char)*(++size));
+                for (i=0;i<size;i++) pick[i]=pck[i];
                 left=l;
                 right=r;
                 chartfile=fopen(ChartPath(ChartFileName), "rb");
@@ -67,13 +71,14 @@ class highway {
                 for (i=0;"Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]&&string[i]=="Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i];i++);
                 if ("Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]) {
                                                          sprintf (string, "Chart File corrupted");
-                                                         outtextxy(0,0, string);
+                                                         outtextxy(SIZEX/2-50,SIZEY/2, string);
                                                          while (kbhit()) getch();
                                                          getch();
                                                          exit(1);
                                                          }
                 fread (&bpm, sizeof(int), 1, chartfile);
                 fread (&size, sizeof(int), 1, chartfile);
+                chart=(note*)malloc(sizeof(note)*size);
                 for (i=0;i<size;i++) {
                     fread (&chart[i].type, sizeof (char), 1, chartfile);
                     fread (&chart[i].time, sizeof (int), 1, chartfile);
