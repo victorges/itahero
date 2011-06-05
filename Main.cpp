@@ -17,7 +17,7 @@ highway::~highway();
 
 int main () {
     initwindow(SIZEX, SIZEY, "ITA Hero");
-    highway &player=*(new highway ("highway"));
+    highway &player=*(new highway ("Arterial"));
     closegraph();
     return 0;
 }
