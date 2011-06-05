@@ -5,7 +5,7 @@
 #define SIZEY 700
 
 void *AllocateFile (char file_name[]) {
-     unsigned int size;
+     size_t size;
      FILE *file;
      void *ret;
      file=fopen(file_name, "rb");
