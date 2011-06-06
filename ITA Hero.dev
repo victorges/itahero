@@ -57,20 +57,20 @@ ProductName=
 ProductVersion=
 AutoIncBuildNr=0
 
-[Unit2]
-FileName=Classes.h
+[Unit3]
+FileName=Functions.h
 CompileCpp=1
-Folder=
+Folder=ITA Hero
 Compile=1
 Link=1
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit3]
-FileName=Functions.h
+[Unit2]
+FileName=Classes.h
 CompileCpp=1
-Folder=
+Folder=ITA Hero
 Compile=1
 Link=1
 Priority=1000

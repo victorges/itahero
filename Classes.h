@@ -1,10 +1,14 @@
+class note {
+      public:
+        char type;
+        int time;
+        int end;
+        bool hit;
+        void PrintNote ();
+      };
+
 class highway {
-        struct note {
-               char type;
-               int time;
-               int end;
-               bool hit;
-               } *chart;
+        note *chart;
         int progress, bpm, size;
         int left, right;
         char *fret, *pick;
