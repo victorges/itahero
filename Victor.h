@@ -45,7 +45,8 @@ highway::highway (char ChartFileName[], char control[]="ZXCVB", char pck[]="", i
                                                          getch();
                                                          exit(1);
                                                          }
-                progress=0;
+                progress=score=streak=0;
+                multiplier=1;
                 }
 
 highway::~highway () {

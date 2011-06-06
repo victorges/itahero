@@ -4,7 +4,7 @@ class note {
         int time;
         int end;
         bool hit;
-        void PrintNote (); //not yet implemented
+        void DrawNote (); //not yet implemented
       };
 
 class highway {
@@ -13,6 +13,9 @@ class highway {
         int left, right;
         char *fret, *pick;
       public:
+        int score, multiplier, streak;
         highway (char ChartFileName[], char control[], char pck[], int l, int r);
         ~highway ();
+        int refresh(); //not yet implemented  
+        void draw();    //not yet implemented
       };
