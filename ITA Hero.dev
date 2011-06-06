@@ -1,7 +1,7 @@
 [Project]
 FileName=ITA Hero.dev
 Name=ITA Hero
-UnitCount=3
+UnitCount=5
 Type=0
 Ver=1
 ObjFiles=
@@ -67,8 +67,28 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit3]
+[Unit5]
 FileName=Classes.h
+CompileCpp=1
+Folder=ITA Hero
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit4]
+FileName=Smaira.h
+CompileCpp=1
+Folder=ITA Hero
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit3]
+FileName=Victor.h
 CompileCpp=1
 Folder=ITA Hero
 Compile=1
