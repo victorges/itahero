@@ -17,8 +17,8 @@ char *ChartPath (char filename[]);
 int main () {
     initwindow(SIZEX, SIZEY, "ITA Hero");
     {
-                      highway &a=*new highway("Arterial");
-                      delete &a;
+                      highway *a=new highway("Arterial");
+                      delete a;
     }
     closegraph();
     return 0;
