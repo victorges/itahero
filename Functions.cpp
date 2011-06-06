@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 char __location[100];
 void *AllocateFile (char file_name[]) {
      size_t size;
@@ -7,7 +9,7 @@ void *AllocateFile (char file_name[]) {
      if (file==NULL) return NULL;
      fseek (file, 0, 2);
      size=ftell(file);
-     ret=malloc(size);
+     ret=new char[size];
      if (ret==NULL) return NULL;
      fseek (file, 0, 0);
      fread (ret, size, 1, file);

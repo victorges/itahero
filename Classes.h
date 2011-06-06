@@ -1,10 +1,13 @@
+char *ChartPath (char filename[]);
+
 class note {
       public:
         char type;
         int time;
         int end;
         bool hit;
-        void PrintNote ();
+        void PrintNote () {
+             }
       };
 
 class highway {
