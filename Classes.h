@@ -8,14 +8,18 @@ class note {
       };
 
 class highway {
+        int location, width, height;
+        char *fret, *pick;
+        short int *fretstate, *pickstate, *lastfretstate, *lastpickstate;
         note *chart;
         int progress, bpm, size;
-        int left, right;
-        char *fret, *pick;
+        int time_delay, timing_window;
       public:
         int score, multiplier, streak;
-        highway (char ChartFileName[], char control[], char pck[], int l, int r);
+        highway (char ChartFileName[], int tw, int hyperspeed, char control[], char pck[], int loc, int w, int h);
         ~highway ();
-        int refresh(); //not yet implemented  
-        void draw();    //not yet implemented
+        int refresh(int time); //in progress
+        void draw(int time);    //not yet implemented
       };
+
+class background; //to-do

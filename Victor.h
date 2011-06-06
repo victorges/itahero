@@ -1,15 +1,25 @@
-highway::highway (char ChartFileName[], char control[]="ZXCVB", char pck[]="", int l=SIZEX/2-175, int r=SIZEX/2+175) {
+highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEX/3) {
                 FILE *chartfile;
                 char string[100];
                 int i;
+                
+                location=loc;
+                width=w;
+                height=h;
+                timing_window=tw;
+                time_delay=300+1200/(hyperspeed+1);
+
                 for (size=0;control[size];size++);
+                fretstate=new short int[size];
+                lastfretstate=new short int[size];
                 fret=new char[++size];
                 for (i=0;i<size;i++) fret[i]=control[i];
                 for (size=0;pck[size];size++);
+                pickstate=new short int[size];
+                lastpickstate=new short int[size];
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
-                left=l;
-                right=r;
+
                 chartfile=fopen(ChartPath(ChartFileName), "rb");
                 if (chartfile==NULL) {
                                      sprintf (string, "Chart File non-existent");
@@ -45,12 +55,30 @@ highway::highway (char ChartFileName[], char control[]="ZXCVB", char pck[]="", i
                                                          getch();
                                                          exit(1);
                                                          }
+
                 progress=score=streak=0;
                 multiplier=1;
                 }
 
 highway::~highway () {
-                 delete[] fret;
-                 delete[] pick;
-                 delete[] chart;
-                 }
+                  delete[] fretstate;
+                  delete[] lastfretstate;
+                  delete[] fret;
+                  delete[] pickstate;
+                  delete[] lastpickstate;
+                  delete[] pick;
+                  delete[] chart;
+                  }
+                 
+int highway::refresh(int time) {
+              int nnotes;
+              for (int i=0;pick[i];i++) {
+                  lastpickstate[i]=pickstate[i];
+                  pickstate[i]=GetAsyncKeyState(fret[i]);
+                  }
+              for (nnotes=0;fret[nnotes];nnotes++) {
+                  lastfretstate[nnotes]=fretstate[nnotes];
+                  fretstate[nnotes]=GetAsyncKeyState(fret[nnotes]);
+                  }
+              return 0;
+              }
