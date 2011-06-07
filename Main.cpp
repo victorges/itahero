@@ -14,6 +14,7 @@ char *ChartPath (char filename[]);
 #include "Victor.h"
 #include "Smaira.h"
 
+
 int main () {
     initwindow(SIZEX, SIZEY, "ITA Hero");
     {

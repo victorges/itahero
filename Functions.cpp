@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-char __location[100];
 void *AllocateFile (char file_name[]) {
      size_t size;
      FILE *file;
@@ -25,16 +24,18 @@ void strcat (char destiny[], char add[]) {
 }
 
 char *SoundFilePath (char filename[]) {
-     __location[0]=0;
-     strcat (__location, "Sound\\");
-     strcat (__location, filename);
-     strcat (__location, ".wav");
-     return __location;
+     static char location[100];
+     location[0]=0;
+     strcat (location, "Sound\\");
+     strcat (location, filename);
+     strcat (location, ".wav");
+     return location;
 }
 char *ChartPath (char filename[]) {
-     __location[0]=0;
-     strcat (__location, "Chart\\");
-     strcat (__location, filename);
-     strcat (__location, ".chart");
-     return __location;
+     static char location[100];
+     location[0]=0;
+     strcat (location, "Chart\\");
+     strcat (location, filename);
+     strcat (location, ".chart");
+     return location;
 }
