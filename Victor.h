@@ -4,6 +4,8 @@ note::note (char ty, char ti, int e, bool h) {
            end=e;
            hit=h;
            }
+note::note () {
+           }
 highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEX/3) {
                 FILE *chartfile;
                 char string[100];
@@ -91,21 +93,34 @@ int highway::refresh(int time) {
                                if (!chart[progress].hit) streak=0;
                                progress++;
                                }
-                         for (int j=progress;chart[j].time-time<timing_window;j++) {
+                         for (int j=progress;chart[j].time-time<timing_window&&j<size;j++) {
                              for (i=0, picked=0;pick[i];i++) if (pickstate[i]&&!lastpickstate[i]) picked=1;
-                             if (!pick[0]||picked||chart[j].hit) {
+                             if (chart[j].hit) {
+                                               for (i=0, fretaux=0;fret[i];i++) fretaux+=(fretstate[i]!=0)<<i;
+                                               if (fretaux^chart[j].type==0) {
+                                                                             chart[j].time=time;
+                                                                             }
+                                               else chart[j].time=chart[j].end;
+                                               }
+                             else if (!pick[0]||picked) {
                                 for (i=0, fretaux=0, lastfretaux=0;fret[i];i++) {
                                     fretaux+=(fretstate[i]==1)<<i;
                                     lastfretaux+=lastfretstate[i]<<i;
                                     }
-                                if (chart[j].hit) {
-                                                  if (fretaux^chart[j].type==0) {
-                                                                                chart[j].time=time;
-                                                                                }
-                                                  else chart[j].end=chart[j].time;
-                                                  }
-                                else if (!pick[0]) {
-                                     
-              
-              return 0;
-              }
+                                if (!pick[0]) {
+                                     if ((lastfretaux^fretaux!=0)&&(fretaux^chart[j].type==0)) {
+                                                                                              chart[j].hit=1;
+                                                                                              for (i=0;fret[i];i++) fretstate[i]=2;
+                                                                                              }
+                                     }
+                                else if (picked) {
+                                     if (fretaux^chart[j].type==0) {
+                                                                   chart[j].hit=1;
+                                                                   for (i=0;!pickstate[i]||lastpickstate[i];i++);
+                                                                   lastpickstate[i]=1;
+                                                                   }
+                                     }
+                                }
+                             }
+                         return 0;
+}

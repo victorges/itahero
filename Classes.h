@@ -4,6 +4,8 @@ class note {
         int time;
         int end;
         bool hit;
+        note (char ty, char ti, int e, bool h);
+        note ();
         bool DrawNote (int time, ...); //not yet implemented
       };
 
