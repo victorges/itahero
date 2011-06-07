@@ -4,7 +4,7 @@ class note {
         int time;
         int end;
         bool hit;
-        bool DrawNote (int time); //not yet implemented
+        bool DrawNote (int time); //not yet implemented, return if note is on screen limits (therefore, if it is visible)
       };
 
 class highway {
