@@ -4,7 +4,7 @@ class note {
         int time;
         int end;
         bool hit;
-        void DrawNote (); //not yet implemented
+        bool DrawNote (int time); //not yet implemented
       };
 
 class highway {
