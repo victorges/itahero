@@ -1,3 +1,9 @@
+note::note (char ty, char ti, int e, bool h) {
+           type=ty;
+           time=ti;
+           end=e;
+           hit=h;
+           }
 highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEX/3) {
                 FILE *chartfile;
                 char string[100];
@@ -71,14 +77,35 @@ highway::~highway () {
                   }
                  
 int highway::refresh(int time) {
-              int nnotes;
-              for (int i=0;pick[i];i++) {
-                  lastpickstate[i]=pickstate[i];
-                  pickstate[i]=GetAsyncKeyState(fret[i]);
-                  }
-              for (nnotes=0;fret[nnotes];nnotes++) {
-                  lastfretstate[nnotes]=fretstate[nnotes];
-                  fretstate[nnotes]=GetAsyncKeyState(fret[nnotes]);
-                  }
+                         int i, picked;
+                         char fretaux, lastfretaux;
+                         for (i=0;fret[i];i++) {
+                             lastfretstate[i]=fretstate[i]!=0;
+                             fretstate[i]=GetAsyncKeyState(fret[i])!=0;
+                             }
+                         for (i=0;pick[i];i++) {
+                             lastpickstate[i]=pickstate[i]!=0;
+                             pickstate[i]=GetAsyncKeyState(fret[i])!=0;
+                             }
+                         while (time-chart[progress].end>timing_window) {
+                               if (!chart[progress].hit) streak=0;
+                               progress++;
+                               }
+                         for (int j=progress;chart[j].time-time<timing_window;j++) {
+                             for (i=0, picked=0;pick[i];i++) if (pickstate[i]&&!lastpickstate[i]) picked=1;
+                             if (!pick[0]||picked||chart[j].hit) {
+                                for (i=0, fretaux=0, lastfretaux=0;fret[i];i++) {
+                                    fretaux+=(fretstate[i]==1)<<i;
+                                    lastfretaux+=lastfretstate[i]<<i;
+                                    }
+                                if (chart[j].hit) {
+                                                  if (fretaux^chart[j].type==0) {
+                                                                                chart[j].time=time;
+                                                                                }
+                                                  else chart[j].end=chart[j].time;
+                                                  }
+                                else if (!pick[0]) {
+                                     
+              
               return 0;
               }

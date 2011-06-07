@@ -4,7 +4,7 @@ class note {
         int time;
         int end;
         bool hit;
-        bool DrawNote (int time); //not yet implemented, return if note is on screen limits (therefore, if it is visible)
+        bool DrawNote (int time, ...); //not yet implemented
       };
 
 class highway {
@@ -19,7 +19,7 @@ class highway {
         highway (char ChartFileName[], int tw, int hyperspeed, char control[], char pck[], int loc, int w, int h);
         ~highway ();
         int refresh(int time); //in progress
-        void draw(int time);    //not yet implemented
+        void draw(int time, ...);    //not yet implemented
       };
 
 class background; //to-do
