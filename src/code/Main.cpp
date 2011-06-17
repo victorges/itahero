@@ -21,7 +21,7 @@ char *SoundFilePath (char filename[]) {
      location[0]=0;
      strcat (location, "Sound\\");
      strcat (location, filename);
-     strcat (location, ".mp3");
+     strcat (location, ".ogg");
      return location;
 }
 char *ChartPath (char filename[]) {
@@ -41,14 +41,22 @@ int main () {
     initwindow(SIZEX, SIZEY, "ITA Hero");
     highway *a=new highway("Arterial");
     ISoundEngine* engine = createIrrKlangDevice();
-    engine->addSoundSourceFromMemory(file, size, "escape.mp3");
+    ISoundSource* source=engine->addSoundSourceFromMemory(file, size, "music.ogg");
+    
     free(file);
-    ISound* music = engine->play2D("escape.mp3", true, false, true, ESM_AUTO_DETECT, true);
+    
+    ISound* music = engine->play2D(source, false, false, true, true);
+    
     ISoundEffectControl* fx=music->getSoundEffectControl();
     //fx->enableWavesReverbSoundEffect();
+    music->setIsPaused();
+    Sleep(1000);
+    music->setIsPaused(0);
     while (!(music->isFinished()));
+    engine->removeSoundSource(source);
+    engine->drop();
+    delete a;
+    getch();
     closegraph();
-    music->drop();
-    //delete a;
     return 0;
 }

@@ -10,6 +10,7 @@ class note {
       };
 
 class highway {
+      private:
         int location, width, height;
         char *fret, *pick;
         short int *fretstate, *pickstate, *lastfretstate, *lastpickstate;
