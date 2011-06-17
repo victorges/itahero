@@ -34,18 +34,45 @@ char *ChartPath (char filename[]) {
      return location;
 }
 
+void sfscanf (FILE *file, char CheckString[]) {
+     int i;
+     for (i=0;CheckString[i];i++);
+     char string[i];
+     for (int j=0;j<i;j++) fscanf (file, "%c", &string[j]);
+     for (i=0;CheckString[i]&&string[i]==CheckString[i];i++);
+     if (CheckString[i]) Error ("Soundlist file corrupted");
+}
 
 int main () {
     size_t size;
     char string[50];
-    music *test=new music("Arterial", "Arterial Black", "Drist");
+    int nSongs;
     initwindow(SIZEX, SIZEY, "ITA Hero");
-    highway *a=new highway(test);
-    irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
-    test->load(engine);
-    test->play();
     
-    while (!test->isFinished()) {
+    FILE *reader;
+    reader=fopen("Sound\\songs.dat", "r");
+    if (reader==NULL) Error ("Soundlist file not found");
+    sfscanf (reader, "[SONGS=");
+    fscanf (reader, "%d", &nSongs);
+    sfscanf (reader, "]\n");
+    music* songs[nSongs];
+    for (int i=0;i<nSongs-1;i++) {
+        songs[i]=new music (reader);
+        char c;
+        sfscanf (reader, "~\n");
+        }
+    songs[nSongs-1]=new music (reader);
+    sfscanf (reader, "[/SONGS]");
+    if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
+    fclose (reader);
+    
+    music* playing=songs[1];
+    highway *a=new highway(playing);
+    irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
+    playing->load(engine);
+    playing->play();
+    
+    while (!playing->isFinished()) {
           moveto(0, 0);
           a->refresh();
           }

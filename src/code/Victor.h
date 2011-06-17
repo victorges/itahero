@@ -11,21 +11,21 @@ music::music (FILE *songs) {
           char string[1000];
           int i;
           
-          fscanf (songs, " FILE=");
+          sfscanf (songs, "FILE=");
           fgets(string, 1000, songs);
           for (i=1;string[i-1]!='\n';i++);
           string[i-1]=0;
           filename=new char[i];
           for (i=0;!i||string[i-1];i++) filename[i]=string[i];
           
-          fscanf (songs, " TITLE=");
+          sfscanf (songs, "TITLE=");
           fgets(string, 1000, songs);
           for (i=1;string[i-1]!='\n';i++);
           string[i-1]=0;
           title=new char[i];
           for (i=0;!i||string[i-1];i++) title[i]=string[i];
           
-          fscanf (songs, " ARTIST=");
+          sfscanf (songs, "ARTIST=");
           fgets(string, 1000, songs);
           for (i=1;string[i-1]!='\n';i++);
           string[i-1]=0;
@@ -106,7 +106,6 @@ int music::time () {
 
 highway::highway (music* stream, int tw=50, int hyperspeed=0,char control[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3) {
                 FILE *chartfile;
-                char string[100];
                 int i;
                 
                 MusicStream=stream;
@@ -131,7 +130,7 @@ highway::highway (music* stream, int tw=50, int hyperspeed=0,char control[]="ZXC
                 chartfile=fopen(ChartPath(MusicStream->filename), "rb");
                 
                 if (chartfile==NULL) Error ("Chart File non-existent");
-                if (CheckIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321")==0) Error ("Chart File corrupted");
+                CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
                 
                 fread (&bpm, sizeof(int), 1, chartfile);
                 fread (&size, sizeof(int), 1, chartfile);
@@ -143,7 +142,7 @@ highway::highway (music* stream, int tw=50, int hyperspeed=0,char control[]="ZXC
                     chart[i].hit=0;
                     }
 
-                if (CheckIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847")==0) Error ("Chart File corrupted");
+                CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 
                 progress=score=streak=0;
                 multiplier=1;
@@ -175,7 +174,7 @@ int highway::refresh () {
                          char string[50];
                          sprintf (string, "%d %d %d", time, chart[progress].end, size);
                          outtext (string);
-                         while (time-chart[progress].end>timing_window) {
+                         while (progress<size&&time-chart[progress].end>timing_window) {
                                if (chart[progress].hit==false) streak=0;
                                progress++;
                                }
@@ -227,17 +226,16 @@ void *AllocateFile (char file_name[], size_t &size) {
 }
 
 void Error (char string[]) {
-     outtextxy(SIZEX/2-50,SIZEY/2, string);
+     showerrorbox (string);
      while (kbhit()) getch();
-     getch();
      exit(1);
 }
 
-bool CheckIntegrity (FILE *chartfile, char CheckString[]) {
+void CheckChartIntegrity (FILE *chartfile, char CheckString[]) {
      int i;
      for (i=1;CheckString[i-1];i++);
      char string[i];
      fread (string, sizeof(char), i, chartfile);
      for (i=0;CheckString[i]&&string[i]==CheckString[i];i++);
-     return !CheckString[i];
+     if (CheckString[i]) Error ("Chart File corrupted");
 }
