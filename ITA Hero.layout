@@ -1,26 +1,44 @@
+<<<<<<< .mine
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="default" />
+	<File name="Functions.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="142" topLine="0" />
+	</File>
+	<File name="Main.cpp" open="1" top="1" tabpos="1">
+		<Cursor position="509" topLine="0" />
+	</File>
+	<File name="Smaira.h" open="1" top="0" tabpos="4">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="Victor.h" open="1" top="0" tabpos="3">
+		<Cursor position="1107" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>
+=======
 [Editor_1]
-CursorCol=19
-CursorRow=15
+CursorCol=1
+CursorRow=2
 TopLine=1
 LeftChar=1
 Open=1
 Top=0
 [Editors]
-Focused=2
+Focused=0
 Order=0,1,2,3,4
 [Editor_0]
 Open=1
-Top=0
-CursorCol=1
-CursorRow=14
+Top=1
+CursorCol=32
+CursorRow=23
 TopLine=1
 LeftChar=1
 [Editor_2]
 Open=1
-Top=1
-CursorCol=30
-CursorRow=124
-TopLine=80
+Top=0
+CursorCol=1
+CursorRow=1
+TopLine=1
 LeftChar=1
 [Editor_3]
 Open=1
@@ -32,7 +50,8 @@ LeftChar=1
 [Editor_4]
 Open=1
 Top=0
-CursorCol=17
-CursorRow=8
+CursorCol=9
+CursorRow=10
 TopLine=1
 LeftChar=1
+>>>>>>> .r29

@@ -1,5 +1,6 @@
 #include <graphics.h>
 #include <windows.h>
+#include <stdio.h>
 
 #define SIZEX 1366
 #define SIZEY 700
