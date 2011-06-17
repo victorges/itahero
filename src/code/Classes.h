@@ -6,7 +6,7 @@ class note {
         bool hit;
         note (char ty, char ti, int e, bool h);
         note ();
-        bool DrawNote (int time, ...); //not yet implemented
+        bool DrawNote (int time, ...); //not yet implemented (smair)
       };
 
 class highway {

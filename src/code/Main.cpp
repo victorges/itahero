@@ -15,6 +15,7 @@ void strcat (char destiny[], char add[]) {
      for (j=0;add[j]!=0;j++) destiny[i+j]=add[j];
      destiny[i+j]=0;
 }
+
 char *SoundFilePath (char filename[]) {
      static char location[100];
      location[0]=0;
@@ -37,9 +38,9 @@ int main () {
     size_t size;
     void *file=AllocateFile(SoundFilePath("escape"), size);
     char string[50];
+    initwindow(SIZEX, SIZEY, "ITA Hero");
     highway *a=new highway("Arterial");
     ISoundEngine* engine = createIrrKlangDevice();
-    initwindow(SIZEX, SIZEY, "ITA Hero");
     engine->addSoundSourceFromMemory(file, size, "escape.mp3");
     free(file);
     ISound* music = engine->play2D("escape.mp3", true, false, true, ESM_AUTO_DETECT, true);
@@ -48,6 +49,6 @@ int main () {
     while (!(music->isFinished()));
     closegraph();
     music->drop();
-    delete a;
+    //delete a;
     return 0;
 }

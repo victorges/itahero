@@ -1,5 +1,9 @@
-[SONGS=1]
-File=escape
-Title=Escape Me (Feat. Cc Sheffield)
-Artist=Tiesto
+[SONGS=2]
+FILE=escape
+TITLE=Escape Me (Feat. Cc Sheffield)
+ARTIST=Tiesto
+~
+FILE=Arterial
+TITLE=Arterial Black
+ARTIT=Drist
 [/SONGS]

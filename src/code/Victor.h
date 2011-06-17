@@ -33,9 +33,7 @@ highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control
                 chartfile=fopen(ChartPath(ChartFileName), "rb");
                 
                 if (chartfile==NULL) Error ("Chart File non-existent");
-                fread (string, sizeof("Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"), 1, chartfile);
-                for (i=0;"Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]&&string[i]=="Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i];i++);
-                if ("Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321"[i]) Error ("Chart File corrupted");
+                if (CheckIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321")==0) Error ("Chart File corrupted");
                 
                 fread (&bpm, sizeof(int), 1, chartfile);
                 fread (&size, sizeof(int), 1, chartfile);
@@ -47,9 +45,7 @@ highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control
                     chart[i].hit=0;
                     }
 
-                fread (string, sizeof("End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"), 1, chartfile);
-                for (i=0;"End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"[i]&&string[i]=="End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"[i];i++);
-                if ("End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847"[i]) Error ("Chart File corrupted");
+                if (CheckIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847")==0) Error ("Chart File corrupted");
 
                 progress=score=streak=0;
                 multiplier=1;
@@ -128,9 +124,17 @@ void *AllocateFile (char file_name[], size_t &size) {
 }
 
 void Error (char string[]) {
-     sprintf (string, string);
      outtextxy(SIZEX/2-50,SIZEY/2, string);
      while (kbhit()) getch();
      getch();
      exit(1);
+}
+
+bool CheckIntegrity (FILE *chartfile, char CheckString[]) {
+     int i;
+     for (i=1;CheckString[i-1];i++);
+     char string[i];
+     fread (string, sizeof(char), i, chartfile);
+     for (i=0;CheckString[i]&&string[i]==CheckString[i];i++);
+     return !CheckString[i];
 }
