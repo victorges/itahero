@@ -3,15 +3,113 @@ note::note (char ty, char ti, int e, bool h) {
            time=ti;
            end=e;
            hit=h;
-           }
+}
 note::note () {
            }
 
-highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3) {
+music::music (FILE *songs) {
+          char string[1000];
+          int i;
+          
+          fscanf (songs, " FILE=");
+          fgets(string, 1000, songs);
+          for (i=1;string[i-1]!='\n';i++);
+          string[i-1]=0;
+          filename=new char[i];
+          for (i=0;!i||string[i-1];i++) filename[i]=string[i];
+          
+          fscanf (songs, " TITLE=");
+          fgets(string, 1000, songs);
+          for (i=1;string[i-1]!='\n';i++);
+          string[i-1]=0;
+          title=new char[i];
+          for (i=0;!i||string[i-1];i++) title[i]=string[i];
+          
+          fscanf (songs, " ARTIST=");
+          fgets(string, 1000, songs);
+          for (i=1;string[i-1]!='\n';i++);
+          string[i-1]=0;
+          artist=new char[i];
+          for (i=0;!i||string[i-1];i++) artist[i]=string[i];
+          
+          sound=0;
+          start=0;
+}
+
+music::music (char flnm[], char ttl[], char artst[]) {
+          int i;
+
+          for (i=1;flnm[i-1];i++);
+          filename=new char[i];
+          for (i=0;!i||flnm[i-1];i++) filename[i]=flnm[i];
+          
+          for (i=1;ttl[i-1];i++);
+          title=new char[i];
+          for (i=0;!i||ttl[i-1];i++) title[i]=ttl[i];
+          
+          for (i=1;artst[i-1];i++);
+          artist=new char[i];
+          for (i=0;!i||artst[i-1];i++) artist[i]=artst[i];
+          
+          sound=0;
+          start=0;
+}
+music::~music () {
+                delete[] filename;
+                delete[] title;
+                delete[] artist;
+                }
+
+void music::load (irrklang::ISoundEngine* engine) {
+     void *soundfile;
+     size_t size;
+     soundfile=AllocateFile(SoundFilePath(filename), size);
+     source=engine->addSoundSourceFromMemory(soundfile, size, title);
+     free (soundfile);
+     source->setStreamMode(irrklang::ESM_AUTO_DETECT);
+     sound=engine->play2D(source, false, true, true, true);
+}
+
+void music::unload (irrklang::ISoundEngine* engine) {
+     if (sound) {
+                if (!sound->isFinished() && !sound->getIsPaused()) sound->stop();
+                sound->drop();
+                sound=0;
+                start=0;
+                }
+     engine->removeSoundSource(source);
+}
+
+bool music::isFinished () {
+     return sound->isFinished();
+}
+
+bool music::play () {
+     if (!sound||!sound->getIsPaused()) return false;
+     sound->setIsPaused(false);
+     for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition());
+     return true;
+}
+
+bool music::pause () {
+     if (!sound||sound->getIsPaused()) return false;
+     sound->setIsPaused(true);
+     start=0;
+     return true;
+}
+
+int music::time () {
+         if (start==0) return ~0;
+         return clock()*1000/CLOCKS_PER_SEC-start;
+}
+      
+
+highway::highway (music* stream, int tw=50, int hyperspeed=0,char control[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3) {
                 FILE *chartfile;
                 char string[100];
                 int i;
                 
+                MusicStream=stream;
                 location=loc;
                 width=w;
                 height=h;
@@ -30,7 +128,7 @@ highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
 
-                chartfile=fopen(ChartPath(ChartFileName), "rb");
+                chartfile=fopen(ChartPath(MusicStream->filename), "rb");
                 
                 if (chartfile==NULL) Error ("Chart File non-existent");
                 if (CheckIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321")==0) Error ("Chart File corrupted");
@@ -60,8 +158,10 @@ highway::~highway () {
                   delete[] pick;
                   delete[] chart;
                   }
-                 
-int highway::refresh(int time) {
+
+int highway::refresh () {
+                         int time=MusicStream->time();
+                         if (time==~0) return score;
                          int i, picked;
                          char fretaux, lastfretaux;
                          for (i=0;fret[i];i++) {
@@ -72,6 +172,9 @@ int highway::refresh(int time) {
                              lastpickstate[i]=pickstate[i]!=0;
                              pickstate[i]=GetAsyncKeyState(pick[i])!=0;
                              }
+                         char string[50];
+                         sprintf (string, "%d %d %d", time, chart[progress].end, size);
+                         outtext (string);
                          while (time-chart[progress].end>timing_window) {
                                if (chart[progress].hit==false) streak=0;
                                progress++;
@@ -105,7 +208,7 @@ int highway::refresh(int time) {
                                      }
                                 }
                              }
-                         return 0;
+                         return score;
 }
 
 void *AllocateFile (char file_name[], size_t &size) {

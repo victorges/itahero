@@ -24,6 +24,7 @@ char *SoundFilePath (char filename[]) {
      strcat (location, ".ogg");
      return location;
 }
+
 char *ChartPath (char filename[]) {
      static char location[100];
      location[0]=0;
@@ -33,28 +34,22 @@ char *ChartPath (char filename[]) {
      return location;
 }
 
-using namespace irrklang;
+
 int main () {
     size_t size;
-    void *file=AllocateFile(SoundFilePath("escape"), size);
     char string[50];
+    music *test=new music("Arterial", "Arterial Black", "Drist");
     initwindow(SIZEX, SIZEY, "ITA Hero");
-    highway *a=new highway("Arterial");
-    ISoundEngine* engine = createIrrKlangDevice();
-    ISoundSource* source=engine->addSoundSourceFromMemory(file, size, "music.ogg");
+    highway *a=new highway(test);
+    irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
+    test->load(engine);
+    test->play();
     
-    free(file);
-    
-    ISound* music = engine->play2D(source, false, false, true, true);
-    
-    ISoundEffectControl* fx=music->getSoundEffectControl();
-    //fx->enableWavesReverbSoundEffect();
-    music->setIsPaused();
-    Sleep(1000);
-    music->setIsPaused(0);
-    while (!(music->isFinished()));
-    engine->removeSoundSource(source);
-    engine->drop();
+    while (!test->isFinished()) {
+          moveto(0, 0);
+          a->refresh();
+          }
+
     delete a;
     getch();
     closegraph();
