@@ -64,6 +64,7 @@ void music::load (irrklang::ISoundEngine* engine) {
      void *soundfile;
      size_t size;
      soundfile=AllocateFile(SoundFilePath(filename), size);
+     if (soundfile==NULL) Error ("Error loading Sound File");
      source=engine->addSoundSourceFromMemory(soundfile, size, title);
      free (soundfile);
      source->setStreamMode(irrklang::ESM_AUTO_DETECT);
@@ -226,8 +227,8 @@ void *AllocateFile (char file_name[], size_t &size) {
 }
 
 void Error (char string[]) {
+     closegraph();
      showerrorbox (string);
-     while (kbhit()) getch();
      exit(1);
 }
 
