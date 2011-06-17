@@ -1,5 +1,6 @@
-#include <graphics.h>
-#include <windows.h>
+#include "graphics\include\graphics.h"
+#include "irrKlang\include\irrKlang.h"
+
 #include <stdio.h>
 
 #define SIZEX 1366
