@@ -42,8 +42,8 @@ BuildCmd=
 [VersionInfo]
 Major=0
 Minor=1
-Release=1
-Build=49
+Release=0
+Build=5
 LanguageID=1033
 CharsetID=1252
 CompanyName=
@@ -57,17 +57,17 @@ ProductName=
 ProductVersion=
 AutoIncBuildNr=1
 
-[Unit2]
-FileName=Functions.cpp
+[Unit5]
+FileName=Functions.h
 CompileCpp=1
-Folder=ITA Hero
+Folder=
 Compile=1
 Link=1
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit5]
+[Unit4]
 FileName=Classes.h
 CompileCpp=1
 Folder=ITA Hero
@@ -77,7 +77,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit4]
+[Unit3]
 FileName=Smaira.h
 CompileCpp=1
 Folder=ITA Hero
@@ -87,7 +87,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit3]
+[Unit2]
 FileName=Victor.h
 CompileCpp=1
 Folder=ITA Hero

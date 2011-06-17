@@ -6,6 +6,9 @@ note::note (char ty, char ti, int e, bool h) {
            }
 note::note () {
            }
+
+
+
 highway::highway (char ChartFileName[], int tw=50, int hyperspeed=0,char control[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEX/3) {
                 FILE *chartfile;
                 char string[100];
@@ -123,4 +126,19 @@ int highway::refresh(int time) {
                                 }
                              }
                          return 0;
+}
+
+void *AllocateFile (char file_name[], size_t &size) {
+     FILE *file;
+     void *ret;
+     file=fopen(file_name, "rb");
+     if (file==NULL) return NULL;
+     fseek (file, 0, 2);
+     size=ftell(file);
+     ret=new char[size];
+     if (ret==NULL) return NULL;
+     fseek (file, 0, 0);
+     fread (ret, size, 1, file);
+     fclose(file);
+     return ret;
 }
