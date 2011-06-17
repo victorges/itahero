@@ -1,7 +1,6 @@
 #include <stdio.h>
 
-void *AllocateFile (char file_name[]) {
-     size_t size;
+void *AllocateFile (char file_name[], size_t &size) {
      FILE *file;
      void *ret;
      file=fopen(file_name, "rb");
@@ -28,7 +27,7 @@ char *SoundFilePath (char filename[]) {
      location[0]=0;
      strcat (location, "Sound\\");
      strcat (location, filename);
-     strcat (location, ".wav");
+     strcat (location, ".mp3");
      return location;
 }
 char *ChartPath (char filename[]) {
