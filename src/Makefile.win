@@ -7,9 +7,9 @@ WINDRES = windres.exe
 RES  = object/ITA_Hero_private.res
 OBJ  = object/Main.o $(RES)
 LINKOBJ  = object/Main.o $(RES)
-LIBS =  -L"C:/Dev-Cpp/lib" -mwindows graphics/lib/libbgi.a -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -lwinmm irrKlang/lib/libirrKlang.a  -g3 
-INCS =  -I"C:/Dev-Cpp/include" 
-CXXINCS =  -I"C:/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"C:/Dev-Cpp/include/c++/3.4.2/backward"  -I"C:/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"C:/Dev-Cpp/include/c++/3.4.2"  -I"C:/Dev-Cpp/include" 
+LIBS =  -L"C:/Dev-Cpp/lib" -L"graphics/lib/" -L"irrKlang/lib/" -mwindows graphics/lib/libbgi.a -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -lwinmm irrKlang/lib/libirrKlang.a  -g3 
+INCS =  -I"C:/Dev-Cpp/include"  -I"graphics/include/"  -I"irrKlang/include/" 
+CXXINCS =  -I"C:/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"C:/Dev-Cpp/include/c++/3.4.2/backward"  -I"C:/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"C:/Dev-Cpp/include/c++/3.4.2"  -I"C:/Dev-Cpp/include"  -I"graphics/include/"  -I"irrKlang/include/" 
 BIN  = "../ITA Hero.exe"
 CXXFLAGS = $(CXXINCS)   -g3
 CFLAGS = $(INCS)   -g3
@@ -26,8 +26,8 @@ clean: clean-custom
 $(BIN): $(OBJ)
 	$(CPP) $(LINKOBJ) -o "..\ITA Hero.exe" $(LIBS)
 
-object/Main.o: Main.cpp
-	$(CPP) -c Main.cpp -o object/Main.o $(CXXFLAGS)
+object/Main.o: code/Main.cpp
+	$(CPP) -c code/Main.cpp -o object/Main.o $(CXXFLAGS)
 
 object/ITA_Hero_private.res: ITA_Hero_private.rc 
 	$(WINDRES) -i ITA_Hero_private.rc --input-format=rc -o object/ITA_Hero_private.res -O coff 
