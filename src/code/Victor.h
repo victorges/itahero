@@ -36,24 +36,6 @@ music::music (FILE *songs) {
           start=0;
 }
 
-music::music (char flnm[], char ttl[], char artst[]) {
-          int i;
-
-          for (i=1;flnm[i-1];i++);
-          filename=new char[i];
-          for (i=0;!i||flnm[i-1];i++) filename[i]=flnm[i];
-          
-          for (i=1;ttl[i-1];i++);
-          title=new char[i];
-          for (i=0;!i||ttl[i-1];i++) title[i]=ttl[i];
-          
-          for (i=1;artst[i-1];i++);
-          artist=new char[i];
-          for (i=0;!i||artst[i-1];i++) artist[i]=artst[i];
-          
-          sound=0;
-          start=0;
-}
 music::~music () {
                 delete[] filename;
                 delete[] title;

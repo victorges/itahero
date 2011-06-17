@@ -16,7 +16,6 @@ class music {
       public:
         char *filename, *title, *artist;
         music (FILE* songs);
-        music (char flnm[], char ttl[], char artst[]);
         ~music ();
         void load (irrklang::ISoundEngine* engine);
         void unload (irrklang::ISoundEngine* engine);
