@@ -19,15 +19,12 @@ char *ChartPath (char filename[]);
 using namespace irrklang;
 int main () {
     size_t size;
-    //void *music=AllocateFile(SoundFilePath("Arterial"), size);
+    void *file=AllocateFile(SoundFilePath("escape"), size);
     char string[50];
     initwindow(SIZEX, SIZEY, "ITA Hero");
     ISoundEngine* engine = createIrrKlangDevice();
-    if (!engine)
-		return 0;
-    //engine->addSoundSourceFromMemory(music, size, "Arterial.wav");
-    ISound* music = engine->play2D(SoundFilePath("Barbra"),
-		true, false, true, ESM_AUTO_DETECT, true);
+    engine->addSoundSourceFromMemory(file, size, "escape.mp3");
+    ISound* music = engine->play2D("escape.mp3", true);
     {
                       highway *a=new highway("Arterial");
                       delete a;
