@@ -120,13 +120,15 @@ highway::highway (music* stream, int tw=100, int hyperspeed=0, int col[]=0, char
                     fread (&chart[i].type, sizeof (char), 1, chartfile);
                     fread (&chart[i].time, sizeof (int), 1, chartfile);
                     fread (&chart[i].end, sizeof (int), 1, chartfile);
-                    chart[i].hit=chart[i].hold=0;;
+                    chart[i].hit=0;
+                    chart[i].hold=chart[i].end>chart[i].time;
+                    chart[i].chord=0;
+                    for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }
 
                 CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 
                 progress=score=streak=0;
-                multiplier=1;
                 }
 
 highway::~highway () {
@@ -140,56 +142,58 @@ highway::~highway () {
                   delete[] color;
                   }
 
+int highway::multiplier () {
+    if (streak>30) return 4;
+    return (streak/10)+1;
+}
+
 int highway::refresh () {
-                         int time=MusicStream->time();
-                         if (time==~0) return score;
-                         int i, picked;
-                         char fretaux, lastfretaux;
-                         for (i=0;fret[i];i++) {
-                             lastfretstate[i]=fretstate[i]!=0;
-                             fretstate[i]=GetAsyncKeyState(fret[i])!=0;
-                             }
-                         for (i=0;pick[i];i++) {
-                             lastpickstate[i]=pickstate[i]!=0;
-                             pickstate[i]=GetAsyncKeyState(pick[i])!=0;
-                             }
-                         while (progress<size&&time-chart[progress].end>timing_window*SIZEY/time_delay) {
-                               if (chart[progress].hit==false) streak=0;
-                               progress++;
-                               }
-                         for (int j=progress;chart[j].time-time<timing_window&&j<size;j++) {
-                             for (i=0, picked=0;pick[i];i++) if (pickstate[i]&&!lastpickstate[i]) picked=1;
-                             if (chart[j].hold) { //sustain
-                                               for (i=0, fretaux=0;fret[i];i++) fretaux+=(fretstate[i]!=0)<<i;
-                                               if ((fretaux^(chart[j].type))==0&&chart[j].time<chart[j].end) {
-                                                                             chart[j].time=time; //pontuação?
-                                                                             }
-                                               else chart[j].hold=false;
-                                               }
-                             else if (!pick[0]||picked) {
-                                for (i=0, fretaux=0, lastfretaux=0;fret[i];i++) {
-                                    fretaux+=(fretstate[i]==1)<<i;
-                                    lastfretaux+=lastfretstate[i]<<i;
-                                    }
-                                if (pick[0]==0) {
-                                     if (((lastfretaux^fretaux)!=0)&&((fretaux^(chart[j].type))==0)) {
-                                            chart[j].hit=true;
-                                            if (chart[j].time!=chart[j].end) chart[j].hold=true;
-                                            for (i=0;fret[i];i++) fretstate[i]=2*(fretstate[i]!=0);
-                                            }
-                                     }
-                                else if (picked) {
-                                     if ((fretaux^(chart[j].type))==0) {
-                                                                   chart[j].hit=true;
-                                                                   if (chart[j].time!=chart[j].end) chart[j].hold=true;
-                                                                   for (i=0;!pickstate[i]||lastpickstate[i];i++);
-                                                                   lastpickstate[i]=1;
-                                                                   }
-                                     }
-                                }
-                             }
-                         draw();
-                         return score;
+                    int time=MusicStream->time();
+                    int i, picked;
+                    char fretaux;
+
+                    if (time==~0) return score;
+
+                    for (i=0;fret[i];i++) {
+                        lastfretstate[i]=fretstate[i];
+                        fretstate[i]=GetAsyncKeyState(fret[i])!=0;
+                        }
+                    for (i=0;pick[i];i++) {
+                        lastpickstate[i]=pickstate[i];
+                        pickstate[i]=GetAsyncKeyState(pick[i])!=0;
+                        }
+
+                    while (progress<size&&time-chart[progress].end>timing_window*SIZEY/time_delay) {
+                        if (chart[progress].hit==false) streak=0;
+                        progress++;
+                        }
+
+                    for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;
+                    for (i=0, picked=0;pick[i];i++) if ((pickstate[i]^lastpickstate[i])&pickstate[i]) picked++;
+                    if (!i) for (i=0;fret[i];i++) if ((fretstate[i]^lastfretstate[i])&fretstate[i]) picked++;
+
+                    for (int j=progress;picked&&chart[j].time-time<timing_window&&j<size;j++) {
+                            if (!chart[j].hit)
+                                    if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))<chart[j].type))) {
+                                           chart[j].hit=true;
+                                           streak++;
+                                           score+=100*chart[j].chord*multiplier();
+                                           picked--;
+                                           if (!pick[0]) fretaux^=chart[j].type;
+                                           }
+                            }
+                    for (int j=progress;chart[j].time-time<timing_window&&j<size;j++) { //sustain
+                        if (chart[j].hit&&chart[j].hold)
+                                        if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))<chart[j].type)))
+                                                if (chart[j].time<chart[j].end) {
+                                                        score+=(time-chart[j].time)*100*chart[j].chord*multiplier()/bpm;
+                                                        chart[j].time=time;
+                                                        fretaux^=chart[j].type;
+                                                        }
+                        }
+                    //if (fretaux!=0) streak=0;
+                    draw();
+                    return score;
 }
 
 void *AllocateFile (char file_name[], size_t &size) {

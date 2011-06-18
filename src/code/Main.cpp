@@ -76,6 +76,7 @@ int main () {
           swapbuffers();
           cleardevice();
           a->refresh();
+          printf ("%d %d %d\n", a->score, a->streak, a->multiplier());
           }
 
     delete a;
