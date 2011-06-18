@@ -1,5 +1,5 @@
-#include <graphics.h>
-#include <irrKlang.h>
+#include "..\graphics\include\graphics.h"
+#include "..\irrKlang\include\irrKlang.h"
 
 #define SIZEX 1366
 #define SIZEY 700
