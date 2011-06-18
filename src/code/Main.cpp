@@ -66,14 +66,15 @@ int main () {
     if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
     fclose (reader);
     
-    music* playing=songs[0];
+    music* playing=songs[1];
     highway *a=new highway(playing);
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     playing->load(engine);
     playing->play();
     
     while (!playing->isFinished()) {
-          moveto(0, 0);
+          swapbuffers();
+          cleardevice();
           a->refresh();
           }
 

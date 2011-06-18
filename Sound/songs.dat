@@ -1,9 +1,13 @@
-[SONGS=2]
-FILE=Tiesto - Escape Me
+[SONGS=3]
+FILE=escape
 TITLE=Escape Me (Feat. Cc Sheffield)
 ARTIST=Tiesto
 ~
-FILE=Drist - Arterial Black
+FILE=arterial
 TITLE=Arterial Black
 ARTIST=Drist
+~
+FILE=rock'n'roll
+TITLE=rock'n'roll hall of fame
+ARTIST=pornophonique
 [/SONGS]
