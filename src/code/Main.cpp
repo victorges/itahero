@@ -65,10 +65,10 @@ int main () {
     sfscanf (reader, "[/SONGS]");
     if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
     fclose (reader);
-    char pck[]={VK_UP, VK_DOWN};
-    music* playing=songs[1];
-    highway *a=new highway(playing, 100, 0, "ZXCVB", pck, 0, 400);
-    highway *b=new highway(playing, 100, 1, "ZXCVB", "", 0, SIZEX-400);
+    char pck[]={VK_LEFT, VK_DOWN, VK_RIGHT, '1', '2'};
+    music* playing=songs[1k];
+    highway *a=new highway(playing, 100, 1, "ZXCVB", "", 0, 400);
+    highway *b=new highway(playing, 100, 0, "GHJKL", "", 0, SIZEX-400);
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     playing->load(engine);
     //Sleep(1000);
