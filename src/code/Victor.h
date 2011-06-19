@@ -224,7 +224,7 @@ int highway::refresh () {
                                     }
                         }
 
-                    draw();
+                    draw(time);
                     return score/100;
 }
 

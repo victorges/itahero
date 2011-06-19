@@ -70,8 +70,9 @@ int main () {
     highway *a=new highway(playing);
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     playing->load(engine);
-    playing->play();
 
+    //while (a->preliminary());
+    playing->play();
     while (!playing->isFinished()) {
           swapbuffers();
           cleardevice();

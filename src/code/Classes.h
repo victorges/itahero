@@ -37,19 +37,19 @@ class highway {
         int time_delay, timing_window;
       public:
         int score, streak;
-        highway (music *stream, int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h);
-        ~highway ();
-        int multiplier ();
+        highway (music *stream, int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h); //in progress
+        ~highway (); //in progress
+        int multiplier (); //done
+        int preliminary(); //to-do | usa antes de começar a tocar a música
         int refresh(); //in progress
-        void draw ();
+        void draw (int time);
     };
     
 class background; //to-do
 
 
 
-void highway::draw () { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
-            int time=MusicStream->time();
+void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
             
             setcolor (WHITE);
