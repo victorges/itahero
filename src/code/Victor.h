@@ -169,7 +169,7 @@ int highway::refresh () {
                         pickstate[i]=GetAsyncKeyState(pick[i])!=0;
                         }
 
-                    while (progress<size&&time-chart[progress].end>timing_window*SIZEY/time_delay) {
+                    while (progress<size&&time-chart[progress].time>timing_window*SIZEY/time_delay) {
                         if (chart[progress].hit==false) streak=0;
                         progress++;
                         }

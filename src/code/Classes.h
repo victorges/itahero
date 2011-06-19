@@ -3,7 +3,7 @@ struct note {
         int time;
         int end;
         bool hit;  //1 se ja foi acertada
-        bool hold; //1 se for nota longa
+        bool hold; //1 se for nota longa (0 se nao for, ou se for nota longa e nao tiver sido segurada ate o fim)
         bool hopo; //1 se for hammer-on ou pull-off
         char chord; //numero de notas da nota (se for um acorde vai ter mais de uma nota)
       };
