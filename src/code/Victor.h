@@ -81,29 +81,23 @@ int music::time () {
 }
       
 
-highway::highway (music* stream, int tw=100, int hyperspeed=0, char control[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3) {
+highway::highway (music* stream, int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
+                  MusicStream(stream), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), progress(0), score(0), streak(0) {
                 FILE *chartfile;
                 int i;
                 
-                MusicStream=stream;
-                location=loc;
-                width=w;
-                height=h;
-                timing_window=tw;
-                time_delay=300+1200/(hyperspeed+1);
-
                 if (col==0) {
                     int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
                     col=col_default;
                 }
 
-                for (size=0;control[size];size++);
+                for (size=0;frt[size];size++);
                 fretstate=new short int[size];
                 lastfretstate=new short int[size];
                 color=new int[size];
                 for (i=0;i<size;i++) color[i]=col[i];
                 fret=new char[++size];
-                for (i=0;i<size;i++) fret[i]=control[i];
+                for (i=0;i<size;i++) fret[i]=frt[i];
                 
                 for (size=0;pck[size];size++);
                 pickstate=new short int[size];
@@ -132,8 +126,6 @@ highway::highway (music* stream, int tw=100, int hyperspeed=0, char control[]="Z
                     }
 
                 CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
-
-                progress=score=streak=0;
                 }
 
 highway::~highway () {
