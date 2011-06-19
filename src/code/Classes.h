@@ -53,12 +53,12 @@ void highway::draw () { //temporaria, copiada do prototipo (pode editar a vontad
             int j=progress;
             while (j>0&&time-chart[j].end<time_delay*100/SIZEY) j--;
             for (;chart[j].time-time<time_delay;j++) {
-                if (chart[j].hit==0||chart[j].hold==1)
+                if (chart[j].hit==0||chart[j].end>chart[j].time)
                     for (int i=0;fret[i];i++)
                         if ((chart[j].type>>i)%2) {
                             setfillstyle(SOLID_FILL, color[i]);
                             setcolor(color[i]);
-                            if (chart[j].hold) line (SIZEX/2+70*i-175+30, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), SIZEX/2+70*i-175+30, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
+                            if (chart[j].end>chart[j].time) line (SIZEX/2+70*i-175+30, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), SIZEX/2+70*i-175+30, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
                             if (!chart[j].hit) bar(SIZEX/2+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), SIZEX/2+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
                             }
                 }

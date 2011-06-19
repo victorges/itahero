@@ -149,8 +149,9 @@ int highway::multiplier () {
 
 int highway::refresh () {
                     int time=MusicStream->time();
-                    int i, picked;
+                    int i;
                     char fretaux;
+                    bool picked;
 
                     if (time==~0) return score;
 
@@ -169,29 +170,36 @@ int highway::refresh () {
                         }
 
                     for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;
-                    for (i=0, picked=0;pick[i];i++) if ((pickstate[i]^lastpickstate[i])&pickstate[i]) picked++;
-                    if (!i) for (i=0;fret[i];i++) if ((fretstate[i]^lastfretstate[i])&fretstate[i]) picked++;
+                    for (i=0, picked=0;pick[i];i++) if ((pickstate[i]^lastpickstate[i])&pickstate[i]) picked=true;
+                    if (!i) for (i=0;fret[i];i++) if ((fretstate[i]^lastfretstate[i])&fretstate[i]) picked=true;
 
-                    for (int j=progress;picked&&chart[j].time-time<timing_window&&j<size;j++) {
+                    for (int j=progress;picked&&chart[j].time-time<timing_window&&j<size;j++)
                             if (!chart[j].hit)
-                                    if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))<chart[j].type))) {
+                                    if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0)) ||
+                                            (!(chart[j].chord-1) &&
+                                                (((pick[0]&&((fretaux^(chart[j].type))<chart[j].type)))
+                                                || ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0))) ) {
                                            chart[j].hit=true;
                                            streak++;
                                            score+=100*chart[j].chord*multiplier();
-                                           picked--;
-                                           if (!pick[0]) fretaux^=chart[j].type;
+                                           picked=false;
                                            }
+                    for (int j=progress;chart[j].time-time<timing_window&&j<size;j++) //sustain
+                        if (chart[j].hit&&chart[j].hold) {
+                                        if ((((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
+                                                    score+=(time-chart[j].time)*100*chart[j].chord*multiplier()/bpm;
+                                                    chart[j].time=time;
+                                                    fretaux^=chart[j].type;
+                                                }
+                                        else chart[j].hold=false;
+                                        }
+                    if (!pick[0]) {
+                        for (i=0, fretaux=0;fret[i];i++) fretaux+=((fretstate[i]^lastfretstate[i])&fretstate[i])<<i;
+                        for (int j=progress;picked&&chart[j].time-time<timing_window&&j<size;j++) {
+                            if (!chart[j].hit&&((chart[j].type)&fretaux)!=0) picked=false;
                             }
-                    for (int j=progress;chart[j].time-time<timing_window&&j<size;j++) { //sustain
-                        if (chart[j].hit&&chart[j].hold)
-                                        if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))<chart[j].type)))
-                                                if (chart[j].time<chart[j].end) {
-                                                        score+=(time-chart[j].time)*100*chart[j].chord*multiplier()/bpm;
-                                                        chart[j].time=time;
-                                                        fretaux^=chart[j].type;
-                                                        }
                         }
-                    //if (fretaux!=0) streak=0;
+                    if (picked) streak=0;
                     draw();
                     return score;
 }
