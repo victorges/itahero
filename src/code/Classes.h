@@ -71,9 +71,12 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                 if (chart[j].hit==0||chart[j].end>chart[j].time)
                     for (int i=0;fret[i];i++)
                         if ((chart[j].type>>i)%2) {
+                            if (chart[j].end>chart[j].time) {
+                                if (!chart[j].hold) setfillstyle (SOLID_FILL, LIGHTGRAY);
+                                else setfillstyle(SOLID_FILL, color[i]);
+                                bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
+                                }
                             setfillstyle(SOLID_FILL, color[i]);
-                            setcolor(color[i]);
-                            if (chart[j].end>chart[j].time) line (location+70*i-175+30, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+30, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
                             if (!chart[j].hit&&!chart[j].hopo) bar(location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
                             if (!chart[j].hit&&chart[j].hopo) bar(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
                             }
