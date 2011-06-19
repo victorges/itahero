@@ -35,7 +35,7 @@ class highway {
         int time_delay, timing_window;
       public:
         int score, streak;
-        highway (music *stream, int tw, int hyperspeed, int col[], char control[], char pck[], int loc, int w, int h);
+        highway (music *stream, int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h);
         ~highway ();
         int multiplier ();
         int refresh(); //in progress

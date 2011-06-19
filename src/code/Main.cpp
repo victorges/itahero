@@ -75,8 +75,7 @@ int main () {
     while (!playing->isFinished()) {
           swapbuffers();
           cleardevice();
-          a->refresh();
-          printf ("%d %d %d\n", a->score, a->streak, a->multiplier());
+          printf ("%d %d %d\n", a->refresh(), a->streak, a->multiplier());
           }
 
     delete a;
