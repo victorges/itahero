@@ -48,7 +48,7 @@ int main () {
     char string[50];
     int nSongs;
     initwindow(SIZEX, SIZEY, "ITA Hero");
-    
+
     FILE *reader;
     reader=fopen("Sound\\songs.dat", "r");
     if (reader==NULL) Error ("Soundlist file not found");
@@ -65,17 +65,17 @@ int main () {
     sfscanf (reader, "[/SONGS]");
     if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
     fclose (reader);
-    
-    music* playing=songs[1];
+
+    music* playing=songs[2];
     highway *a=new highway(playing);
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     playing->load(engine);
     playing->play();
-    
+
     while (!playing->isFinished()) {
           swapbuffers();
           cleardevice();
-          printf ("%d %d %d\n", a->refresh(), a->streak, a->multiplier());
+          a->refresh();
           }
 
     delete a;

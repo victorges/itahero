@@ -42,6 +42,8 @@ void music::load (irrklang::ISoundEngine* engine) {
      free (soundfile);
      source->setStreamMode(irrklang::ESM_AUTO_DETECT);
      sound=engine->play2D(source, false, true, true, true);
+     FX=sound->getSoundEffectControl();
+     start=clock()*1000/CLOCKS_PER_SEC;
 }
 
 void music::unload (irrklang::ISoundEngine* engine) {
@@ -49,6 +51,7 @@ void music::unload (irrklang::ISoundEngine* engine) {
                 if (!sound->isFinished() && !sound->getIsPaused()) sound->stop();
                 sound->drop();
                 sound=0;
+                FX=0;
                 start=0;
                 }
      engine->removeSoundSource(source);
@@ -68,12 +71,12 @@ bool music::play () {
 bool music::pause () {
      if (!sound||sound->getIsPaused()) return false;
      sound->setIsPaused(true);
-     start=0;
      return true;
 }
 
 int music::time () {
-         if (start==0) return ~0;
+         if (start=0) return ~0;
+         if (sound->getIsPaused()) return clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition();
          return clock()*1000/CLOCKS_PER_SEC-start;
 }
       
@@ -90,7 +93,7 @@ highway::highway (music* stream, int tw=100, int hyperspeed=0, char control[]="Z
                 time_delay=300+1200/(hyperspeed+1);
 
                 if (col==0) {
-                    int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), YELLOW, COLOR(10, 10, 200), COLOR(255, 102, 0)};
+                    int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
                     col=col_default;
                 }
 
@@ -120,9 +123,11 @@ highway::highway (music* stream, int tw=100, int hyperspeed=0, char control[]="Z
                     fread (&chart[i].type, sizeof (char), 1, chartfile);
                     fread (&chart[i].time, sizeof (int), 1, chartfile);
                     fread (&chart[i].end, sizeof (int), 1, chartfile);
-                    chart[i].hit=0;
+                    chart[i].hit=false;
                     chart[i].hold=chart[i].end>chart[i].time;
                     chart[i].chord=0;
+                    if (i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type) chart[i].hopo=true;
+                    else chart[i].hopo=false;
                     for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }
 
@@ -169,12 +174,13 @@ int highway::refresh () {
                         progress++;
                         }
 
+                    picked=false;
                     for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;
                     for (i=0, picked=0;pick[i];i++) if ((pickstate[i]^lastpickstate[i])&pickstate[i]) picked=true;
                     if (!i) for (i=0;fret[i];i++) if ((fretstate[i]^lastfretstate[i])&fretstate[i]) picked=true;
 
-                    for (int j=progress;picked&&chart[j].time-time<timing_window&&j<size;j++)
-                            if (!chart[j].hit)
+                    for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {  //notas normais/acordes
+                            if (!chart[j].hit) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||
                                         (!(chart[j].chord-1) &&(((pick[0]&&((fretaux^(chart[j].type))<chart[j].type)))||
                                                                ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0)))) {
@@ -183,22 +189,41 @@ int highway::refresh () {
                                            score+=10000*chart[j].chord*multiplier();
                                            picked=false;
                                            }
-                    for (int j=progress;chart[j].time-time<timing_window&&j<size;j++) //sustain
+                                    }
+                            }
+
+                    for (int j=progress;j<size&&chart[j].time-time<timing_window;j++) {//sustain
                         if (chart[j].hit&&chart[j].hold) {
                                         if ((((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
-                                                    score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm/25;
+                                                    score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm/50;
                                                     chart[j].time=time;
                                                     fretaux^=chart[j].type;
                                                 }
                                         else chart[j].hold=false;
                                         }
+                        }
                     if (!pick[0]) {
                         for (i=0, fretaux=0;fret[i];i++) fretaux+=((fretstate[i]^lastfretstate[i])&fretstate[i])<<i;
-                        for (int j=progress;picked&&chart[j].time-time<timing_window&&j<size;j++) {
+                        for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
                             if (!chart[j].hit&&((chart[j].type)&fretaux)!=0) picked=false;
                             }
                         }
                     if (picked) streak=0;
+
+                    picked=false;
+                    for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;
+                    for (i=0;fret[i];i++) if (fretstate[i]^lastfretstate[i]) picked=true;
+                    for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {//hopo
+                        if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo==true) {
+                                    if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
+                                        chart[j].hit=true;
+                                        streak++;
+                                        score+=10000*chart[j].chord*multiplier();
+                                        picked=false;
+                                        }
+                                    }
+                        }
+
                     draw();
                     return score/100;
 }
