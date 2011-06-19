@@ -1,8 +1,8 @@
 #include <graphics.h>
 #include <irrKlang.h>
 
-#define SIZEX 1366
-#define SIZEY 700
+const int SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
+const int SIZEY=850>getmaxheight()?(getmaxheight()-50):850;
 
 #include "Functions.h"
 #include "Classes.h"
@@ -66,11 +66,11 @@ int main () {
     if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
     fclose (reader);
 
-    music* playing=songs[2];
+    music* playing=songs[1];
     highway *a=new highway(playing);
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     playing->load(engine);
-
+    //Sleep(1000);
     //while (a->preliminary());
     playing->play();
     while (!playing->isFinished()) {

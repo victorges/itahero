@@ -63,7 +63,7 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                 rectangle (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
                 if (fretstate[j]) {
                     setfillstyle(SOLID_FILL, COLOR (GetRValue(color[j])<40?0:(GetRValue(color[j])-40), GetGValue(color[j])<40?0:(GetGValue(color[j])-40), GetBValue(color[j])<40?0:(GetBValue(color[j])-40)));
-                    bar (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
+                    bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138);
                     }
                 }
             for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);

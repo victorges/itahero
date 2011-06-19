@@ -75,7 +75,7 @@ bool music::pause () {
 }
 
 int music::time () {
-         if (start=0) return ~0;
+         if (start==0) return ~0;
          if (sound->getIsPaused()) return clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition();
          return clock()*1000/CLOCKS_PER_SEC-start;
 }
@@ -195,7 +195,7 @@ int highway::refresh () {
                     for (int j=progress;j<size&&chart[j].time-time<timing_window;j++) {//sustain
                         if (chart[j].hit&&chart[j].hold) {
                                         if ((((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
-                                                    score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm/50;
+                                                    score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm/25;
                                                     chart[j].time=time;
                                                     fretaux^=chart[j].type;
                                                 }
