@@ -35,8 +35,8 @@ class highway {
         music *MusicStream;
         int progress, bpm, size;
         int time_delay, timing_window;
+        int basescore, score, streak;
       public:
-        int score, streak;
         highway (music *stream, int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h); //in progress
         ~highway (); //in progress
         int multiplier (); //done
@@ -83,7 +83,7 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                 }
             char string[50];
             setcolor (WHITE);
-            sprintf (string, "%d", score/100);
+            sprintf (string, "%.1f  %d", (float)score/basescore, score/100);
             moveto (location-300, SIZEY-140);
             outtext(string);
             moverel(-textwidth(string), textheight(string));

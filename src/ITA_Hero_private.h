@@ -5,11 +5,11 @@
 #define ITA_HERO_PRIVATE_H
 
 /* VERSION DEFINITIONS */
-#define VER_STRING	"0.1.0.739"
+#define VER_STRING	"0.1.0.745"
 #define VER_MAJOR	0
 #define VER_MINOR	1
 #define VER_RELEASE	0
-#define VER_BUILD	739
+#define VER_BUILD	745
 #define COMPANY_NAME	""
 #define FILE_VERSION	""
 #define FILE_DESCRIPTION	"Developed using the Dev-C++ IDE"

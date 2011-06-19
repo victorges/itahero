@@ -1,4 +1,4 @@
-music::music (FILE *songs) {
+music::music (FILE *songs): sound(0), start(0) {
           char string[1000];
           int i;
           
@@ -22,9 +22,6 @@ music::music (FILE *songs) {
           string[i-1]=0;
           artist=new char[i];
           for (i=0;!i||string[i-1];i++) artist[i]=string[i];
-          
-          sound=0;
-          start=0;
 }
 
 music::~music () {
@@ -82,7 +79,7 @@ int music::time () {
       
 
 highway::highway (music* stream, int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
-                  MusicStream(stream), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), progress(0), score(0), streak(0) {
+                  MusicStream(stream), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(0), progress(0), score(0), streak(0) {
                 FILE *chartfile;
                 int i;
                 
@@ -162,7 +159,10 @@ int highway::refresh () {
                         }
 
                     while (progress<size&&time-chart[progress].time>timing_window*SIZEY/time_delay) {
-                        if (chart[progress].hit==false) streak=0;
+                        if (chart[progress].hit==false) {
+                            basescore+=(10000+(chart[progress].end-chart[progress].time)*bpm/25)*chart[progress].chord;
+                            streak=0;
+                            }
                         progress++;
                         }
 
@@ -171,20 +171,21 @@ int highway::refresh () {
                     for (i=0, picked=0;pick[i];i++) if ((pickstate[i]^lastpickstate[i])&pickstate[i]) picked=true;
                     if (!i) for (i=0;fret[i];i++) if ((fretstate[i]^lastfretstate[i])&fretstate[i]) picked=true;
 
-                    for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {  //notas normais/acordes
+                    for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {     //notas normais/acordes
                             if (!chart[j].hit) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||
                                         (!(chart[j].chord-1) &&(((pick[0]&&((fretaux^(chart[j].type))<chart[j].type)))||
                                                                ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0)))) {
                                            chart[j].hit=true;
+                                           basescore+=(10000+(chart[j].end-chart[j].time)*bpm/25)*chart[j].chord;
                                            streak++;
                                            score+=10000*chart[j].chord*multiplier();
-                                           picked=false;
+                                           picked=chart[j].hopo=false;
                                            }
                                     }
                             }
 
-                    for (int j=progress;j<size&&chart[j].time-time<timing_window;j++) {//sustain
+                    for (int j=progress;j<size&&chart[j].time-time<timing_window;j++) {             //sustain
                         if (chart[j].hit&&chart[j].hold) {
                                         if ((((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
                                                     score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm/25;
@@ -200,15 +201,21 @@ int highway::refresh () {
                             if (!chart[j].hit&&((chart[j].type)&fretaux)!=0) picked=false;
                             }
                         }
+                    else {
+                        for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
+                            if (chart[j].hit&&chart[j].hopo) picked=chart[j].hopo=false;
+                            }
+                        }
                     if (picked) streak=0;
 
                     picked=false;
-                    for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;
+                    for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;                  //hopo
                     for (i=0;fret[i];i++) if (fretstate[i]^lastfretstate[i]) picked=true;
-                    for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {//hopo
+                    for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
                         if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo==true) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
                                         chart[j].hit=true;
+                                        basescore+=(10000+(chart[j].end-chart[j].time)*bpm/25)*chart[j].chord;
                                         streak++;
                                         score+=10000*chart[j].chord*multiplier();
                                         picked=false;
