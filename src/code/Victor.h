@@ -209,7 +209,10 @@ int highway::refresh () {
 
                     picked=false;
                     for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;                  //hopo
-                    for (i=0;fret[i];i++) if (fretstate[i]^lastfretstate[i]) picked=true;
+                    for (i=0;fret[i];i++) {
+                        if (!picked) picked=fretstate[i]^lastfretstate[i];
+                        else picked=!(fretstate[i]&lastfretstate[i]);
+                    }
                     for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
                         if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo==true) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
