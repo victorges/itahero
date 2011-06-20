@@ -33,10 +33,11 @@ music::~music () {
 void music::load (irrklang::ISoundEngine* engine) {
      void *soundfile;
      size_t size;
-     soundfile=AllocateFile(SoundFilePath(filename), size);
-     if (soundfile==NULL) Error ("Error loading Sound File");
+     soundfile=AllocateFile(FilePath("Sound/", filename, ".ogg"), size);
+     if (soundfile==NULL) Error ("Sound File not found");
      source=engine->addSoundSourceFromMemory(soundfile, size, title);
      free (soundfile);
+     if (source==NULL) Error ("Error loading Sound File");
      source->setStreamMode(irrklang::ESM_AUTO_DETECT);
      sound=engine->play2D(source, false, true, true, true);
      FX=sound->getSoundEffectControl();
@@ -102,9 +103,9 @@ highway::highway (music* stream, int tw=100, int hyperspeed=0, char frt[]="ZXCVB
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
 
-                chartfile=fopen(ChartPath(MusicStream->filename), "rb");
+                chartfile=fopen(FilePath("Chart/", MusicStream->filename, ".chart"), "rb");
                 
-                if (chartfile==NULL) Error ("Chart File non-existent");
+                if (chartfile==NULL) Error ("Chart File not found");
                 CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
                 
                 fread (&bpm, sizeof(int), 1, chartfile);
@@ -187,7 +188,7 @@ int highway::refresh () {
 
                     for (int j=progress;j<size&&chart[j].time-time<timing_window;j++) {             //sustain
                         if (chart[j].hit&&chart[j].hold) {
-                                        if ((((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
+                                        if (streak>0&&(((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
                                                     score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm/25;
                                                     chart[j].time=time;
                                                     fretaux^=chart[j].type;

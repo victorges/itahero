@@ -16,21 +16,12 @@ void strcat (char destiny[], char add[]) {
      destiny[i+j]=0;
 }
 
-char *SoundFilePath (char filename[]) {
+char *FilePath (char prefix[], char filename[], char suffix[]) {
      static char location[100];
      location[0]=0;
-     strcat (location, "Sound\\");
+     strcat (location, prefix);
      strcat (location, filename);
-     strcat (location, ".ogg");
-     return location;
-}
-
-char *ChartPath (char filename[]) {
-     static char location[100];
-     location[0]=0;
-     strcat (location, "Chart\\");
-     strcat (location, filename);
-     strcat (location, ".chart");
+     strcat (location, suffix);
      return location;
 }
 
@@ -50,7 +41,7 @@ int main () {
     initwindow(SIZEX, SIZEY, "ITA Hero");
 
     FILE *reader;
-    reader=fopen("Sound\\songs.dat", "r");
+    reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
     if (reader==NULL) Error ("Soundlist file not found");
     sfscanf (reader, "[SONGS=");
     fscanf (reader, "%d", &nSongs);
@@ -66,7 +57,7 @@ int main () {
     if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
     fclose (reader);
     char pck[]={VK_LEFT, VK_DOWN, VK_RIGHT, '1', '2'};
-    music* playing=songs[1k];
+    music* playing=songs[1];
     highway *a=new highway(playing, 100, 1, "ZXCVB", "", 0, 400);
     highway *b=new highway(playing, 100, 0, "GHJKL", "", 0, SIZEX-400);
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
