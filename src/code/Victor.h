@@ -202,10 +202,8 @@ int highway::refresh () {
                             if (!chart[j].hit&&((chart[j].type)&fretaux)!=0) picked=false;
                             }
                         }
-                    else {
-                        for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
-                            if (chart[j].hit&&chart[j].hopo) picked=chart[j].hopo=false;
-                            }
+                    for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
+                        if (chart[j].hit&&chart[j].hopo) picked=chart[j].hopo=false;
                         }
                     if (picked) streak=0;
 
