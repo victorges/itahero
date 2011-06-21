@@ -1,4 +1,4 @@
-[SONGS=3]
+[SONGS=4]
 FILE=escape
 TITLE=Escape Me (Feat. Cc Sheffield)
 ARTIST=Tiesto
@@ -10,4 +10,8 @@ ARTIST=Drist
 FILE=rock'n'roll
 TITLE=rock'n'roll hall of fame
 ARTIST=pornophonique
+~
+FILE=lights
+TITLE=Hit the Lights
+ARTIST=Metallica
 [/SONGS]
