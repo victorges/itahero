@@ -83,6 +83,7 @@ highway::highway (music* stream, char instrument[], int tw=100, int hyperspeed=0
                   MusicStream(stream), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(1), progress(0), score(0), streak(0) {
                 FILE *chartfile;
                 int i;
+                bool drum;
                 
                 if (col==0) {
                     int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
@@ -103,12 +104,16 @@ highway::highway (music* stream, char instrument[], int tw=100, int hyperspeed=0
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
 
-                char extension[20]="";
-                strcat (extension, "_");
-                strcat (extension, instrument);
-                extension[4]=0;
-                strcat (extension, ".chart");
-                chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
+                {
+                    char extension[20]="";
+                    strcat (extension, "_");
+                    strcat (extension, instrument);
+                    extension[4]=0;
+                    strcat (extension, ".chart");
+                    chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
+                }
+                for (i=0;instrument[i]&&"drum"[i]==instrument[i];i++);
+                drum=!("drum"[i]);
                 
                 if (chartfile==NULL) Error ("Chart File not found");
                 CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
@@ -123,7 +128,7 @@ highway::highway (music* stream, char instrument[], int tw=100, int hyperspeed=0
                     chart[i].hit=false;
                     chart[i].hold=chart[i].end>chart[i].time;
                     chart[i].chord=0;
-                    if (i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type) chart[i].hopo=true;
+                    if (!drum&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type) chart[i].hopo=true;
                     else chart[i].hopo=false;
                     for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }

@@ -58,10 +58,10 @@ int main () {
     fclose (reader);
 
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
-    int i=0;
+    int i=4;
     music* playing=songs[i];
     highway *a=new highway(playing, "guitar", 100, 1, "ZXCVB", "", 0, 400);
-    highway *b=new highway(playing, "guitar", 100, 0, "GHJKL", "", 0, SIZEX-400);
+    highway *b=new highway(playing, "drum", 100, 0, "GHJKL", "", 0, SIZEX-400);
     playing->load(engine);
     //Sleep(1000);
     //while (a->preliminary());
