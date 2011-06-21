@@ -59,6 +59,10 @@ bool music::isFinished () {
      return sound->isFinished();
 }
 
+int music::getPlayLength() {
+    return sound->getPlayLength();
+}
+
 bool music::play () {
      if (!sound||!sound->getIsPaused()) return false;
      sound->setIsPaused(false);

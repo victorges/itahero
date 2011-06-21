@@ -20,6 +20,7 @@ class music {
         void load (irrklang::ISoundEngine* engine);
         void unload (irrklang::ISoundEngine* engine);
         bool isFinished ();
+        int getPlayLength();
         bool play ();
         bool pause ();
         int time ();
@@ -52,7 +53,7 @@ class background; //to-do
 
 void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
-            
+
             setcolor (WHITE);
             line (location-180, SIZEY-0, location-180, SIZEY-SIZEY);
             line (location+170, SIZEY-0, location+170, SIZEY-SIZEY);
@@ -92,8 +93,7 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
             outtext(string);
 }
 /*backup
-void highway::draw () { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
-            int time=MusicStream->time();
+void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
 
             setcolor (WHITE);
@@ -107,7 +107,7 @@ void highway::draw () { //temporaria, copiada do prototipo (pode editar a vontad
                 rectangle (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
                 if (fretstate[j]) {
                     setfillstyle(SOLID_FILL, COLOR (GetRValue(color[j])<40?0:(GetRValue(color[j])-40), GetGValue(color[j])<40?0:(GetGValue(color[j])-40), GetBValue(color[j])<40?0:(GetBValue(color[j])-40)));
-                    bar (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
+                    bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138);
                     }
                 }
             for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);
@@ -115,16 +115,19 @@ void highway::draw () { //temporaria, copiada do prototipo (pode editar a vontad
                 if (chart[j].hit==0||chart[j].end>chart[j].time)
                     for (int i=0;fret[i];i++)
                         if ((chart[j].type>>i)%2) {
+                            if (chart[j].end>chart[j].time) {
+                                if (!chart[j].hold) setfillstyle (SOLID_FILL, LIGHTGRAY);
+                                else setfillstyle(SOLID_FILL, color[i]);
+                                bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
+                                }
                             setfillstyle(SOLID_FILL, color[i]);
-                            setcolor(color[i]);
-                            if (chart[j].end>chart[j].time) line (location+70*i-175+30, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+30, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
                             if (!chart[j].hit&&!chart[j].hopo) bar(location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
                             if (!chart[j].hit&&chart[j].hopo) bar(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
                             }
                 }
             char string[50];
             setcolor (WHITE);
-            sprintf (string, "%d", score/100);
+            sprintf (string, "%.1f  %d", (float)score/basescore, score/10000);
             moveto (location-300, SIZEY-140);
             outtext(string);
             moverel(-textwidth(string), textheight(string));
