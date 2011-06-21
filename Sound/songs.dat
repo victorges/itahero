@@ -1,4 +1,4 @@
-[SONGS=4]
+[SONGS=5]
 FILE=escape
 TITLE=Escape Me (Feat. Cc Sheffield)
 ARTIST=Tiesto
@@ -14,4 +14,8 @@ ARTIST=pornophonique
 FILE=lights
 TITLE=Hit the Lights
 ARTIST=Metallica
+~
+FILE=money
+TITLE=Money For Nothing
+ARTIST=Dire Straits
 [/SONGS]
