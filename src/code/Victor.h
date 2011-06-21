@@ -161,7 +161,7 @@ int highway::refresh () {
 
                     while (progress<size&&time-chart[progress].time>timing_window*SIZEY/time_delay) {
                         if (chart[progress].hit==false) {
-                            basescore+=(10000+(chart[progress].end-chart[progress].time)*bpm/25)*chart[progress].chord;
+                            basescore+=(100000+(chart[progress].end-chart[progress].time)*bpm*10/25)*chart[progress].chord;
                             streak=0;
                             }
                         progress++;
@@ -178,9 +178,9 @@ int highway::refresh () {
                                         (!(chart[j].chord-1) &&(((pick[0]&&((fretaux^(chart[j].type))<chart[j].type)))||
                                                                ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0)))) {
                                            chart[j].hit=true;
-                                           basescore+=(10000+(chart[j].end-chart[j].time)*bpm/25)*chart[j].chord;
+                                           basescore+=(100000+(chart[j].end-chart[j].time)*bpm*10/25)*chart[j].chord;
                                            streak++;
-                                           score+=10000*chart[j].chord*multiplier();
+                                           score+=100000*chart[j].chord*multiplier();
                                            picked=chart[j].hopo=false;
                                            }
                                     }
@@ -189,7 +189,7 @@ int highway::refresh () {
                     for (int j=progress;j<size&&chart[j].time-time<timing_window;j++) {             //sustain
                         if (chart[j].hit&&chart[j].hold) {
                                         if (streak>0&&(((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
-                                                    score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm/25;
+                                                    score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm*10/25;
                                                     chart[j].time=time;
                                                     fretaux^=chart[j].type;
                                                 }
@@ -217,16 +217,16 @@ int highway::refresh () {
                         if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo==true) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
                                         chart[j].hit=true;
-                                        basescore+=(10000+(chart[j].end-chart[j].time)*bpm/25)*chart[j].chord;
+                                        basescore+=(100000+(chart[j].end-chart[j].time)*bpm*10/25)*chart[j].chord;
                                         streak++;
-                                        score+=10000*chart[j].chord*multiplier();
+                                        score+=100000*chart[j].chord*multiplier();
                                         picked=false;
                                         }
                                     }
                         }
 
                     draw(time);
-                    return score/100;
+                    return score/1000;
 }
 
 void *AllocateFile (char file_name[], size_t &size) {

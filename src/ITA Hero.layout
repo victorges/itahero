@@ -1,7 +1,7 @@
 [Editor_4]
-CursorCol=96
-CursorRow=216
-TopLine=193
+CursorCol=73
+CursorRow=206
+TopLine=166
 LeftChar=1
 Open=1
 Top=1
@@ -30,9 +30,9 @@ CursorRow=3
 TopLine=1
 LeftChar=1
 [Editor_2]
-Open=0
+Open=1
 Top=0
-CursorCol=1
-CursorRow=9
-TopLine=9
+CursorCol=27
+CursorRow=60
+TopLine=33
 LeftChar=1
