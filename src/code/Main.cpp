@@ -1,6 +1,10 @@
 #include <graphics.h>
 #include <irrKlang.h>
 
+#define GUITAR 0
+#define BASS 1
+#define DRUMS 2
+
 const int SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
 const int SIZEY=850>getmaxheight()?(getmaxheight()-50):850;
 
@@ -60,8 +64,9 @@ int main () {
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     int i=4;
     music* playing=songs[i];
-    highway *a=new highway(playing, "guitar", 100, 1, "ZXCVB", "", 0, 400);
-    highway *b=new highway(playing, "drum", 100, 0, "GHJKL", "", 0, SIZEX-400);
+    highway *a=new highway(playing, GUITAR, 100, 0, "ZXCVB", "", 0, 300);
+    highway *b=new highway(playing, BASS, 100, 1, "QWERT", "", 0, SIZEX/2+50);
+    highway *c=new highway(playing, DRUMS, 100, 2, "GHJKL", "", 0, SIZEX-200);
     playing->load(engine);
     //Sleep(1000);
     //while (a->preliminary());
@@ -71,15 +76,18 @@ int main () {
           cleardevice();
           a->refresh();
           b->refresh();
+          c->refresh();
           if (kbhit()||playing->isFinished()) {
                 if (playing->isFinished()||getch()==27) {
                     playing->unload(engine);
                     delete a;
                     delete b;
+                    delete c;
                     i=(i+1)%nSongs;
                     playing=songs[i];
-                    a=new highway (playing, "guitar", 100, 1, "ZXCVB", "", 0, 400);
-                    b=new highway(playing, "guitar", 100, 0, "GHJKL", "", 0, SIZEX-400);
+                    a=new highway (playing, GUITAR, 100, 0, "ZXCVB", "", 0, 300);
+                    b=new highway(playing, BASS, 100, 1, "QWERT", "", 0, SIZEX/2+50);
+                    c=new highway(playing, DRUMS, 100, 2, "GHJKL", "", 0, SIZEX-200);
                     playing->load(engine);
                     Sleep(1000);
                     playing->play();

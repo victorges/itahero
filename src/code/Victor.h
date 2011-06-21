@@ -79,11 +79,10 @@ int music::time () {
 }
       
 
-highway::highway (music* stream, char instrument[], int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
-                  MusicStream(stream), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(1), progress(0), score(0), streak(0) {
-                FILE *chartfile;
+highway::highway (music* stream, char instr, int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
+                  MusicStream(stream), instrument(instr), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(1), progress(0), score(0), streak(0) {
+                FILE *chartfile=NULL;
                 int i;
-                bool drum;
                 
                 if (col==0) {
                     int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
@@ -104,18 +103,29 @@ highway::highway (music* stream, char instrument[], int tw=100, int hyperspeed=0
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
 
-                {
+                while (instrument>=0&&chartfile==NULL) {
                     char extension[20]="";
                     strcat (extension, "_");
-                    strcat (extension, instrument);
-                    extension[4]=0;
+                    switch (instrument) {
+                        case DRUMS: strcat (extension,"dru"); break;
+                        case BASS: strcat (extension, "bas"); break;
+                        case GUITAR: strcat (extension, "gui"); break;
+                        }
                     strcat (extension, ".chart");
                     chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
-                }
-                for (i=0;instrument[i]&&"drum"[i]==instrument[i];i++);
-                drum=!("drum"[i]);
+                    if (chartfile==NULL) {
+                        switch (instrument) {
+                            case DRUMS: printf ("Drums "); break;
+                            case BASS: printf ("Bass "); break;
+                            case GUITAR: printf ("Guitar "); break;
+                            }
+                        printf ("chart file for %s not abaliable.\n", MusicStream->title);
+                        instrument--;
+                        }
+                    }
                 
-                if (chartfile==NULL) Error ("Chart File not found");
+                if (chartfile==NULL) Error ("No chart files are avaliable");
+                
                 CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
                 
                 fread (&bpm, sizeof(int), 1, chartfile);
@@ -128,7 +138,7 @@ highway::highway (music* stream, char instrument[], int tw=100, int hyperspeed=0
                     chart[i].hit=false;
                     chart[i].hold=chart[i].end>chart[i].time;
                     chart[i].chord=0;
-                    if (!drum&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type) chart[i].hopo=true;
+                    if (instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type) chart[i].hopo=true;
                     else chart[i].hopo=false;
                     for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }
