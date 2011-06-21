@@ -38,7 +38,7 @@ class highway {
         long long int basescore, score;
         int streak;
       public:
-        highway (music *stream, int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h); //in progress
+        highway (music *stream, char instrument[], int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h); //in progress
         ~highway (); //in progress
         int multiplier (); //done
         int preliminary(); //to-do | usa antes de começar a tocar a música

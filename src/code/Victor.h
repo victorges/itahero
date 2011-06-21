@@ -79,7 +79,7 @@ int music::time () {
 }
       
 
-highway::highway (music* stream, int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
+highway::highway (music* stream, char instrument[], int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
                   MusicStream(stream), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(1), progress(0), score(0), streak(0) {
                 FILE *chartfile;
                 int i;
@@ -103,7 +103,12 @@ highway::highway (music* stream, int tw=100, int hyperspeed=0, char frt[]="ZXCVB
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
 
-                chartfile=fopen(FilePath("Chart/", MusicStream->filename, ".chart"), "rb");
+                char extension[20]="";
+                strcat (extension, "_");
+                strcat (extension, instrument);
+                extension[4]=0;
+                strcat (extension, ".chart");
+                chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
                 
                 if (chartfile==NULL) Error ("Chart File not found");
                 CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");

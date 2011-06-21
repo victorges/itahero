@@ -60,8 +60,8 @@ int main () {
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     int i=0;
     music* playing=songs[i];
-    highway *a=new highway(playing, 100, 1, "ZXCVB", "", 0, 400);
-    highway *b=new highway(playing, 100, 0, "GHJKL", "", 0, SIZEX-400);
+    highway *a=new highway(playing, "guitar", 100, 1, "ZXCVB", "", 0, 400);
+    highway *b=new highway(playing, "guitar", 100, 0, "GHJKL", "", 0, SIZEX-400);
     playing->load(engine);
     //Sleep(1000);
     //while (a->preliminary());
@@ -78,8 +78,8 @@ int main () {
                     delete b;
                     i=(i+1)%nSongs;
                     playing=songs[i];
-                    a=new highway (playing, 100, 1, "ZXCVB", "", 0, 400);
-                    b=new highway(playing, 100, 0, "GHJKL", "", 0, SIZEX-400);
+                    a=new highway (playing, "guitar", 100, 1, "ZXCVB", "", 0, 400);
+                    b=new highway(playing, "guitar", 100, 0, "GHJKL", "", 0, SIZEX-400);
                     playing->load(engine);
                     Sleep(1000);
                     playing->play();
