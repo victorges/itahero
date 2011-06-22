@@ -5,8 +5,8 @@
 #define BASS 1
 #define DRUMS 2
 
-const int SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
-const int SIZEY=850>getmaxheight()?(getmaxheight()-50):850;
+const int SIZEX=1800>getmaxwidth()?getmaxwidth():1600;
+const int SIZEY=1080>getmaxheight()?(getmaxheight()-50):850;
 
 #include "Functions.h"
 #include "Classes.h"
@@ -42,7 +42,7 @@ int main () {
     size_t size;
     char string[50];
     int nSongs;
-    initwindow(SIZEX, SIZEY, "ITA Hero");
+    initwindow(1920, SIZEY, "ITA Hero");
 
     FILE *reader;
     reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
