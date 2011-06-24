@@ -1,7 +1,7 @@
-[SONGS=5]
+[SONGS=6]
 FILE=escape
-TITLE=Escape Me (Feat. Cc Sheffield)
-ARTIST=Tiesto
+TITLE=Escape Me
+ARTIST=Tiesto (feat. Cc Sheffield)
 ~
 FILE=arterial
 TITLE=Arterial Black
@@ -18,4 +18,8 @@ ARTIST=Metallica
 FILE=money
 TITLE=Money For Nothing
 ARTIST=Dire Straits
+~
+FILE=get up
+TITLE=Get Up
+ARTIST=David Guetta (feat. Chris Willis)
 [/SONGS]

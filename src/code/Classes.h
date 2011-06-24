@@ -1,3 +1,21 @@
+class menu {
+      char *header;
+      struct option {
+            char *content;
+            option *next;
+            } *start;
+      option *end;
+      int selected, nOpt;
+      void print();
+    public:
+      menu (char head[]);
+      ~menu ();
+      bool addOpt (char content[]);
+      bool done();
+      int opt();
+      void navigate();
+    };
+
 struct note {
         char type;
         int time;
@@ -11,21 +29,22 @@ struct note {
 class music {
         irrklang::ISound* sound;
         irrklang::ISoundSource* source;
-        irrklang::ISoundEffectControl* FX;
         unsigned int start;
       public:
+        irrklang::ISoundEffectControl* FX;
         char *filename, *title, *artist;
         music (FILE* songs);
         ~music ();
         void load (irrklang::ISoundEngine* engine);
         void unload (irrklang::ISoundEngine* engine);
+        bool isInstrumentAvaliable (int instrument);
         bool isFinished ();
         int getPlayLength();
         bool play ();
         bool pause ();
         int time ();
       };
-      
+
 class highway {
       private:
         int location, width, height;
@@ -37,19 +56,33 @@ class highway {
         int progress, bpm, size;
         int time_delay, timing_window;
         long long int basescore, score;
-        int streak;
+        int streak, rockmeter;
+        void draw (int time);
       public:
         highway (music *stream, char instr, int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h); //in progress
         ~highway (); //in progress
         int multiplier (); //done
         int preliminary(); //to-do | usa antes de começar a tocar a música
-        int refresh(); //in progress
-        void draw (int time);
+        long long int refresh(); //in progress
+        bool alive();
     };
     
 class background; //to-do
 
 
+void menu::print () { //temporaria
+    option *aux=start;
+    moveto(0,0);
+    outtext(header);
+    int y=textheight(header);
+    for (int curr=0;aux;curr++) {
+        moveto (0, y);
+        if (selected==curr) outtext(" ");
+        outtext (aux->content);
+        y+=textheight(aux->content);
+        aux=aux->next;
+        }
+}
 
 void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
@@ -89,7 +122,10 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
             moveto (location-300, SIZEY-140);
             outtext(string);
             moverel(-textwidth(string), textheight(string));
-            sprintf (string, "%d  x%d\n", streak, multiplier());
+            sprintf (string, "%d  x%d", streak, multiplier());
+            outtext(string);
+            moverel(-textwidth(string), textheight(string));
+            sprintf (string, "%d", rockmeter);
             outtext(string);
 }
 /*backup

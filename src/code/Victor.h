@@ -1,4 +1,69 @@
-music::music (FILE *songs): sound(0), start(0) {
+menu::menu (char head[]=""): selected(0), start(NULL), end(NULL), nOpt(0) {
+    int size;
+    for (size=0;head[size];size++);
+    header=new char[++size];
+    for (int i=0;i<size;i++) header[i]=head[i];
+    }
+
+menu::~menu () {
+    option *aux;
+    while (start) {
+        aux=start->next;
+        delete start;
+        start=aux;
+        }
+}
+
+bool menu::addOpt (char content[]) {
+    int size;
+    if (end==NULL) {
+        start=end=new option;
+        if (end==NULL) return 0;
+        }
+    else {
+        end->next=new option;
+        if (end->next==NULL) return 0;
+        end=end->next;
+        }
+    end->next=0;
+    for (size=0;content[size];size++);
+    end->content=new char[++size];
+    if (end->content==NULL) {
+        option *aux=start;
+        while (aux->next!=end) aux=aux->next;
+        delete end;
+        end=aux;
+        return 0;
+        }
+    for (int i=0;i<size;i++) end->content[i]=content[i];
+    nOpt++;
+    return 1;
+}
+
+bool menu::done() {
+    return (nOpt&&selected==nOpt-1);
+}
+
+int menu::opt() {
+    return selected+1;
+}
+
+void menu::navigate () {
+    char c;
+    for (c=0;!kbhit()||((c=getch())!=13&&c!=27);) {
+        switch (c) {
+            case 72: selected=(selected+nOpt-1)%nOpt; break;
+            case 80: selected=(selected+nOpt+1)%nOpt; break;
+            }
+        cleardevice();
+        print();
+        swapbuffers();
+        c=0;
+        }
+    if (c==27) selected=nOpt-1;
+}
+
+music::music (FILE *songs): sound(0), FX(0), source(0), start(0) {
           char string[1000];
           int i;
           
@@ -55,6 +120,20 @@ void music::unload (irrklang::ISoundEngine* engine) {
      engine->removeSoundSource(source);
 }
 
+bool music::isInstrumentAvaliable (int instrument) {
+    char extension[20]="";
+    strcat (extension, "_");
+    switch (instrument) {
+        case DRUMS: strcat (extension,"dru"); break;
+        case BASS: strcat (extension, "bas"); break;
+        case GUITAR: strcat (extension, "gui"); break;
+        }
+    strcat (extension, ".chart");
+    FILE *file=fopen(FilePath("Chart/", filename, extension), "rb");
+    fclose(file);
+    return file!=NULL;
+}
+
 bool music::isFinished () {
      return sound->isFinished();
 }
@@ -73,6 +152,7 @@ bool music::play () {
 bool music::pause () {
      if (!sound||sound->getIsPaused()) return false;
      sound->setIsPaused(true);
+     start=0;
      return true;
 }
 
@@ -84,7 +164,7 @@ int music::time () {
       
 
 highway::highway (music* stream, char instr, int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
-                  MusicStream(stream), instrument(instr), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(1), progress(0), score(0), streak(0) {
+                  MusicStream(stream), instrument(instr), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(1), progress(0), score(0), streak(0), rockmeter(500) {
                 FILE *chartfile=NULL;
                 int i;
                 
@@ -166,13 +246,13 @@ int highway::multiplier () {
     return (streak/10)+1;
 }
 
-int highway::refresh () {
+long long int highway::refresh () {
                     int time=MusicStream->time();
                     int i;
                     char fretaux;
                     bool picked;
 
-                    if (time==~0) return score;
+                    if (time==~0) return score/10000;
 
                     for (i=0;fret[i];i++) {
                         lastfretstate[i]=fretstate[i];
@@ -185,6 +265,7 @@ int highway::refresh () {
 
                     while (progress<size&&time-chart[progress].time>timing_window*SIZEY/time_delay) {
                         if (chart[progress].hit==false) {
+                            rockmeter-=20;
                             basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
                             streak=0;
                             }
@@ -201,6 +282,7 @@ int highway::refresh () {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||
                                         (!(chart[j].chord-1) &&(((pick[0]&&((fretaux^(chart[j].type))<chart[j].type)))||
                                                                ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0)))) {
+                                           rockmeter+=21-rockmeter/50;
                                            chart[j].hit=true;
                                            basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
@@ -229,8 +311,10 @@ int highway::refresh () {
                     for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
                         if (chart[j].hit&&chart[j].hopo) picked=chart[j].hopo=false;
                         }
-                    if (picked) streak=0;
-
+                    if (picked) {
+                        rockmeter-=20;
+                        streak=0;
+                        }
                     picked=false;
                     for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;                  //hopo
                     for (i=0;fret[i];i++) {
@@ -240,6 +324,7 @@ int highway::refresh () {
                     for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
                         if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo==true) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
+                                        rockmeter+=21-rockmeter/50;
                                         chart[j].hit=true;
                                         basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
@@ -248,9 +333,14 @@ int highway::refresh () {
                                         }
                                     }
                         }
+                    if (rockmeter>1000) rockmeter=1000;
 
                     draw(time);
                     return score/10000;
+}
+
+bool highway::alive() {
+    return rockmeter>0;
 }
 
 void *AllocateFile (char file_name[], size_t &size) {
