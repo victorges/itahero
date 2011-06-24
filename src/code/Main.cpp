@@ -135,6 +135,7 @@ int main () {
                             else stay=1;
                             delete instrm;
                             }
+                        else stay=0;
                         }
                     delete songmenu;
                 }
