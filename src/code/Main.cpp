@@ -64,7 +64,7 @@ int main (int argc, char *argv[]) {
     int nSongs;
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     initwindow(SIZEX, SIZEY, "ITA Hero");
-
+    SDL_Init(SDL_INIT_VIDEO);
 //load song list
     FILE *reader;
     reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
@@ -88,7 +88,7 @@ int main (int argc, char *argv[]) {
 
     char playersfret[4][6]={"ZXCVB", "QWERT", "GHJKL", {VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, 0}};
     char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{1, 2, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3]
+    int playersextras[4][10]={{1, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3]
     
     menu *startmenu=new menu(" - Main Menu");
     startmenu->addOpt("Singleplayer");

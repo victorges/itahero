@@ -70,6 +70,25 @@ void menu::navigate () {
     if (c==27) selected=nOpt-1;
 }
 
+/*void menu::navigate () {  //SDL
+    char c;
+    SDL_Event event;
+    while (event.key.keysym.sym!=SDLK_ESCAPE&&event.key.keysym.sym!=SDLK_RETURN) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type==SDL_KEYDOWN)
+                switch (event.key.keysym.sym) {
+                    case SDLK_UP: selected=(selected+nOpt-1)%nOpt; break;
+                    case SDLK_DOWN: selected=(selected+nOpt+1)%nOpt; break;
+                    }
+            }
+        cleardevice();
+        print();
+        swapbuffers();
+        }
+    if (event.key.keysym.sym==SDLK_ESCAPE) selected=nOpt-1;
+}*/
+
+
 music::music (FILE *songs): sound(0), FX(0), source(0), start(0) {
           char string[1000];
           int i;
