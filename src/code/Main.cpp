@@ -1,5 +1,6 @@
-#include <graphics.h>
-#include <irrKlang.h>
+#include <graphics/graphics.h>
+#include <irrKlang/irrKlang.h>
+#include <SDL/SDL.h>
 
 #define GUITAR 0
 #define BASS 1
@@ -57,7 +58,7 @@ void PlaySong (music *song, highway *players[], int nPlayers=1) {
         }
 }
 
-int main () {
+int main (int argc, char *argv[]) {
     size_t size;
     char string[200];
     int nSongs;

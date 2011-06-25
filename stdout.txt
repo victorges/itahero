@@ -1,0 +1,2 @@
+irrKlang sound library version 1.3.0
+Using DirectSound8 driver
