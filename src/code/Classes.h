@@ -5,14 +5,15 @@ class menu {
             option *next;
             } *start;
       option *end;
-      int selected, nOpt;
+      int selected, nOpt, locx, locy;
       void print();
     public:
-      menu (char head[]);
+      menu (char head[], int x, int y);
       ~menu ();
       bool addOpt (char content[]);
-      bool done();
-      int opt();
+      bool lastopt();
+      int opt();    //retorna posiçao escolhida apos navigate()
+      char* opts();  //retorna string da opção escolhida
       void navigate();
     };
 
@@ -55,11 +56,12 @@ class highway {
         music *MusicStream;
         int progress, bpm, size;
         int time_delay, timing_window;
+        bool godmode;
         long long int basescore, score;
         int streak, rockmeter;
         void draw (int time);
       public:
-        highway (music *stream, char instr, int tw, int hyperspeed, char control[], char pck[], int col[], int loc, int w, int h); //in progress
+        highway (music *stream, char instr, int *xtras, char control[], char pck[], int loc, int w, int h, int col[]); //in progress
         ~highway (); //in progress
         int multiplier (); //done
         int preliminary(); //to-do | usa antes de começar a tocar a música
@@ -72,11 +74,11 @@ class background; //to-do
 
 void menu::print () { //temporaria
     option *aux=start;
-    moveto(0,0);
+    moveto(locx,locy);
     outtext(header);
     int y=textheight(header);
     for (int curr=0;aux;curr++) {
-        moveto (0, y);
+        moveto (locx, locy+y);
         if (selected==curr) outtext(" ");
         outtext (aux->content);
         y+=textheight(aux->content);

@@ -1,4 +1,4 @@
-menu::menu (char head[]=""): selected(0), start(NULL), end(NULL), nOpt(0) {
+menu::menu (char head[]="", int x=50, int y=50): locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
     int size;
     for (size=0;head[size];size++);
     header=new char[++size];
@@ -40,12 +40,19 @@ bool menu::addOpt (char content[]) {
     return 1;
 }
 
-bool menu::done() {
+bool menu::lastopt() {
     return (nOpt&&selected==nOpt-1);
 }
 
 int menu::opt() {
     return selected+1;
+}
+
+char* menu::opts() {
+    option *aux=start;
+    int n=selected;
+    while (n--) aux=aux->next;
+    return aux->content;
 }
 
 void menu::navigate () {
@@ -163,8 +170,8 @@ int music::time () {
 }
       
 
-highway::highway (music* stream, char instr, int tw=100, int hyperspeed=0, char frt[]="ZXCVB", char pck[]="", int col[]=0, int loc=SIZEX/2, int w=175, int h=2*SIZEY/3):
-                  MusicStream(stream), instrument(instr), location(loc), width(w), height(h), timing_window(tw), time_delay(300+1200/(hyperspeed+1)), basescore(1), progress(0), score(0), streak(0), rockmeter(500) {
+highway::highway (music* stream, char instr, int *xtras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
+                  MusicStream(stream), instrument(instr), time_delay(300+1200/(xtras[HYPERSPEED]+1)), timing_window(100/(xtras[PRECISION]+1)), godmode(xtras[GODMODE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500) {
                 FILE *chartfile=NULL;
                 int i;
                 
@@ -186,6 +193,7 @@ highway::highway (music* stream, char instr, int tw=100, int hyperspeed=0, char 
                 lastpickstate=new short int[size];
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
+
 
                 while (instrument>=0&&chartfile==NULL) {
                     char extension[20]="";
@@ -222,7 +230,7 @@ highway::highway (music* stream, char instr, int tw=100, int hyperspeed=0, char 
                     chart[i].hit=false;
                     chart[i].hold=chart[i].end>chart[i].time;
                     chart[i].chord=0;
-                    if (instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type) chart[i].hopo=true;
+                    if (xtras[ALLHOPO]||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
                     else chart[i].hopo=false;
                     for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }
@@ -334,13 +342,14 @@ long long int highway::refresh () {
                                     }
                         }
                     if (rockmeter>1000) rockmeter=1000;
+                    if (rockmeter<0) rockmeter=0;
 
                     draw(time);
                     return score/10000;
 }
 
 bool highway::alive() {
-    return rockmeter>0;
+    return godmode||rockmeter>0;
 }
 
 void *AllocateFile (char file_name[], size_t &size) {
