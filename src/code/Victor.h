@@ -89,7 +89,7 @@ void menu::navigate () {
 }*/
 
 
-music::music (FILE *songs): sound(0), FX(0), source(0), start(0) {
+music::music (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source(0), start(0), engine(eng) {
           char string[1000];
           int i;
           
@@ -121,7 +121,7 @@ music::~music () {
                 delete[] artist;
                 }
 
-void music::load (irrklang::ISoundEngine* engine) {
+void music::load () {
      void *soundfile;
      size_t size;
      soundfile=AllocateFile(FilePath("Sound/", filename, ".ogg"), size);
@@ -132,10 +132,20 @@ void music::load (irrklang::ISoundEngine* engine) {
      source->setStreamMode(irrklang::ESM_AUTO_DETECT);
      sound=engine->play2D(source, false, true, true, true);
      FX=sound->getSoundEffectControl();
-     start=clock()*1000/CLOCKS_PER_SEC;
+     for (int i=0;i<NERROR;i++) {
+            char string[100];
+            sprintf (string, "error%d", i+1);
+            soundfile=AllocateFile(FilePath("FX/", string, ".ogg"), size);
+            if (soundfile==NULL) Error ("Error Sound File not found");
+            errorsource[i]=engine->addSoundSourceFromMemory(soundfile, size, string);
+            free (soundfile);
+            if (source==NULL) Error ("Error loading Error Sound File");
+            errorsource[i]->setStreamMode(irrklang::ESM_AUTO_DETECT);
+            }
+    start=clock()*1000/CLOCKS_PER_SEC;
 }
 
-void music::unload (irrklang::ISoundEngine* engine) {
+void music::unload () {
      if (sound) {
                 if (!sound->isFinished() && !sound->getIsPaused()) sound->stop();
                 sound->drop();
@@ -144,6 +154,7 @@ void music::unload (irrklang::ISoundEngine* engine) {
                 start=0;
                 }
      engine->removeSoundSource(source);
+     for (int i=0;i<NERROR;i++) engine->removeSoundSource (errorsource[i]);
 }
 
 bool music::isInstrumentAvaliable (int instrument) {
@@ -171,8 +182,30 @@ int music::getPlayLength() {
 bool music::play () {
      if (!sound||!sound->getIsPaused()) return false;
      sound->setIsPaused(false);
+     sound->setVolume(0.8);
      for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition());
      return true;
+}
+
+void music::error () {
+    int sel=rand()%NERROR;
+    engine->play2D(errorsource[sel]);
+}
+
+void music::lose() {
+    engine->play2D(FilePath("FX/", "losing", ".ogg"));
+}
+
+void music::starpower(bool active=true) {
+    if (active) if (!FX->isDistortionSoundEffectEnabled()) FX->enableDistortionSoundEffect();
+    else if (FX->isDistortionSoundEffectEnabled()) FX->disableDistortionSoundEffect();
+}
+
+void music::hitting(bool active=true) {
+    if (active) {
+        if (FX->isParamEqSoundEffectEnabled()) FX->disableParamEqSoundEffect();
+        }
+    else if (!FX->isParamEqSoundEffectEnabled()) FX->enableParamEqSoundEffect(3000, 10, -15);
 }
 
 bool music::pause () {
@@ -295,6 +328,7 @@ long long int highway::refresh () {
                             rockmeter-=20;
                             basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
                             streak=0;
+                            MusicStream->hitting(false);
                             }
                         progress++;
                         }
@@ -311,6 +345,7 @@ long long int highway::refresh () {
                                                                ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0)))) {
                                            rockmeter+=21-rockmeter/50;
                                            chart[j].hit=true;
+                                           MusicStream->hitting();
                                            basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
                                            score+=1000000*chart[j].chord*multiplier();
@@ -326,7 +361,10 @@ long long int highway::refresh () {
                                                     chart[j].time=time;
                                                     fretaux^=chart[j].type;
                                                 }
-                                        else chart[j].hold=false;
+                                        else {
+                                            chart[j].hold=false;
+                                            if (chart[j].time<chart[j].end) MusicStream->hitting(false);
+                                            }
                                         }
                         }
                     if (!pick[0]) {
@@ -341,6 +379,7 @@ long long int highway::refresh () {
                     if (picked) {
                         rockmeter-=20;
                         streak=0;
+                        MusicStream->error();
                         }
                     picked=false;
                     for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;                  //hopo
@@ -353,6 +392,7 @@ long long int highway::refresh () {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
                                         rockmeter+=21-rockmeter/50;
                                         chart[j].hit=true;
+                                        MusicStream->hitting();
                                         basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
                                         score+=1000000*chart[j].chord*multiplier();
@@ -368,6 +408,7 @@ long long int highway::refresh () {
 }
 
 bool highway::alive() {
+    if (!godmode&&rockmeter==0) MusicStream->lose();
     return godmode||rockmeter>0;
 }
 

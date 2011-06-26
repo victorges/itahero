@@ -28,20 +28,25 @@ struct note {
       };
 
 class music {
+        irrklang::ISoundEngine *engine;
         irrklang::ISound* sound;
-        irrklang::ISoundSource* source;
+        irrklang::ISoundSource* source, *errorsource[10];
         unsigned int start;
       public:
         irrklang::ISoundEffectControl* FX;
         char *filename, *title, *artist;
-        music (FILE* songs);
+        music (FILE* songs, irrklang::ISoundEngine *eng);
         ~music ();
-        void load (irrklang::ISoundEngine* engine);
-        void unload (irrklang::ISoundEngine* engine);
+        void load ();
+        void unload ();
         bool isInstrumentAvaliable (int instrument);
         bool isFinished ();
         int getPlayLength();
         bool play ();
+        void error();
+        void lose();
+        void starpower(bool active);
+        void hitting(bool active);
         bool pause ();
         int time ();
       };

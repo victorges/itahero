@@ -11,6 +11,8 @@
 #define GODMODE 2
 #define ALLHOPO 3
 
+#define NERROR 4
+
 const int SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
 const int SIZEY=850>getmaxheight()?(getmaxheight()-50):850;
 
@@ -76,11 +78,11 @@ int main (int argc, char *argv[]) {
     music* songs[nSongs];
     
     for (int i=0;i<nSongs-1;i++) {
-        songs[i]=new music (reader);
+        songs[i]=new music (reader, engine);
         char c;
         sfscanf (reader, "~\n");
         }
-    songs[nSongs-1]=new music (reader);
+    songs[nSongs-1]=new music (reader, engine);
     sfscanf (reader, "[/SONGS]");
     if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
     fclose (reader);
@@ -88,7 +90,7 @@ int main (int argc, char *argv[]) {
 
     char playersfret[4][6]={"ZXCVB", "QWERT", "GHJKL", {VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, 0}};
     char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{1, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3]
+    int playersextras[4][10]={{1, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3]
     
     menu *startmenu=new menu(" - Main Menu");
     startmenu->addOpt("Singleplayer");
@@ -128,10 +130,10 @@ int main (int argc, char *argv[]) {
                                     case 'B': instrument=BASS; break;
                                     case 'D': instrument=DRUMS; break;
                                     }
-                                ChosenSong->load(engine);
+                                ChosenSong->load();
                                 highway *player=new highway (ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
                                 PlaySong (ChosenSong, &player);
-                                ChosenSong->unload(engine);
+                                ChosenSong->unload();
                                 delete player;
                                 stay=0;
                                 }
@@ -185,11 +187,11 @@ int main (int argc, char *argv[]) {
                                     delete instrm;
                                     }
                                 if (i==nPlayers) {
-                                    ChosenSong->load(engine);
+                                    ChosenSong->load();
                                     highway *players[nPlayers];
                                     for (int j=0;j<nPlayers;j++) players[j]=new highway (ChosenSong, instrument[j], playersextras[j], playersfret[j], playerspick[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
                                     PlaySong (ChosenSong, players, nPlayers);
-                                    ChosenSong->unload(engine);
+                                    ChosenSong->unload();
                                     for (int j=0;j<nPlayers;j++) delete players[j];
                                     stay=0;
                                     }
