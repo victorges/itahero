@@ -201,11 +201,19 @@ void music::starpower(bool active=true) {
     else if (FX->isDistortionSoundEffectEnabled()) FX->disableDistortionSoundEffect();
 }
 
-void music::hitting(bool active=true) {
-    if (active) {
-        if (FX->isParamEqSoundEffectEnabled()) FX->disableParamEqSoundEffect();
-        }
-    else if (!FX->isParamEqSoundEffectEnabled()) FX->enableParamEqSoundEffect(3000, 10, -15);
+void music::hitting(char instrument, bool active=true) {
+    if (active)
+        switch (instrument) {
+            case GUITAR: if (FX->isParamEqSoundEffectEnabled()) FX->disableParamEqSoundEffect(); break;
+            case DRUMS: if (FX->isCompressorSoundEffectEnabled()) FX->disableCompressorSoundEffect(); break;
+            case BASS: if (FX->isParamEqSoundEffectEnabled()) FX->disableParamEqSoundEffect(); break;
+            }
+    else
+        switch (instrument) {
+            case GUITAR:  if (!FX->isParamEqSoundEffectEnabled()) FX->enableParamEqSoundEffect(3000, 12, -15); break;
+            case DRUMS: if (!FX->isCompressorSoundEffectEnabled()) FX->enableCompressorSoundEffect(-12); break;
+            case BASS: if (!FX->isParamEqSoundEffectEnabled()) FX->enableParamEqSoundEffect(100, 12, -15); break;
+            }
 }
 
 bool music::pause () {
@@ -327,12 +335,13 @@ long long int highway::refresh () {
                         if (chart[progress].hit==false) {
                             rockmeter-=20;
                             basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
+                            if (streak>0) MusicStream->error();
                             streak=0;
-                            MusicStream->hitting(false);
+                            MusicStream->hitting(instrument, false);
                             }
                         progress++;
                         }
-
+                    if (chart[progress].time-time>time_delay&&chart[progress-1].end<time) MusicStream->hitting(instrument);
                     picked=false;
                     for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;
                     for (i=0, picked=0;pick[i];i++) if ((pickstate[i]^lastpickstate[i])&pickstate[i]) picked=true;
@@ -345,7 +354,7 @@ long long int highway::refresh () {
                                                                ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0)))) {
                                            rockmeter+=21-rockmeter/50;
                                            chart[j].hit=true;
-                                           MusicStream->hitting();
+                                           MusicStream->hitting(instrument);
                                            basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
                                            score+=1000000*chart[j].chord*multiplier();
@@ -363,7 +372,7 @@ long long int highway::refresh () {
                                                 }
                                         else {
                                             chart[j].hold=false;
-                                            if (chart[j].time<chart[j].end) MusicStream->hitting(false);
+                                            if (chart[j].time<chart[j].end) MusicStream->hitting(instrument, false);
                                             }
                                         }
                         }
@@ -392,7 +401,7 @@ long long int highway::refresh () {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
                                         rockmeter+=21-rockmeter/50;
                                         chart[j].hit=true;
-                                        MusicStream->hitting();
+                                        MusicStream->hitting(instrument);
                                         basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
                                         score+=1000000*chart[j].chord*multiplier();

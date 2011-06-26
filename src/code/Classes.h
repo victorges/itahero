@@ -46,7 +46,7 @@ class music {
         void error();
         void lose();
         void starpower(bool active);
-        void hitting(bool active);
+        void hitting(char instrument, bool active);
         bool pause ();
         int time ();
       };
