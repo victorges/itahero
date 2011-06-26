@@ -3,8 +3,8 @@ CursorCol=2
 CursorRow=172
 TopLine=160
 LeftChar=1
-Open=1
-Top=1
+Open=0
+Top=0
 [Editor_3]
 CursorCol=1
 CursorRow=1
@@ -16,7 +16,7 @@ Top=0
 Focused=-1
 Order=-1
 [Editor_0]
-Open=1
+Open=0
 Top=0
 CursorCol=13
 CursorRow=47
@@ -31,8 +31,8 @@ TopLine=1
 LeftChar=1
 [Editor_2]
 Open=1
-Top=0
-CursorCol=1
-CursorRow=21
+Top=1
+CursorCol=17
+CursorRow=14
 TopLine=1
 LeftChar=1

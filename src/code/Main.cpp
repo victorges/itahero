@@ -11,7 +11,7 @@
 #define GODMODE 2
 #define ALLHOPO 3
 
-#define NERROR 4
+#define NERROR 5
 
 const int SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
 const int SIZEY=850>getmaxheight()?(getmaxheight()-50):850;
