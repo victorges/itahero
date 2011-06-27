@@ -138,6 +138,20 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                 }
 }
 /*backup
+void menu::print () { //temporaria
+    option *aux=start;
+    moveto(locx,locy);
+    outtext(header);
+    int y=textheight(header);
+    for (int curr=0;aux;curr++) {
+        moveto (locx, locy+y);
+        if (selected==curr) outtext(" ");
+        outtext (aux->content);
+        y+=textheight(aux->content);
+        aux=aux->next;
+        }
+}
+
 void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
 
@@ -176,7 +190,11 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
             moveto (location-300, SIZEY-140);
             outtext(string);
             moverel(-textwidth(string), textheight(string));
-            sprintf (string, "%d  x%d\n", streak, multiplier());
+            sprintf (string, "%d  x%d", streak, multiplier());
             outtext(string);
-}
-        }*/
+            moverel(-textwidth(string), textheight(string));
+            if (!practice) {
+                sprintf (string, "%d", rockmeter);
+                outtext(string);
+                }
+}*/
