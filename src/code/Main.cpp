@@ -10,6 +10,7 @@
 #define PRECISION 1
 #define GODMODE 2
 #define ALLHOPO 3
+#define PRACTICE 9
 
 #define NERROR 5
 
@@ -90,7 +91,7 @@ int main (int argc, char *argv[]) {
 
     char playersfret[4][6]={"ZXCVB", "QWERT", "GHJKL", {VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, 0}};
     char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{1, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3]
+    int playersextras[4][10]={{1, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
     
     menu *startmenu=new menu(" - Main Menu");
     startmenu->addOpt("Singleplayer");
@@ -98,8 +99,8 @@ int main (int argc, char *argv[]) {
     startmenu->addOpt("Practice");
     startmenu->addOpt("Options");
     startmenu->addOpt("Exit");
-
-    while (!startmenu->lastopt()) {
+    bool done=0;
+    while (!done) {
         while (startmenu->navigate());
         switch (startmenu->opts()[0]) {
             case 'S':
@@ -109,7 +110,6 @@ int main (int argc, char *argv[]) {
                         sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                         songmenu->addOpt(string);
                         }
-                    songmenu->addOpt("Cancel");
 
                     bool stay=1;
                     music *ChosenSong=NULL;
@@ -128,14 +128,13 @@ int main (int argc, char *argv[]) {
                                 ChosenSong=NULL;
                                 }
                             }
-                        if (!songmenu->lastopt()) {
+                        if (!songmenu->cancel()) {
                             menu *instrm=new menu(" - Choose instrument");
                             if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                             if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                             if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
-                            instrm->addOpt("Back");
                             while (instrm->navigate());
-                            if (!instrm->lastopt()) {
+                            if (!instrm->cancel()) {
                                 int instrument;
                                 switch (instrm->opts()[0]) {
                                     case 'G': instrument=GUITAR; break;
@@ -165,17 +164,15 @@ int main (int argc, char *argv[]) {
                     ordmenu->addOpt("2");
                     ordmenu->addOpt("3");
                     ordmenu->addOpt("4");
-                    ordmenu->addOpt("Cancel");
                     while(ordmenu->navigate());
                     nPlayers=ordmenu->opt()+1;
-                    if (!ordmenu->lastopt()) {
+                    if (!ordmenu->cancel()) {
                         delete ordmenu;
                         ordmenu=new menu(" - Choose song to play");
                         for (int i=0;i<nSongs;i++) {
                             sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                             ordmenu->addOpt(string);
                             }
-                        ordmenu->addOpt("Cancel");
                         bool stay=1;
                         music *ChosenSong=NULL;
                         while (stay) {
@@ -193,7 +190,7 @@ int main (int argc, char *argv[]) {
                                     ChosenSong=NULL;
                                     }
                                 }
-                            if (!ordmenu->lastopt()) {
+                            if (!ordmenu->cancel()) {
                                 menu *instrm;
                                 int i, instrument[nPlayers];
                                 for (i=0;i>=0&&i<nPlayers;i++) {
@@ -202,9 +199,8 @@ int main (int argc, char *argv[]) {
                                     if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                                     if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                     if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
-                                    instrm->addOpt("Back");
                                     while(instrm->navigate());
-                                    if (instrm->lastopt()) i-=2;
+                                    if (instrm->cancel()) i-=2;
                                     else
                                         switch (instrm->opts()[0]) {
                                             case 'G': instrument[i]=GUITAR; break;
@@ -238,7 +234,6 @@ int main (int argc, char *argv[]) {
                         sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                         songmenu->addOpt(string);
                         }
-                    songmenu->addOpt("Cancel");
 
                     bool stay=1;
                     music *ChosenSong=NULL;
@@ -257,14 +252,13 @@ int main (int argc, char *argv[]) {
                                 ChosenSong=NULL;
                                 }
                             }
-                        if (!songmenu->lastopt()) {
+                        if (!songmenu->cancel()) {
                             menu *instrm=new menu(" - Choose instrument");
                             if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                             if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                             if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
-                            instrm->addOpt("Back");
                             while (instrm->navigate());
-                            if (!instrm->lastopt()) {
+                            if (!instrm->cancel()) {
                                 int instrument;
                                 switch (instrm->opts()[0]) {
                                     case 'G': instrument=GUITAR; break;
@@ -272,11 +266,13 @@ int main (int argc, char *argv[]) {
                                     case 'D': instrument=DRUMS; break;
                                     }
                                 ChosenSong->preview(false);
+                                playersextras[0][PRACTICE]=1;
                                 ChosenSong->load(0.6);
                                 highway *player=new highway (ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
                                 PlaySong (ChosenSong, &player);
                                 ChosenSong->unload();
                                 delete player;
+                                playersextras[0][PRACTICE]=0;
                                 stay=0;
                                 }
                             delete instrm;
@@ -289,21 +285,26 @@ int main (int argc, char *argv[]) {
                 break;
             case 'O':
                 {
-                    menu *options=new menu("Options");
+                    menu *options=new menu(" - Options");
                     options->addOpt("Controls");
                     options->addOpt("Extras");
                     options->addOpt("Back");
-                    while (!options->lastopt()) {
-                        while(options->navigate());
-                        switch (options->opt()) {
-                            case 1: break;
-                            case 2: break;
+                    bool done=0;
+                    while (!done) {
+                        while (options->navigate());
+                        switch (options->opts()[0]) {
+                            case 'C': break;
+                            case 'E': break;
+                            case 'B': done=1; break;
                             }
+                        if (options->cancel()) done=1;
                         }
                     delete options;
                 }
                 break;
+            case 'E': done=1; break;
             }
+        if (startmenu->cancel()) done=1;
         }
     delete startmenu;
 

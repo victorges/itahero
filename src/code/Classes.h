@@ -21,7 +21,7 @@ class menu {
       menu (char head[], int x, int y);
       ~menu ();
       void addOpt (char content[]);
-      bool lastopt();
+      bool cancel();
       int opt();    //retorna posiçao escolhida apos navigate()
       char* opts();  //retorna string da opção escolhida
       bool navigate();
@@ -61,7 +61,7 @@ class highway {
         music *MusicStream;
         int progress, bpm, size;
         int time_delay, timing_window;
-        bool godmode;
+        bool godmode, practice;
         long long int basescore, score;
         int streak, rockmeter;
         void draw (int time);
@@ -132,8 +132,10 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
             sprintf (string, "%d  x%d", streak, multiplier());
             outtext(string);
             moverel(-textwidth(string), textheight(string));
-            sprintf (string, "%d", rockmeter);
-            outtext(string);
+            if (!practice) {
+                sprintf (string, "%d", rockmeter);
+                outtext(string);
+                }
 }
 /*backup
 void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)

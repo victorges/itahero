@@ -33,8 +33,8 @@ void menu::addOpt (char content[]) {
     nOpt++;
 }
 
-bool menu::lastopt() {
-    return (nOpt&&selected==nOpt-1);
+bool menu::cancel() {
+    return (nOpt&&selected==nOpt);
 }
 
 int menu::opt() {
@@ -55,13 +55,13 @@ bool menu::navigate () {
         switch (c) {
             case 72: selected=(selected+nOpt-1)%nOpt; break;
             case 80: selected=(selected+nOpt+1)%nOpt; break;
-            case 27: selected=nOpt-1; break;
+            case 27: case 8: selected=nOpt; break;
             }
         }
     cleardevice();
     print();
     swapbuffers();
-    return !(c==13||c==27);
+    return !(c==13||c==27||c==8);
 }
 
 /*void menu::navigate () {  //SDL
@@ -180,7 +180,7 @@ void music::preview (bool active) {
             }
         else if (sound->getPlayPosition()>9*sound->getPlayLength()/16) {
             if (sound->getVolume()>0.0) sound->setVolume(sound->getVolume()-0.0005);
-            else unload();
+            else sound->setPlayPosition(sound->getPlayLength()/2);
             }
         else if (sound->getVolume()<0.4) sound->setVolume(sound->getVolume()+0.001);
         }
@@ -238,8 +238,8 @@ int music::time () {
 }
       
 
-highway::highway (music* stream, char instr, int *xtras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
-                  MusicStream(stream), instrument(instr), time_delay(300+1200/(xtras[HYPERSPEED]+1)), timing_window(100/(xtras[PRECISION]+1)), godmode(xtras[GODMODE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500) {
+highway::highway (music* stream, char instr, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
+                  MusicStream(stream), instrument(instr), time_delay(300+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500) {
                 FILE *chartfile=NULL;
                 int i;
                 
@@ -298,7 +298,7 @@ highway::highway (music* stream, char instr, int *xtras, char frt[]="ZXCVB", cha
                     chart[i].hit=false;
                     chart[i].hold=chart[i].end>chart[i].time;
                     chart[i].chord=0;
-                    if (xtras[ALLHOPO]||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
+                    if (extras[ALLHOPO]||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
                     else chart[i].hopo=false;
                     for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }
@@ -426,7 +426,7 @@ long long int highway::refresh () {
 
 bool highway::alive() {
     if (!godmode&&rockmeter==0) MusicStream->lose();
-    return godmode||rockmeter>0;
+    return godmode||practice||rockmeter>0;
 }
 
 void *AllocateFile (char file_name[], size_t &size) {
