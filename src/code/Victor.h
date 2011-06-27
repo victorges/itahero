@@ -49,19 +49,18 @@ char* menu::opts() {
 }
 
 bool menu::navigate () {
-    char c;
-    if (kbhit()) {
-        c=getch();
-        switch (c) {
-            case 72: selected=(selected+nOpt-1)%nOpt; break;
-            case 80: selected=(selected+nOpt+1)%nOpt; break;
-            case 27: case 8: selected=nOpt; break;
-            }
-        }
-    cleardevice();
     print();
     swapbuffers();
-    return !(c==13||c==27||c==8);
+    cleardevice();
+    if (kbhit()) {
+        char c=getch();
+        switch (c) {
+            case 72: selected=(selected+nOpt-1)%nOpt; return 1;
+            case 80: selected=(selected+nOpt+1)%nOpt; return 1;
+            case 27: case 8: selected=nOpt; case 13: return 0;
+            }
+        }
+    return 1;
 }
 
 /*void menu::navigate () {  //SDL
