@@ -14,30 +14,23 @@ menu::~menu () {
         }
 }
 
-bool menu::addOpt (char content[]) {
+void menu::addOpt (char content[]) {
     int size;
     if (end==NULL) {
         start=end=new option;
-        if (end==NULL) return 0;
+        if (end==NULL) Error ("Error loading menu");
         }
     else {
         end->next=new option;
-        if (end->next==NULL) return 0;
+        if (end->next==NULL) Error ("Error loading menu");
         end=end->next;
         }
     end->next=0;
     for (size=0;content[size];size++);
     end->content=new char[++size];
-    if (end->content==NULL) {
-        option *aux=start;
-        while (aux->next!=end) aux=aux->next;
-        delete end;
-        end=aux;
-        return 0;
-        }
+    if (end->content==NULL) Error ("Error loading menu");
     for (int i=0;i<size;i++) end->content[i]=content[i];
     nOpt++;
-    return 1;
 }
 
 bool menu::lastopt() {
@@ -55,19 +48,20 @@ char* menu::opts() {
     return aux->content;
 }
 
-void menu::navigate () {
+bool menu::navigate () {
     char c;
-    for (c=0;!kbhit()||((c=getch())!=13&&c!=27);) {
+    if (kbhit()) {
+        c=getch();
         switch (c) {
             case 72: selected=(selected+nOpt-1)%nOpt; break;
             case 80: selected=(selected+nOpt+1)%nOpt; break;
+            case 27: selected=nOpt-1; break;
             }
-        cleardevice();
-        print();
-        swapbuffers();
-        c=0;
         }
-    if (c==27) selected=nOpt-1;
+    cleardevice();
+    print();
+    swapbuffers();
+    return !(c==13||c==27);
 }
 
 /*void menu::navigate () {  //SDL
@@ -121,7 +115,7 @@ music::~music () {
                 delete[] artist;
                 }
 
-void music::load () {
+void music::load (float speed=1.0) {
      void *soundfile;
      size_t size;
      soundfile=AllocateFile(FilePath("Sound/", filename, ".ogg"), size);
@@ -142,6 +136,7 @@ void music::load () {
             if (source==NULL) Error ("Error loading Error Sound File");
             errorsource[i]->setStreamMode(irrklang::ESM_AUTO_DETECT);
             }
+    sound->setPlaybackSpeed (speed);
     start=clock()*1000/CLOCKS_PER_SEC;
 }
 
@@ -175,14 +170,20 @@ bool music::isFinished () {
      return sound->isFinished();
 }
 
-int music::getPlayLength() {
-    return sound->getPlayLength();
+void music::preview (bool active) {
+    if (active&&sound==NULL) {
+        load();
+        sound->setPlayPosition(sound->getPlayLength()/2);
+        sound->setVolume(0.3);
+        sound->setIsPaused(false);
+        }
+    else if (!active&&sound!=NULL) unload();
 }
 
 bool music::play () {
      if (!sound||!sound->getIsPaused()) return false;
-     sound->setIsPaused(false);
      sound->setVolume(0.8);
+     sound->setIsPaused(false);
      for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition());
      return true;
 }
@@ -226,7 +227,7 @@ bool music::pause () {
 int music::time () {
          if (start==0) return ~0;
          if (sound->getIsPaused()) return clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition();
-         return clock()*1000/CLOCKS_PER_SEC-start;
+         return (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed());
 }
       
 

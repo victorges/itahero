@@ -1,3 +1,13 @@
+struct note {
+        char type;
+        int time;
+        int end;
+        bool hit;  //1 se ja foi acertada
+        bool hold; //1 se for nota longa (0 se nao for, ou se for nota longa e nao tiver sido segurada ate o fim)
+        bool hopo; //1 se for hammer-on ou pull-off
+        char chord; //numero de notas da nota (se for um acorde vai ter mais de uma nota)
+      };
+
 class menu {
       char *header;
       struct option {
@@ -10,22 +20,12 @@ class menu {
     public:
       menu (char head[], int x, int y);
       ~menu ();
-      bool addOpt (char content[]);
+      void addOpt (char content[]);
       bool lastopt();
       int opt();    //retorna posiçao escolhida apos navigate()
       char* opts();  //retorna string da opção escolhida
-      void navigate();
+      bool navigate();
     };
-
-struct note {
-        char type;
-        int time;
-        int end;
-        bool hit;  //1 se ja foi acertada
-        bool hold; //1 se for nota longa (0 se nao for, ou se for nota longa e nao tiver sido segurada ate o fim)
-        bool hopo; //1 se for hammer-on ou pull-off
-        char chord; //numero de notas da nota (se for um acorde vai ter mais de uma nota)
-      };
 
 class music {
         irrklang::ISoundEngine *engine;
@@ -37,11 +37,11 @@ class music {
         char *filename, *title, *artist;
         music (FILE* songs, irrklang::ISoundEngine *eng);
         ~music ();
-        void load ();
+        void load (float speed);
         void unload ();
         bool isInstrumentAvaliable (int instrument);
         bool isFinished ();
-        int getPlayLength();
+        void preview (bool active);
         bool play ();
         void error();
         void lose();
