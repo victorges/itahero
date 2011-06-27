@@ -121,6 +121,7 @@ int main (int argc, char *argv[]) {
                                     ChosenSong=songs[songmenu->opt()-1];
                                     ChosenSong->preview(true);
                                     }
+                                else ChosenSong->preview(true);
                                 }
                             else if (ChosenSong!=NULL) {
                                 ChosenSong->preview(false);
@@ -182,9 +183,10 @@ int main (int argc, char *argv[]) {
                                 if (ordmenu->opt()<=nSongs) {
                                     if (ChosenSong!=songs[ordmenu->opt()-1]) {
                                         if (ChosenSong!=NULL) ChosenSong->preview(false);
-                                        ChosenSong=songs[ordmenu->opt()-1];
-                                        ChosenSong->preview(true);
-                                        }
+                                            ChosenSong=songs[ordmenu->opt()-1];
+                                            ChosenSong->preview(true);
+                                            }
+                                    else ChosenSong->preview(true);
                                     }
                                 else if (ChosenSong!=NULL) {
                                     ChosenSong->preview(false);
@@ -248,6 +250,7 @@ int main (int argc, char *argv[]) {
                                     ChosenSong=songs[songmenu->opt()-1];
                                     ChosenSong->preview(true);
                                     }
+                                else ChosenSong->preview(true);
                                 }
                             else if (ChosenSong!=NULL) {
                                 ChosenSong->preview(false);

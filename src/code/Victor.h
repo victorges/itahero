@@ -171,13 +171,20 @@ bool music::isFinished () {
 }
 
 void music::preview (bool active) {
-    if (active&&sound==NULL) {
-        load();
-        sound->setPlayPosition(sound->getPlayLength()/2);
-        sound->setVolume(0.3);
-        sound->setIsPaused(false);
+    if (active) {
+        if (sound==NULL) {
+            load();
+            sound->setPlayPosition(sound->getPlayLength()/2);
+            sound->setVolume(0.0);
+            sound->setIsPaused(false);
+            }
+        else if (sound->getPlayPosition()>9*sound->getPlayLength()/16) {
+            if (sound->getVolume()>0.0) sound->setVolume(sound->getVolume()-0.0005);
+            else unload();
+            }
+        else if (sound->getVolume()<0.4) sound->setVolume(sound->getVolume()+0.001);
         }
-    else if (!active&&sound!=NULL) unload();
+    else if (sound!=NULL) unload();
 }
 
 bool music::play () {
