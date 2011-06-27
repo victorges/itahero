@@ -188,7 +188,6 @@ void music::preview (bool active) {
 
 bool music::play () {
      if (!sound||!sound->getIsPaused()) return false;
-     sound->setVolume(0.8);
      sound->setIsPaused(false);
      for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition());
      return true;
