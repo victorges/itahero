@@ -31,7 +31,7 @@ class music {
       private:
         irrklang::ISoundEngine *engine;
         irrklang::ISound* sound;
-        irrklang::ISoundSource* source, *errorsource[10];
+        irrklang::ISoundSource* source, *errorsource[NERROR];
         unsigned int start, limit;
       public:
         irrklang::ISoundEffectControl* FX;
