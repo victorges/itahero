@@ -68,7 +68,7 @@ int main (int argc, char *argv[]) {
     char string[200];
     int nSongs;
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
-    //initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
+    initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
     SDL_Init (SDL_INIT_EVERYTHING);
     TTF_Init ();
     SDL_Surface *screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);
