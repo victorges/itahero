@@ -1,17 +1,17 @@
-Uint32 get_pixel ( SDL_Surface *source, int x, int y ){
+Uint32 drawer::get_pixel ( SDL_Surface *source, int x, int y ){
     Uint32 *pixels = ( Uint32 * ) source->pixels;
     
     return pixels [ ( y * source->w ) + x ];
 }
 
-void put_pixel ( SDL_Surface *destination, int x, int y, Uint32 pixel ){
+void drawer::put_pixel ( SDL_Surface *destination, int x, int y, Uint32 pixel ){
     Uint32 *pixels = ( Uint32 * ) destination->pixels;
     
     pixels[ ( y * destination->w ) + x ] = pixel;
 }
 
 
-void line ( SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha = 255 ){
+void drawer::line ( SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha = 255 ){
     if ( end_x != ini_x ){
         if ( end_x < ini_x ){
             end_x ^= ini_x ^= end_x ^= ini_x;
@@ -28,19 +28,19 @@ void line ( SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y
     }
 }
 
-void rectangle ( SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha = 255 ){
+void drawer::rectangle ( SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha = 255 ){
     line ( destination, left, top, right, top, red, green, blue, alpha );
     line ( destination, right, top, right, bottom, red, green, blue, alpha );
     line ( destination, right, bottom, left, bottom, red, green, blue, alpha );
     line ( destination, left, bottom, left, top, red, green, blue, alpha );
 }
 
-void bar ( SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha = 255 ){
+void drawer::bar ( SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha = 255 ){
     for ( int i = left; i <= right; i++ )
         line ( destination, i, top, i, bottom, red, green, blue, alpha );
 }
 
-Uint8 get_pixel_color ( SDL_Surface *source, int x, int y, char c ){
+Uint8 drawer::get_pixel_color ( SDL_Surface *source, int x, int y, char c ){
     SDL_PixelFormat *fmt;
     Uint32 temp, pixel;
     Uint8 color;
@@ -90,7 +90,7 @@ void check_lock ( SDL_Surface *source ){
         SDL_LockSurface ( source );
 }
 
-SDL_Surface *load_image ( char *name ){
+SDL_Surface* drawer::load_image ( char *name ){
     SDL_Surface *loaded = NULL;
     SDL_Surface *optimized = NULL;
     

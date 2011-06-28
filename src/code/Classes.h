@@ -79,13 +79,13 @@ class highway {
     
 class drawer {
      private:
-        Uint8 get_pixel_color (SDL_Surface *source, int x, int y, char c);
         void check_unlock (SDL_Surface *source);
         void check_lock (SDL_Surface *source);
-        SDL_Surface *load_image (char *name);
+        SDL_Surface* load_image (char *name);
+        Uint8 get_pixel_color (SDL_Surface *source, int x, int y, char c);
         void apply_surface (int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip);
      public:
-        Uint8 get_pixel (SDL_Surface *source, int x, int y);
+        Uint32 get_pixel (SDL_Surface *source, int x, int y);
         void put_pixel (SDL_Surface *destination, int x, int y, Uint32 pixel);
         void line (SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
         void rectangle (SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
