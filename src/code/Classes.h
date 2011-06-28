@@ -105,7 +105,7 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
             for (j=0;fret[j];j++) {
                 setcolor(color[j]);
                 rectangle (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
-                if (fretstate[j]) {
+                if (lastfretstate[j]) {
                     setfillstyle(SOLID_FILL, COLOR (GetRValue(color[j])<40?0:(GetRValue(color[j])-40), GetGValue(color[j])<40?0:(GetGValue(color[j])-40), GetBValue(color[j])<40?0:(GetBValue(color[j])-40)));
                     bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138);
                     }
