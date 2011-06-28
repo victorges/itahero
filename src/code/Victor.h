@@ -82,7 +82,7 @@ bool menu::navigate () {
 }*/
 
 
-music::music (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source(0), start(0), engine(eng) {
+music::music (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source(0), start(0), limit(16), engine(eng) {
           char string[1000];
           int i;
           
@@ -114,7 +114,7 @@ music::~music () {
                 delete[] artist;
                 }
 
-void music::load (float speed=1.0) {
+void music::load (float speed=1.0, int starts=0, int ends=16) {
      void *soundfile;
      size_t size;
      soundfile=AllocateFile(FilePath("Sound/", filename, ".ogg"), size);
@@ -125,6 +125,8 @@ void music::load (float speed=1.0) {
      source->setStreamMode(irrklang::ESM_AUTO_DETECT);
      sound=engine->play2D(source, false, true, true, true);
      FX=sound->getSoundEffectControl();
+     sound->setPlayPosition (starts*sound->getPlayLength()/16);
+     limit=ends;
      for (int i=0;i<NERROR;i++) {
             char string[100];
             sprintf (string, "error%d", i+1);
@@ -166,18 +168,24 @@ bool music::isInstrumentAvaliable (int instrument) {
 }
 
 bool music::isFinished () {
-     return sound->isFinished();
+     return sound->isFinished()||sound->getPlayPosition()>limit*sound->getPlayLength()/16;
 }
 
-void music::preview (bool active) {
+void music::preview (bool active, int sixteenth=8) {
+    static int current=sixteenth;
     if (active) {
         if (sound==NULL) {
             load();
-            sound->setPlayPosition(sound->getPlayLength()/2);
+            sound->setPlayPosition(sixteenth*sound->getPlayLength()/16);
             sound->setVolume(0.0);
             sound->setIsPaused(false);
             }
-        else if (sound->getPlayPosition()>9*sound->getPlayLength()/16) {
+        else if (current!=sixteenth) {
+            current=sixteenth;
+            sound->setPlayPosition(sixteenth*sound->getPlayLength()/16);
+            sound->setVolume(0.0);
+            }
+        else if (sound->getPlayPosition()>(sixteenth+1)*sound->getPlayLength()/16) {
             if (sound->getVolume()>0.0) sound->setVolume(sound->getVolume()-0.0005);
             else sound->setPlayPosition(sound->getPlayLength()/2);
             }
@@ -189,13 +197,14 @@ void music::preview (bool active) {
 bool music::play () {
      if (!sound||!sound->getIsPaused()) return false;
      sound->setIsPaused(false);
-     for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition());
+     sound->setVolume(1.0);
+     for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(clock()*1000/CLOCKS_PER_SEC-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
      return true;
 }
 
 void music::error () {
     int sel=rand()%NERROR;
-    engine->play2D(errorsource[sel]);
+    engine->play2D(errorsource[sel], false, false, false, true)->setVolume(0.8);
 }
 
 void music::lose() {
@@ -230,8 +239,8 @@ bool music::pause () {
 }
 
 int music::time () {
-         if (start==0) return ~0;
-         if (sound->getIsPaused()) return clock()*1000/CLOCKS_PER_SEC-sound->getPlayPosition();
+         if (sound==NULL) Error ("Asked for status with no song playing");
+         if (sound->getIsPaused()) return sound->getPlayPosition();
          return (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed());
 }
       
@@ -300,7 +309,7 @@ highway::highway (music* stream, char instr, int *extras, char frt[]="ZXCVB", ch
                     else chart[i].hopo=false;
                     for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }
-
+                for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
                 CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
                 }
 
@@ -337,7 +346,7 @@ long long int highway::refresh () {
                         pickstate[i]=GetAsyncKeyState(pick[i])!=0;
                         }
 
-                    while (progress<size&&time-chart[progress].time>timing_window*SIZEY/time_delay) {
+                    while (progress<size&&time-chart[progress].time>timing_window) {
                         if (chart[progress].hit==false) {
                             rockmeter-=20;
                             basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
@@ -423,7 +432,7 @@ long long int highway::refresh () {
 }
 
 bool highway::alive() {
-    if (!godmode&&rockmeter==0) MusicStream->lose();
+    if (!godmode&&!practice&&rockmeter==0) MusicStream->lose();
     return godmode||practice||rockmeter>0;
 }
 

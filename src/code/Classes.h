@@ -31,17 +31,17 @@ class music {
         irrklang::ISoundEngine *engine;
         irrklang::ISound* sound;
         irrklang::ISoundSource* source, *errorsource[10];
-        unsigned int start;
+        unsigned int start, limit;
       public:
         irrklang::ISoundEffectControl* FX;
         char *filename, *title, *artist;
         music (FILE* songs, irrklang::ISoundEngine *eng);
         ~music ();
-        void load (float speed);
+        void load (float speed, int starts, int ends);
         void unload ();
         bool isInstrumentAvaliable (int instrument);
         bool isFinished ();
-        void preview (bool active);
+        void preview (bool active, int sixteenth);
         bool play ();
         void error();
         void lose();
@@ -125,14 +125,14 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                 }
             char string[50];
             setcolor (WHITE);
-            sprintf (string, "%.1f  %d", (float)score/basescore, score/10000);
-            moveto (location-300, SIZEY-140);
-            outtext(string);
-            moverel(-textwidth(string), textheight(string));
-            sprintf (string, "%d  x%d", streak, multiplier());
-            outtext(string);
-            moverel(-textwidth(string), textheight(string));
             if (!practice) {
+                sprintf (string, "%.1f  %d", (float)score/basescore, score/10000);
+                moveto (location-300, SIZEY-140);
+                outtext(string);
+                moverel(-textwidth(string), textheight(string));
+                sprintf (string, "%d  x%d", streak, multiplier());
+                outtext(string);
+                moverel(-textwidth(string), textheight(string));
                 sprintf (string, "%d", rockmeter);
                 outtext(string);
                 }
