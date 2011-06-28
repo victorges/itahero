@@ -67,7 +67,8 @@ int main (int argc, char *argv[]) {
     int nSongs;
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
     initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
-    SDL_Init(SDL_INIT_VIDEO);
+    //SDL_Init(SDL_INIT_VIDEO);
+    //SDL_Surface *screen=SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE|SDL_DOUBLEBUF);
 //load song list
     FILE *reader;
     reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");

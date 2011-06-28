@@ -9,13 +9,13 @@ struct note {
       };
 
 class menu {
+    private:
       char *header;
       struct option {
             char *content;
             option *next;
-            } *start;
-      option *end;
-      int selected, nOpt, locx, locy;
+            } *start, *end;
+      int selected, nOpt, locx, locy, sizex, sizey;
       void print();
     public:
       menu (char head[], int x, int y);
@@ -28,6 +28,7 @@ class menu {
     };
 
 class music {
+      private:
         irrklang::ISoundEngine *engine;
         irrklang::ISound* sound;
         irrklang::ISoundSource* source, *errorsource[10];
@@ -76,9 +77,10 @@ class highway {
     
 class background; //to-do
 
-
 void menu::print () { //temporaria
     option *aux=start;
+    setfillstyle(SOLID_FILL, BLACK);
+    bar (locx-10, locy-10, locx+sizex+10, locy+sizey+10);
     moveto(locx,locy);
     outtext(header);
     int y=textheight(header);

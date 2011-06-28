@@ -3,6 +3,8 @@ menu::menu (char head[]="", int x=50, int y=50): locx(x), locy(y), selected(0), 
     for (size=0;head[size];size++);
     header=new char[++size];
     for (int i=0;i<size;i++) header[i]=head[i];
+    sizex=textwidth(header);
+    sizey=textheight(header);
     }
 
 menu::~menu () {
@@ -25,11 +27,13 @@ void menu::addOpt (char content[]) {
         if (end->next==NULL) Error ("Error loading menu");
         end=end->next;
         }
-    end->next=0;
+    end->next=NULL;
     for (size=0;content[size];size++);
     end->content=new char[++size];
     if (end->content==NULL) Error ("Error loading menu");
     for (int i=0;i<size;i++) end->content[i]=content[i];
+    sizey+=textheight(end->content);
+    if (textwidth(end->content)>sizex) sizex=textwidth(end->content);
     nOpt++;
 }
 
@@ -51,7 +55,6 @@ char* menu::opts() {
 bool menu::navigate () {
     print();
     swapbuffers();
-    cleardevice();
     if (kbhit()) {
         char c=getch();
         switch (c) {
@@ -64,21 +67,16 @@ bool menu::navigate () {
 }
 
 /*void menu::navigate () {  //SDL
-    char c;
+    print();
+    swapbuffers();
     SDL_Event event;
-    while (event.key.keysym.sym!=SDLK_ESCAPE&&event.key.keysym.sym!=SDLK_RETURN) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type==SDL_KEYDOWN)
-                switch (event.key.keysym.sym) {
-                    case SDLK_UP: selected=(selected+nOpt-1)%nOpt; break;
-                    case SDLK_DOWN: selected=(selected+nOpt+1)%nOpt; break;
-                    }
+    if (SDL_PollEvent(&event)&&event.type==SDL_KEYDOWN)
+        switch (event.key.keysym.sym) {
+            case SDLK_UP: selected=(selected+nOpt-1)%nOpt; return 1;
+            case SDLK_DOWN: selected=(selected+nOpt+1)%nOpt; return 1;
+            case SDLK_ESCAPE: case SDLK_BACKSPACE: selected=nOpt; case SDLK_RETURN: return 0;
             }
-        cleardevice();
-        print();
-        swapbuffers();
-        }
-    if (event.key.keysym.sym==SDLK_ESCAPE) selected=nOpt-1;
+    return 1;
 }*/
 
 
@@ -337,13 +335,16 @@ long long int highway::refresh () {
 
                     if (time==~0) return score/10000;
 
+                    /*
+                    Uint8 *keyboard=SDL_GetKeyState();
+                    */
                     for (i=0;fret[i];i++) {
                         lastfretstate[i]=fretstate[i];
-                        fretstate[i]=GetAsyncKeyState(fret[i])!=0;
+                        fretstate[i]=GetAsyncKeyState(fret[i])!=0; //keyboard[fret[i]]!=0
                         }
                     for (i=0;pick[i];i++) {
                         lastpickstate[i]=pickstate[i];
-                        pickstate[i]=GetAsyncKeyState(pick[i])!=0;
+                        pickstate[i]=GetAsyncKeyState(pick[i])!=0; //keyboard[fret[i]]!=0
                         }
 
                     while (progress<size&&time-chart[progress].time>timing_window) {
