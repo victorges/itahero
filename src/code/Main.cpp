@@ -1,6 +1,8 @@
 #include <graphics/graphics.h>
 #include <irrKlang/irrKlang.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_ttf.h>
 
 #define GUITAR 0
 #define BASS 1
@@ -66,9 +68,13 @@ int main (int argc, char *argv[]) {
     char string[200];
     int nSongs;
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
-    initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
-    //SDL_Init(SDL_INIT_VIDEO);
-    //SDL_Surface *screen=SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE|SDL_DOUBLEBUF);
+    //initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
+    SDL_Init (SDL_INIT_EVERYTHING);
+    TTF_Init ();
+    SDL_Surface *screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);
+    
+    SDL_WM_SetCaption ( "ITA Hero", NULL );
+    
 //load song list
     FILE *reader;
     reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
@@ -364,6 +370,8 @@ int main (int argc, char *argv[]) {
           }*/
           
     engine->drop();
-    closegraph();
+    SDL_Quit ();
+    TTF_Quit ();
+    //closegraph();
     return 0;
 }
