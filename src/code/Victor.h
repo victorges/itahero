@@ -356,7 +356,7 @@ long long int highway::refresh () {
                     while (progress<size&&time-chart[progress].time>timing_window) {
                         if (chart[progress].hit==false) {
                             rockmeter-=20;
-                            basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
+                            basescore+=(500000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
                             if (streak>0) MusicStream->error();
                             streak=0;
                             MusicStream->hitting(instrument, false);
@@ -377,9 +377,9 @@ long long int highway::refresh () {
                                            rockmeter+=21-rockmeter/50;
                                            chart[j].hit=true;
                                            MusicStream->hitting(instrument);
-                                           basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                           basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
-                                           score+=1000000*chart[j].chord*multiplier();
+                                           score+=500000*chart[j].chord*multiplier();
                                            picked=chart[j].hopo=false;
                                            }
                                     }
@@ -424,9 +424,9 @@ long long int highway::refresh () {
                                         rockmeter+=21-rockmeter/50;
                                         chart[j].hit=true;
                                         MusicStream->hitting(instrument);
-                                        basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                        basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
-                                        score+=1000000*chart[j].chord*multiplier();
+                                        score+=500000*chart[j].chord*multiplier();
                                         picked=false;
                                         }
                                     }
