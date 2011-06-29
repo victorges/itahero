@@ -80,12 +80,12 @@ Uint8 drawer::get_pixel_color ( SDL_Surface *source, int x, int y, char c ){
     return color;
 }
 
-void check_unlock ( SDL_Surface *source ){
+void drawer::check_unlock ( SDL_Surface *source ){
     if ( SDL_MUSTLOCK ( source ) )
         SDL_UnlockSurface ( source );
 }
 
-void check_lock ( SDL_Surface *source ){
+void drawer::check_lock ( SDL_Surface *source ){
     if ( SDL_MUSTLOCK ( source ) )
         SDL_LockSurface ( source );
 }
@@ -105,7 +105,7 @@ SDL_Surface* drawer::load_image ( char *name ){
     return optimized;
 }
 
-void apply_surface ( int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip = NULL ){
+void drawer::apply_surface ( int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip = NULL ){
     SDL_Rect offset;
     
     offset.x = x;

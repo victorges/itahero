@@ -49,17 +49,26 @@ void sfscanf (FILE *file, char CheckString[]) {
      if (CheckString[i]) Error ("Soundlist file corrupted");
 }
 
-void PlaySong (music *song, highway *players[], int nPlayers=1) {
+void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayers=1) {
     song->play();
-    bool continuous=true;
-    while (continuous) {
+    SDL_Event event;
+    bool done=false;
+    SDL_Rect all;
+    all.x=0;
+    all.y=0;
+    all.h=SIZEY-1;
+    all.w=SIZEX-1;
+    while (!done) {
         swapbuffers();
+        SDL_Flip(screen);
+        SDL_FillRect(screen, &all, 0);
         cleardevice();
         for (int i=0;i<nPlayers;i++) {
             players[i]->refresh();
-            if (!players[i]->alive()) continuous=false;
+            if (!players[i]->alive()) done=true;
             }
-        if (song->isFinished()) continuous=false;
+        if (song->isFinished()) done=true;
+        while (SDL_PollEvent(&event)) if (event.type == SDL_QUIT) exit(0);
         }
 }
 
@@ -71,10 +80,10 @@ int main (int argc, char *argv[]) {
     initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
     SDL_Init (SDL_INIT_EVERYTHING);
     TTF_Init ();
-    SDL_Surface *screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE);
-    
+    SDL_Surface *screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+
     SDL_WM_SetCaption ( "ITA Hero", NULL );
-    
+
 //load song list
     FILE *reader;
     reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
@@ -84,7 +93,7 @@ int main (int argc, char *argv[]) {
     sfscanf (reader, "]\n");
 
     music* songs[nSongs];
-    
+
     for (int i=0;i<nSongs-1;i++) {
         songs[i]=new music (reader, engine);
         char c;
@@ -96,10 +105,10 @@ int main (int argc, char *argv[]) {
     fclose (reader);
 //end of loading of song list
 
-    char playersfret[4][6]={"ZXCVB", "QWERT", "GHJKL", {VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, 0}};
+    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b, 0}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l, 0}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t, 0}, {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5, 0}};
     char playerspick[4][3]={"", "", "", ""};
     int playersextras[4][10]={{1, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
-    
+
     menu *startmenu=new menu(" - Main Menu");
     startmenu->addOpt("Singleplayer");
     startmenu->addOpt("Multiplayer");
@@ -109,6 +118,7 @@ int main (int argc, char *argv[]) {
     bool done=0;
     while (!done) {
         while (startmenu->navigate());
+        cleardevice(); swapbuffers(); cleardevice();
         switch (startmenu->opts()[0]) {
             case 'S':
                 {
@@ -128,12 +138,14 @@ int main (int argc, char *argv[]) {
                                 }
                             ChosenSong->preview(true);
                             }
+                        cleardevice(); swapbuffers(); cleardevice();
                         if (!songmenu->cancel()) {
                             menu *instrm=new menu(" - Choose instrument");
                             if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                             if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                             if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                             while (instrm->navigate()) ChosenSong->preview(true);
+                            cleardevice(); swapbuffers(); cleardevice();
                             if (!instrm->cancel()) {
                                 int instrument;
                                 switch (instrm->opts()[0]) {
@@ -143,8 +155,8 @@ int main (int argc, char *argv[]) {
                                     }
                                 ChosenSong->preview(false);
                                 ChosenSong->load();
-                                highway *player=new highway (ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
-                                PlaySong (ChosenSong, &player);
+                                highway *player=new highway (screen, ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
+                                PlaySong (screen, ChosenSong, &player);
                                 ChosenSong->unload();
                                 delete player;
                                 stay=0;
@@ -165,6 +177,7 @@ int main (int argc, char *argv[]) {
                     ordmenu->addOpt("3");
                     ordmenu->addOpt("4");
                     while(ordmenu->navigate());
+                    cleardevice(); swapbuffers(); cleardevice();
                     nPlayers=ordmenu->opt()+1;
                     if (!ordmenu->cancel()) {
                         delete ordmenu;
@@ -183,6 +196,7 @@ int main (int argc, char *argv[]) {
                                     }
                                 ChosenSong->preview(true);
                                 }
+                            cleardevice(); swapbuffers(); cleardevice();
                             if (!ordmenu->cancel()) {
                                 menu *instrm;
                                 int i, instrument[nPlayers];
@@ -193,6 +207,7 @@ int main (int argc, char *argv[]) {
                                     if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                     if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                                     while(instrm->navigate()) ChosenSong->preview(true);
+                                    cleardevice(); swapbuffers(); cleardevice();
                                     if (instrm->cancel()) i-=2;
                                     else
                                         switch (instrm->opts()[0]) {
@@ -206,8 +221,8 @@ int main (int argc, char *argv[]) {
                                     ChosenSong->preview(false);
                                     ChosenSong->load();
                                     highway *players[nPlayers];
-                                    for (int j=0;j<nPlayers;j++) players[j]=new highway (ChosenSong, instrument[j], playersextras[j], playersfret[j], playerspick[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
-                                    PlaySong (ChosenSong, players, nPlayers);
+                                    for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], playersextras[j], playersfret[j], playerspick[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
+                                    PlaySong (screen, ChosenSong, players, nPlayers);
                                     ChosenSong->unload();
                                     for (int j=0;j<nPlayers;j++) delete players[j];
                                     stay=0;
@@ -238,12 +253,14 @@ int main (int argc, char *argv[]) {
                                 }
                             ChosenSong->preview(true);
                             }
+                        cleardevice(); swapbuffers(); cleardevice();
                         if (!songmenu->cancel()) {
                             menu *instrm=new menu(" - Choose instrument");
                             if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                             if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                             if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                             while (instrm->navigate()) ChosenSong->preview(true);
+                            cleardevice(); swapbuffers(); cleardevice();
                             if (!instrm->cancel()) {
                                 int instrument;
                                 switch (instrm->opts()[0]) {
@@ -257,6 +274,7 @@ int main (int argc, char *argv[]) {
                                 speed->addOpt("Slow");
                                 speed->addOpt("Full Speed");
                                 while (speed->navigate()) ChosenSong->preview(true);
+                                cleardevice(); swapbuffers(); cleardevice();
                                 if (!speed->cancel()) {
                                     menu *section=new menu (" - Choose section (starting point)");
                                     int from, to;
@@ -269,6 +287,7 @@ int main (int argc, char *argv[]) {
                                         if (from!=section->opt()-1) from=section->opt()-1;
                                         ChosenSong->preview(true, from);
                                         }
+                                    cleardevice(); swapbuffers(); cleardevice();
                                     if (!section->cancel()) {
                                         delete section;
                                         section=new menu (" - Choose section (ending point)");
@@ -280,6 +299,7 @@ int main (int argc, char *argv[]) {
                                             if (to!=section->opt()+from-1) to=section->opt()+from-1;
                                             ChosenSong->preview(true, to);
                                             }
+                                        cleardevice(); swapbuffers(); cleardevice();
                                         if (!section->cancel()) {
                                             ChosenSong->preview(false);
                                             switch (speed->opt()) {
@@ -289,8 +309,8 @@ int main (int argc, char *argv[]) {
                                                 case 4: ChosenSong->load(1.0, from, to+1); break;
                                                 }
                                             playersextras[0][PRACTICE]=1;
-                                            highway *player=new highway (ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
-                                            PlaySong (ChosenSong, &player);
+                                            highway *player=new highway (screen, ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
+                                            PlaySong (screen, ChosenSong, &player);
                                             ChosenSong->unload();
                                             delete player;
                                             playersextras[0][PRACTICE]=0;
@@ -315,22 +335,24 @@ int main (int argc, char *argv[]) {
                     options->addOpt("Controls");
                     options->addOpt("Extras");
                     options->addOpt("Back");
-                    bool done=0;
-                    while (!done) {
+                    bool doneopt=0;
+                    while (!doneopt) {
                         while (options->navigate());
                         switch (options->opts()[0]) {
                             case 'C': break;
                             case 'E': break;
-                            case 'B': done=1; break;
+                            case 'B': doneopt=1; break;
                             }
-                        if (options->cancel()) done=1;
+                        if (options->cancel()) doneopt=1;
                         }
+                    cleardevice(); swapbuffers(); cleardevice();
                     delete options;
                 }
                 break;
             case 'E': done=1; break;
             }
         if (startmenu->cancel()) done=1;
+        cleardevice(); swapbuffers(); cleardevice();
         }
     delete startmenu;
 
@@ -368,7 +390,7 @@ int main (int argc, char *argv[]) {
                     }
                 }
           }*/
-          
+
     engine->drop();
     SDL_Quit ();
     TTF_Quit ();

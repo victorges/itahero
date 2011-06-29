@@ -8,6 +8,23 @@ struct note {
         char chord; //numero de notas da nota (se for um acorde vai ter mais de uma nota)
       };
 
+class drawer {
+     private:
+        Uint8 get_pixel_color (SDL_Surface *source, int x, int y, char c);
+        void check_unlock (SDL_Surface *source);
+        void check_lock (SDL_Surface *source);
+        SDL_Surface* load_image (char *name);
+        void apply_surface (int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip);
+     public:
+        SDL_Surface *surface;
+        drawer (SDL_Surface *surface);
+        Uint32 get_pixel (SDL_Surface *source, int x, int y);
+        void put_pixel (SDL_Surface *destination, int x, int y, Uint32 pixel);
+        void line (SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
+        void rectangle (SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
+        void bar (SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
+};
+
 class menu {
     private:
       char *header;
@@ -66,33 +83,21 @@ class highway {
         bool godmode, practice;
         long long int basescore, score;
         int streak, rockmeter;
+        drawer *visual;
         void draw (int time);
       public:
-        highway (music *stream, char instr, int *xtras, char control[], char pck[], int loc, int w, int h, int col[]); //in progress
+        highway (SDL_Surface *visual, music *MusicStream, char instrument, int *extras, char *fret, char *pick, int location, int width, int height, int *color); //in progress
         ~highway (); //in progress
         int multiplier (); //done
         int preliminary(); //to-do | usa antes de começar a tocar a música
         long long int refresh(); //in progress
         bool alive();
-     friend class drawer;
     };
-    
-class drawer {
-     private:
-        void check_unlock (SDL_Surface *source);
-        void check_lock (SDL_Surface *source);
-        SDL_Surface* load_image (char *name);
-        Uint8 get_pixel_color (SDL_Surface *source, int x, int y, char c);
-        void apply_surface (int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip);
-     public:
-        Uint32 get_pixel (SDL_Surface *source, int x, int y);
-        void put_pixel (SDL_Surface *destination, int x, int y, Uint32 pixel);
-        void line (SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
-        void rectangle (SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
-        void bar (SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
-};
 
 class background; //to-do
+
+drawer::drawer (SDL_Surface *surf): surface(surf) {
+    }
 
 void menu::print () { //temporaria
     option *aux=start;
@@ -114,17 +119,23 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
             int j=progress;
 
             setcolor (WHITE);
-            line (location-180, SIZEY-0, location-180, SIZEY-SIZEY);
-            line (location+170, SIZEY-0, location+170, SIZEY-SIZEY);
+            line (location-180, SIZEY, location-180, SIZEY-SIZEY);
+            visual->line(visual->surface, location-180, SIZEY-1, location-180, 0, 255, 255, 255, 255);
+            line (location+170, SIZEY, location+170, 0);
+            visual->line(visual->surface, location+170, SIZEY-1, location+170, 0, 255, 255, 255, 255);
             setcolor (DARKGRAY);
-            for (j=(time/(60*1000)/bpm)*(60*1000)/bpm;j<time+time_delay;j+=(60*1000)/bpm) line (location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100));
-
+            for (j=(time/(60*1000)/bpm)*(60*1000)/bpm;j<time+time_delay;j+=(60*1000)/bpm) {
+                line (location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100));
+                if (SIZEY-((j-time)*(SIZEY-100)/time_delay+100)<SIZEY) visual->line(visual->surface, location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), RED_VALUE(DARKGRAY), GREEN_VALUE(DARKGRAY), BLUE_VALUE(DARKGRAY), 255);
+                }
             for (j=0;fret[j];j++) {
                 setcolor(color[j]);
                 rectangle (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
+                visual->rectangle (visual->surface, location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140, GetRValue(color[j]), GetGValue(color[j]), GetBValue(color[j]), 255);
                 if (lastfretstate[j]) {
                     setfillstyle(SOLID_FILL, COLOR (GetRValue(color[j])<40?0:(GetRValue(color[j])-40), GetGValue(color[j])<40?0:(GetGValue(color[j])-40), GetBValue(color[j])<40?0:(GetBValue(color[j])-40)));
                     bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138);
+                    visual->bar (visual->surface, location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138, GetRValue(color[j]), GetGValue(color[j]), GetBValue(color[j]), 255);
                     }
                 }
             for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);
@@ -136,10 +147,17 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                                 if (!chart[j].hold) setfillstyle (SOLID_FILL, LIGHTGRAY);
                                 else setfillstyle(SOLID_FILL, color[i]);
                                 bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
+                                if (SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20)<SIZEY&&SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20)>0) visual->bar (visual->surface, location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20), GetRValue(color[i]), GetGValue(color[i]), GetBValue(color[i]), 255);
                                 }
                             setfillstyle(SOLID_FILL, color[i]);
-                            if (!chart[j].hit&&!chart[j].hopo) bar(location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
-                            if (!chart[j].hit&&chart[j].hopo) bar(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
+                            if (!chart[j].hit&&!chart[j].hopo) {
+                                bar(location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
+                                if (SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100)<SIZEY&&SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40)>0) visual->bar (visual->surface, location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), GetRValue(color[i]), GetGValue(color[i]), GetBValue(color[i]), 255);
+                                }
+                            if (!chart[j].hit&&chart[j].hopo) {
+                                bar(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
+                                if (SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100)<SIZEY&&SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40)>0) visual->bar (visual->surface, location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), GetRValue(color[i]), GetGValue(color[i]), GetBValue(color[i]), 255);
+                                }
                             }
                 }
             char string[50];

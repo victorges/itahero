@@ -49,10 +49,11 @@ char* menu::opts() {
     option *aux=start;
     int n=selected;
     while (n--) aux=aux->next;
-    return aux->content;
+    if (aux) return aux->content;
+    return "";
 }
 
-bool menu::navigate () {
+/*bool menu::navigate () {
     print();
     swapbuffers();
     if (kbhit()) {
@@ -64,20 +65,23 @@ bool menu::navigate () {
             }
         }
     return 1;
-}
+}*/
 
-/*void menu::navigate () {  //SDL
+bool menu::navigate () {  //SDL
     print();
     swapbuffers();
     SDL_Event event;
-    if (SDL_PollEvent(&event)&&event.type==SDL_KEYDOWN)
-        switch (event.key.keysym.sym) {
-            case SDLK_UP: selected=(selected+nOpt-1)%nOpt; return 1;
-            case SDLK_DOWN: selected=(selected+nOpt+1)%nOpt; return 1;
-            case SDLK_ESCAPE: case SDLK_BACKSPACE: selected=nOpt; case SDLK_RETURN: return 0;
-            }
+    if (SDL_PollEvent(&event)) {
+        if (event.type==SDL_KEYDOWN)
+            switch (event.key.keysym.sym) {
+                case SDLK_UP: selected=(selected+nOpt-1)%nOpt; return 1;
+                case SDLK_DOWN: selected=(selected+nOpt+1)%nOpt; return 1;
+                case SDLK_ESCAPE: case SDLK_BACKSPACE: selected=nOpt; case SDLK_RETURN: return 0;
+                }
+        else if (event.type==SDL_QUIT) exit(0);
+        }
     return 1;
-}*/
+}
 
 
 music::music (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source(0), start(0), limit(16), engine(eng) {
@@ -243,11 +247,11 @@ int music::time () {
 }
       
 
-highway::highway (music* stream, char instr, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
-                  MusicStream(stream), instrument(instr), time_delay(300+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500) {
+highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
+                  visual(new drawer(screen)), MusicStream(stream), instrument(instr), time_delay(300+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
+                {
                 FILE *chartfile=NULL;
                 int i;
-                
                 if (col==0) {
                     int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
                     col=col_default;
@@ -335,16 +339,18 @@ long long int highway::refresh () {
 
                     if (time==~0) return score/10000;
 
-                    /*
-                    Uint8 *keyboard=SDL_GetKeyState();
-                    */
+
+                    Uint8 *keyboard=SDL_GetKeyState(NULL);
+                    
                     for (i=0;fret[i];i++) {
                         lastfretstate[i]=fretstate[i];
-                        fretstate[i]=GetAsyncKeyState(fret[i])!=0; //keyboard[fret[i]]!=0
+                        //fretstate[i]=GetAsyncKeyState(fret[i])!=0;
+                        fretstate[i]=keyboard[fret[i]]!=0;
                         }
                     for (i=0;pick[i];i++) {
                         lastpickstate[i]=pickstate[i];
-                        pickstate[i]=GetAsyncKeyState(pick[i])!=0; //keyboard[fret[i]]!=0
+                        //pickstate[i]=GetAsyncKeyState(pick[i])!=0;
+                        pickstate[i]=keyboard[fret[i]]!=0;
                         }
 
                     while (progress<size&&time-chart[progress].time>timing_window) {
