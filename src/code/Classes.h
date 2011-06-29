@@ -10,6 +10,7 @@ struct note {
 
 class drawer {
      private:
+        int sizex, sizey;
         Uint8 get_pixel_color (SDL_Surface *source, int x, int y, char c);
         void check_unlock (SDL_Surface *source);
         void check_lock (SDL_Surface *source);
@@ -17,12 +18,17 @@ class drawer {
         void apply_surface (int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip);
      public:
         SDL_Surface *surface;
-        drawer (SDL_Surface *surface);
+        drawer (SDL_Surface *surface, int sizex, int sizey); //cria drawer para uma surface já pronta
+        drawer (int width, int height, int bpp, Uint32 flags); //cria surface para ser a tela
+        drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask); //cria surface qualquer
+        drawer (char filename[]); //abre arquivo de imagem
         Uint32 get_pixel (SDL_Surface *source, int x, int y);
         void put_pixel (SDL_Surface *destination, int x, int y, Uint32 pixel);
         void line (SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
         void rectangle (SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
         void bar (SDL_Surface *destination, int left, int top, int right, int bottom, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
+        void Flip();
+        void clear();
 };
 
 class menu {
@@ -95,9 +101,6 @@ class highway {
     };
 
 class background; //to-do
-
-drawer::drawer (SDL_Surface *surf): surface(surf) {
-    }
 
 void menu::print () { //temporaria
     option *aux=start;

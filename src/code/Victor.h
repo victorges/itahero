@@ -1,3 +1,26 @@
+drawer::drawer (SDL_Surface *surf, int szx=SIZEX, int szy=SIZEY):
+    surface(surf), sizex(szx), sizey(szy) {}
+
+drawer::drawer (int width, int height, int bpp, Uint32 flags):
+    surface(SDL_SetVideoMode(width, height, bpp, flags)) {}
+
+drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask):
+    surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)) {}
+    
+void drawer::Flip () {
+    SDL_Flip(surface);
+    }
+
+void drawer::clear () {
+    SDL_Rect all;
+    all.x=0;
+    all.y=0;
+    all.h=sizey-1;
+    all.w=sizex-1;
+    SDL_FillRect(surface, &all, 0);
+}
+
+
 menu::menu (char head[]="", int x=50, int y=50): locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
     int size;
     for (size=0;head[size];size++);
@@ -256,7 +279,7 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                     int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
                     col=col_default;
                 }
-
+                
                 for (size=0;frt[size];size++);
                 fretstate=new short int[size];
                 lastfretstate=new short int[size];
