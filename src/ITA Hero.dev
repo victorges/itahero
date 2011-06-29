@@ -48,14 +48,14 @@ LanguageID=1033
 CharsetID=1252
 CompanyName=
 FileVersion=
-FileDescription=Developed using the Dev-C++ IDE
+FileDescription=ITA Hero
 InternalName=
 LegalCopyright=
 LegalTrademarks=
 OriginalFilename=
 ProductName=
 ProductVersion=
-AutoIncBuildNr=1
+AutoIncBuildNr=0
 
 [Unit5]
 FileName=code\Victor.h
