@@ -16,8 +16,8 @@
 
 #define NERROR 5
 
-const int SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
-const int SIZEY=850>getmaxheight()?(getmaxheight()-50):850;
+int SIZEX;
+int SIZEY;
 
 #include "Functions.h"
 #include "Classes.h"
@@ -73,14 +73,23 @@ void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayer
 }
 
 int main (int argc, char *argv[]) {
+
+    SDL_Init (SDL_INIT_EVERYTHING);
+    TTF_Init ();
+    irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
+    //SIZEX=SDL_GetVideoInfo()->current_w;
+    //SIZEY=SDL_GetVideoInfo()->current_h;
+    SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
+    SIZEY=850>getmaxheight()?getmaxheight():850;
+
     size_t size;
     char string[200];
     int nSongs;
-    irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
+   
     initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
-    SDL_Init (SDL_INIT_EVERYTHING);
-    TTF_Init ();
-    SDL_Surface *screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    SDL_Surface *screen;
+    screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    //screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
 
     SDL_WM_SetCaption ( "ITA Hero", NULL );
 
