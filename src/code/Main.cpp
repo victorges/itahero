@@ -16,8 +16,16 @@
 
 #define NERROR 5
 
-int SIZEX;
-int SIZEY;
+class video {
+    private:
+      int width, height;
+    public:
+      video():width(1600>SDL_GetVideoInfo()->current_w?SDL_GetVideoInfo()->current_w:1600), height(850>SDL_GetVideoInfo()->current_h?SDL_GetVideoInfo()->current_h:850) {}
+      int sizex() {return width;}
+      int sizey() {return height;}
+} *systeminfo;
+#define SIZEX (systeminfo->sizex())
+#define SIZEY (systeminfo->sizey())
 
 #include "Functions.h"
 #include "Classes.h"
@@ -52,7 +60,7 @@ void sfscanf (FILE *file, char CheckString[]) {
 void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayers=1) {
     song->play();
     SDL_Event event;
-    Uint8* keyboard;
+    Uint8* keyboard=SDL_GetKeyState(NULL);
     bool done=false;
     SDL_Rect all;
     all.x=0;
@@ -83,10 +91,7 @@ int main (int argc, char *argv[]) {
     SDL_Init (SDL_INIT_EVERYTHING);
     TTF_Init ();
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
-    //SIZEX=SDL_GetVideoInfo()->current_w;
-    //SIZEY=SDL_GetVideoInfo()->current_h;
-    SIZEX=1600>getmaxwidth()?getmaxwidth():1600;
-    SIZEY=850>getmaxheight()?getmaxheight():850;
+    systeminfo=new video ();
 
     size_t size;
     char string[200];
