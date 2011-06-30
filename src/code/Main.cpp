@@ -398,44 +398,9 @@ int main (int argc, char *argv[]) {
         }
     delete startmenu;
 
-    /*int i=4;
-    music* playing=songs[i];
-    highway *players[4];
-    players[0]=new highway(playing, GUITAR, 100, playershs[0], playersfret[0], playerspick[0], 0, 300);
-    players[1]=new highway(playing, BASS, 100, playershs[1], playersfret[1], playerspick[1], 0, SIZEX/2+50);
-    players[2]=new highway(playing, DRUMS, 100, playershs[2], playersfret[2], playerspick[2], 0, SIZEX-200);
-    playing->load(engine);
-    //Sleep(1000);
-    //while (a->preliminary());
-    //playing->play();
-    PlaySong (playing, players, 3);
-    while (1) {
-          swapbuffers();
-          cleardevice();
-          a->refresh();
-          b->refresh();
-          c->refresh();
-          if (kbhit()||playing->isFinished()) {
-                if (playing->isFinished()||getch()==27) {
-                    playing->unload(engine);
-                    delete a;
-                    delete b;
-                    delete c;
-                    i=(i+1)%nSongs;
-                    playing=songs[i];
-                    a=new highway (playing, GUITAR, 100, 0, "ZXCVB", "", 0, 300);
-                    b=new highway(playing, BASS, 100, 1, "QWERT", "", 0, SIZEX/2+50);
-                    c=new highway(playing, DRUMS, 100, 2, "GHJKL", "", 0, SIZEX-200);
-                    playing->load(engine);
-                    Sleep(1000);
-                    playing->play();
-                    }
-                }
-          }*/
-
     engine->drop();
     SDL_Quit ();
     TTF_Quit ();
-    //closegraph();
+    closegraph();
     return 0;
 }
