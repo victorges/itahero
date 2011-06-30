@@ -1,11 +1,18 @@
-drawer::drawer (SDL_Surface *surf, int szx=SIZEX, int szy=SIZEY):
-    surface(surf), sizex(szx), sizey(szy) {}
+drawer::drawer (SDL_Surface *surf):surface(surf) {}
 
 drawer::drawer (int width, int height, int bpp, Uint32 flags):
     surface(SDL_SetVideoMode(width, height, bpp, flags)) {}
 
 drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask):
     surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)) {}
+    
+void drawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+    maincolor=SDL_MapRGBA(surface->format, R, G, B, A);
+}
+
+void drawer::setcolor (Uint32 color) {
+    maincolor=color;
+}
 
 void drawer::Flip () {
     SDL_Flip(surface);
@@ -15,9 +22,19 @@ void drawer::clear () {
     SDL_Rect all;
     all.x=0;
     all.y=0;
-    all.h=sizey-1;
-    all.w=sizex-1;
+    all.h=surface->w-1;
+    all.w=surface->h-1;
     SDL_FillRect(surface, &all, 0);
+}
+
+void note::operator()(FILE *chartfile) {
+    fread (&type, sizeof (char), 1, chartfile);
+    fread (&time, sizeof (int), 1, chartfile);
+    fread (&end, sizeof (int), 1, chartfile);
+    hit=false;
+    hold=end>time;
+    chord=0;
+    for (int j=0;j<5;j++) if ((type>>j)%2) chord++;
 }
 
 
@@ -152,6 +169,7 @@ void music::load (float speed=1.0, int starts=0, int ends=16) {
      FX=sound->getSoundEffectControl();
      sound->setPlayPosition (starts*sound->getPlayLength()/16);
      limit=ends;
+     section=starts;
      for (int i=0;i<NERROR;i++) {
             char string[100];
             sprintf (string, "error%d", i+1);
@@ -164,6 +182,11 @@ void music::load (float speed=1.0, int starts=0, int ends=16) {
             }
     sound->setPlaybackSpeed (speed);
     start=clock()*1000/CLOCKS_PER_SEC;
+}
+
+void music::reload () {
+    sound->setIsPaused(true);
+    sound->setPlayPosition(section*sound->getPlayLength()/16);
 }
 
 void music::unload () {
@@ -312,19 +335,12 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                 fread (&size, sizeof(int), 1, chartfile);
                 chart=new note[(size>50000)?(size=0):(size)];
                 for (i=0;i<size;i++) {
-                    fread (&chart[i].type, sizeof (char), 1, chartfile);
-                    fread (&chart[i].time, sizeof (int), 1, chartfile);
-                    fread (&chart[i].end, sizeof (int), 1, chartfile);
-                    chart[i].hit=false;
-                    chart[i].hold=chart[i].end>chart[i].time;
-                    chart[i].chord=0;
-                    if (allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
-                    else chart[i].hopo=false;
-                    for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
+                    chart[i](chartfile);
+                    chart[i].hopo=(allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type));
                     }
                 for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
                 CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
-                }
+}
 
 highway::~highway () {
                   delete[] fretstate;
@@ -363,15 +379,8 @@ void highway::reset () {
         fread (&size, sizeof(int), 1, chartfile);
         chart=new note[(size>50000)?(size=0):(size)];
         for (int i=0;i<size;i++) {
-            fread (&chart[i].type, sizeof (char), 1, chartfile);
-            fread (&chart[i].time, sizeof (int), 1, chartfile);
-            fread (&chart[i].end, sizeof (int), 1, chartfile);
-            chart[i].hit=false;
-            chart[i].hold=chart[i].end>chart[i].time;
-            chart[i].chord=0;
-            if (allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
-            else chart[i].hopo=false;
-            for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
+            chart[i](chartfile);
+            chart[i].hopo=(allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type));
             }
         for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
         CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
@@ -512,7 +521,7 @@ void *AllocateFile (char file_name[], size_t &size) {
 
 void Error (char string[]) {
      closegraph();
-     showerrorbox (string);
+     MessageBox(GetActiveWindow(), string, NULL, MB_OK);
      exit(1);
 }
 

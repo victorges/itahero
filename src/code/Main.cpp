@@ -4,6 +4,8 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
+//#define FULLSCREEN
+
 #define GUITAR 0
 #define BASS 1
 #define DRUMS 2
@@ -16,16 +18,10 @@
 
 #define NERROR 5
 
-class video {
-    private:
-      int width, height;
-    public:
-      video():width(1600>SDL_GetVideoInfo()->current_w?SDL_GetVideoInfo()->current_w:1600), height(850>SDL_GetVideoInfo()->current_h?SDL_GetVideoInfo()->current_h:850) {}
-      int sizex() {return width;}
-      int sizey() {return height;}
-} *systeminfo;
-#define SIZEX (systeminfo->sizex())
-#define SIZEY (systeminfo->sizey())
+const int *resolutionx;
+const int *resolutiony;
+#define SIZEX (*resolutionx)
+#define SIZEY (*resolutiony)
 
 #include "Functions.h"
 #include "Classes.h"
@@ -91,16 +87,16 @@ void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayer
                         pause->addOpt("Exit");
                         while (pause->navigate());
                         switch (pause->opt()) {
-                            case 1: done=0; break;
                             case 2:
-                                song->unload();
-                                song->load();
+                                song->reload();
                                 for (int i=0;i<nPlayers;i++) players[i]->reset();
                                 break;
                             case 3:
                                 done=1;
                                 break;
                             }
+                        if (pause->cancel()) keyboard[SDLK_ESCAPE]=0;
+                        delete pause;
                         song->play();
                         }
 
@@ -112,16 +108,26 @@ int main (int argc, char *argv[]) {
     SDL_Init (SDL_INIT_EVERYTHING);
     TTF_Init ();
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
-    systeminfo=new video ();
-
+    
+    #ifndef FULLSCREEN
+    resolutionx=new const int (1600>SDL_GetVideoInfo()->current_w?SDL_GetVideoInfo()->current_w:1600);
+    resolutiony=new const int (850>SDL_GetVideoInfo()->current_h?SDL_GetVideoInfo()->current_h:850);
+    #else
+    resolutionx=new const int (SDL_GetVideoInfo()->current_w);
+    resolutiony=new const int (SDL_GetVideoInfo()->current_h);
+    #endif
+    
     size_t size;
     char string[200];
     int nSongs;
    
-    initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
+    initwindow(SIZEX, SIZEY, "ITA Hero", (SDL_GetVideoInfo()->current_w-SIZEX)/2, (SDL_GetVideoInfo()->current_h-SIZEY-50)/2, true);
     SDL_Surface *screen;
+    #ifndef FULLSCREEN
     screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE);
-    //screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
+    #else
+    screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
+    #endif
 
     SDL_WM_SetCaption ( "ITA Hero", NULL );
 
