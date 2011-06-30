@@ -6,7 +6,7 @@ drawer::drawer (int width, int height, int bpp, Uint32 flags):
 
 drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask):
     surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)) {}
-    
+
 void drawer::Flip () {
     SDL_Flip(surface);
     }
@@ -110,21 +110,21 @@ bool menu::navigate () {  //SDL
 music::music (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source(0), start(0), limit(16), engine(eng) {
           char string[1000];
           int i;
-          
+
           sfscanf (songs, "FILE=");
           fgets(string, 1000, songs);
           for (i=1;string[i-1]!='\n';i++);
           string[i-1]=0;
           filename=new char[i];
           for (i=0;!i||string[i-1];i++) filename[i]=string[i];
-          
+
           sfscanf (songs, "TITLE=");
           fgets(string, 1000, songs);
           for (i=1;string[i-1]!='\n';i++);
           string[i-1]=0;
           title=new char[i];
           for (i=0;!i||string[i-1];i++) title[i]=string[i];
-          
+
           sfscanf (songs, "ARTIST=");
           fgets(string, 1000, songs);
           for (i=1;string[i-1]!='\n';i++);
@@ -268,7 +268,7 @@ int music::time () {
          if (sound->getIsPaused()) return sound->getPlayPosition();
          return (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed());
 }
-      
+
 
 highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
                   visual(new drawer(screen)), MusicStream(stream), instrument(instr), time_delay(300+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
@@ -279,18 +279,15 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                     int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
                     col=col_default;
                 }
-                
-                for (size=0;frt[size];size++);
-                fretstate=new short int[size];
-                lastfretstate=new short int[size];
-                color=new int[size];
-                for (i=0;i<size;i++) color[i]=col[i];
-                fret=new char[++size];
-                for (i=0;i<size;i++) fret[i]=frt[i];
-                
+
+                fretstate=new short int[5];
+                color=new int[5];
+                for (i=0;i<5;i++) color[i]=col[i];
+                fret=new char[5];
+                for (i=0;i<5;i++) fret[i]=frt[i];
+
                 for (size=0;pck[size];size++);
                 pickstate=new short int[size];
-                lastpickstate=new short int[size];
                 pick=new char[++size];
                 for (i=0;i<size;i++) pick[i]=pck[i];
 
@@ -315,11 +312,11 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                         instrument--;
                         }
                     }
-                
+
                 if (chartfile==NULL) Error ("No chart files are avaliable");
-                
+
                 CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
-                
+
                 fread (&bpm, sizeof(int), 1, chartfile);
                 fread (&size, sizeof(int), 1, chartfile);
                 chart=new note[(size>50000)?(size=0):(size)];
@@ -340,10 +337,8 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
 
 highway::~highway () {
                   delete[] fretstate;
-                  delete[] lastfretstate;
                   delete[] fret;
                   delete[] pickstate;
-                  delete[] lastpickstate;
                   delete[] pick;
                   delete[] chart;
                   delete[] color;
@@ -354,26 +349,21 @@ int highway::multiplier () {
     return (streak/10)+1;
 }
 
-long long int highway::refresh () {
+long long int highway::refresh (Uint8* keyboard) {
                     int time=MusicStream->time();
                     int i;
-                    char fretaux;
+                    char fretaux, newfretstate[5], newpickstate[5];
                     bool picked;
 
                     if (time==~0) return score/10000;
 
-
-                    Uint8 *keyboard=SDL_GetKeyState(NULL);
-                    
-                    for (i=0;fret[i];i++) {
-                        lastfretstate[i]=fretstate[i];
-                        //fretstate[i]=GetAsyncKeyState(fret[i])!=0;
-                        fretstate[i]=keyboard[fret[i]]!=0;
+                    for (i=0;i<5;i++) {
+                        //newnewfretstate[i]=GetAsyncKeyState(fret[i])!=0;
+                        newfretstate[i]=keyboard[fret[i]]!=0;
                         }
                     for (i=0;pick[i];i++) {
-                        lastpickstate[i]=pickstate[i];
-                        //pickstate[i]=GetAsyncKeyState(pick[i])!=0;
-                        pickstate[i]=keyboard[fret[i]]!=0;
+                        //newpickstate[i]=GetAsyncKeyState(pick[i])!=0;
+                        newpickstate[i]=keyboard[pick[i]]!=0;
                         }
 
                     while (progress<size&&time-chart[progress].time>timing_window) {
@@ -387,16 +377,15 @@ long long int highway::refresh () {
                         progress++;
                         }
                     if (chart[progress].time-time>time_delay&&chart[progress-1].end<time) MusicStream->hitting(instrument);
-                    picked=false;
-                    for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;
-                    for (i=0, picked=0;pick[i];i++) if ((pickstate[i]^lastpickstate[i])&pickstate[i]) picked=true;
-                    if (!i) for (i=0;fret[i];i++) if ((fretstate[i]^lastfretstate[i])&fretstate[i]) picked=true;
+
+                    for (i=0, fretaux=0;i<5;i++) fretaux+=newfretstate[i]<<i;
+                    for (i=0, picked=false;pick[i];i++) if ((newpickstate[i]^pickstate[i])&newpickstate[i]) picked=true;
+                    if (!i) for (i=0;i<5;i++) if ((newfretstate[i]^fretstate[i])&newfretstate[i]) picked=true;
 
                     for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {     //notas normais/acordes
                             if (!chart[j].hit) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||
-                                        (!(chart[j].chord-1) &&(((pick[0]&&((fretaux^(chart[j].type))<chart[j].type)))||
-                                                               ((!pick[0]&&(fretaux^(chart[j].type))&(chart[j].type))==0)))) {
+                                        (!(chart[j].chord-1) &&(fretaux^(chart[j].type))<chart[j].type)) {
                                            rockmeter+=21-rockmeter/50;
                                            chart[j].hit=true;
                                            MusicStream->hitting(instrument);
@@ -422,7 +411,10 @@ long long int highway::refresh () {
                                         }
                         }
                     if (!pick[0]) {
-                        for (i=0, fretaux=0;fret[i];i++) fretaux+=((fretstate[i]^lastfretstate[i])&fretstate[i])<<i;
+                        for (i=0, fretaux=0;i<5;i++) {
+                            fretaux+=((newfretstate[i]^fretstate[i])&newfretstate[i])<<i;
+                            if (fretaux&&newfretstate[i]) fretaux=newfretstate[i]<<i;
+                            }
                         for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
                             if (!chart[j].hit&&((chart[j].type)&fretaux)!=0) picked=false;
                             }
@@ -436,14 +428,15 @@ long long int highway::refresh () {
                         MusicStream->error();
                         }
                     picked=false;
-                    for (i=0, fretaux=0;fret[i];i++) fretaux+=fretstate[i]<<i;                  //hopo
-                    for (i=0;fret[i];i++) {
-                        if (!picked) picked=fretstate[i]^lastfretstate[i];
-                        else picked=!(fretstate[i]&lastfretstate[i]);
+                    for (i=0, fretaux=0;i<5;i++) fretaux+=newfretstate[i]<<i;                  //hopo
+                    for (i=0;i<5;i++) {
+                        if (!picked) picked=newfretstate[i]^fretstate[i];
+                        else picked=!(newfretstate[i]&fretstate[i]);
                     }
                     for (int j=progress;picked&&j<size&&chart[j].time-time<timing_window;j++) {
-                        if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo==true) {
-                                    if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||(!(chart[j].chord-1)&&((fretaux^(chart[j].type))&(chart[j].type))==0)) {
+                        if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo) {
+                                    if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||
+                                        (!(chart[j].chord-1) &&(fretaux^(chart[j].type))<chart[j].type)) {
                                         rockmeter+=21-rockmeter/50;
                                         chart[j].hit=true;
                                         MusicStream->hitting(instrument);
@@ -456,6 +449,9 @@ long long int highway::refresh () {
                         }
                     if (rockmeter>1000) rockmeter=1000;
                     if (rockmeter<0) rockmeter=0;
+
+                    for (i=0;i<5;i++) fretstate[i]=newfretstate[i];
+                    for (i=0;pick[i];i++) pickstate[i]=newpickstate[i];
 
                     draw(time);
                     return score/10000;

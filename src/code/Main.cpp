@@ -52,6 +52,7 @@ void sfscanf (FILE *file, char CheckString[]) {
 void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayers=1) {
     song->play();
     SDL_Event event;
+    Uint8* keyboard;
     bool done=false;
     SDL_Rect all;
     all.x=0;
@@ -64,11 +65,16 @@ void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayer
         SDL_FillRect(screen, &all, 0);
         cleardevice();
         for (int i=0;i<nPlayers;i++) {
-            players[i]->refresh();
+            players[i]->refresh(keyboard);
             if (!players[i]->alive()) done=true;
             }
         if (song->isFinished()) done=true;
-        while (SDL_PollEvent(&event)) if (event.type == SDL_QUIT) exit(0);
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_KEYDOWN: case SDL_KEYUP: keyboard=SDL_GetKeyState(NULL); break;
+                case SDL_QUIT: exit(0); break;
+                }
+            }
         }
 }
 
@@ -114,7 +120,7 @@ int main (int argc, char *argv[]) {
     fclose (reader);
 //end of loading of song list
 
-    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b, 0}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l, 0}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t, 0}, {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5, 0}};
+    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}, {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5}};
     char playerspick[4][3]={"", "", "", ""};
     int playersextras[4][10]={{1, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
 
@@ -167,6 +173,7 @@ int main (int argc, char *argv[]) {
                                 highway *player=new highway (screen, ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
                                 PlaySong (screen, ChosenSong, &player);
                                 ChosenSong->unload();
+                                ChosenSong=NULL;
                                 delete player;
                                 stay=0;
                                 }

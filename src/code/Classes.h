@@ -21,7 +21,7 @@ class drawer {
         drawer (SDL_Surface *surface, int sizex, int sizey); //cria drawer para uma surface já pronta
         drawer (int width, int height, int bpp, Uint32 flags); //cria surface para ser a tela
         drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask); //cria surface qualquer
-        drawer (char filename[]); //abre arquivo de imagem
+        drawer (char filename[]); //abre arquivo de imagem (comofas)
         Uint32 get_pixel (SDL_Surface *source, int x, int y);
         void put_pixel (SDL_Surface *destination, int x, int y, Uint32 pixel);
         void line (SDL_Surface *destination, int ini_x, int ini_y, int end_x, int end_y, Uint8 red, Uint8 green, Uint8 blue, Uint8 alpha);
@@ -80,7 +80,7 @@ class highway {
       private:
         int location, width, height;
         char *fret, *pick, instrument;
-        short int *fretstate, *pickstate, *lastfretstate, *lastpickstate;
+        short int *fretstate, *pickstate;
         int *color;
         note *chart;
         music *MusicStream;
@@ -96,7 +96,7 @@ class highway {
         ~highway (); //in progress
         int multiplier (); //done
         int preliminary(); //to-do | usa antes de começar a tocar a música
-        long long int refresh(); //in progress
+        long long int refresh(Uint8* keyboard); //in progress
         bool alive();
     };
 
@@ -131,11 +131,11 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                 line (location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100));
                 if (SIZEY-((j-time)*(SIZEY-100)/time_delay+100)<SIZEY) visual->line(visual->surface, location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), RED_VALUE(DARKGRAY), GREEN_VALUE(DARKGRAY), BLUE_VALUE(DARKGRAY), 255);
                 }
-            for (j=0;fret[j];j++) {
+            for (j=0;j<5;j++) {
                 setcolor(color[j]);
                 rectangle (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
                 visual->rectangle (visual->surface, location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140, GetRValue(color[j]), GetGValue(color[j]), GetBValue(color[j]), 255);
-                if (lastfretstate[j]) {
+                if (fretstate[j]) {
                     setfillstyle(SOLID_FILL, COLOR (GetRValue(color[j])<40?0:(GetRValue(color[j])-40), GetGValue(color[j])<40?0:(GetGValue(color[j])-40), GetBValue(color[j])<40?0:(GetBValue(color[j])-40)));
                     bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138);
                     visual->bar (visual->surface, location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138, GetRValue(color[j]), GetGValue(color[j]), GetBValue(color[j]), 255);
@@ -144,7 +144,7 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
             for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);
             for (;chart[j].time-time<time_delay;j++) {
                 if (chart[j].hit==0||chart[j].end>chart[j].time)
-                    for (int i=0;fret[i];i++)
+                    for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
                                 if (!chart[j].hold) setfillstyle (SOLID_FILL, LIGHTGRAY);
