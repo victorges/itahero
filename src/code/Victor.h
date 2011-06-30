@@ -271,7 +271,7 @@ int music::time () {
 
 
 highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
-                  visual(new drawer(screen)), MusicStream(stream), instrument(instr), time_delay(300+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
+                  visual(new drawer(screen)), MusicStream(stream), instrument(instr), time_delay(300+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
                 {
                 FILE *chartfile=NULL;
                 int i;
@@ -292,7 +292,7 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                 for (i=0;i<size;i++) pick[i]=pck[i];
 
 
-                while (instrument>=0&&chartfile==NULL) {
+                {
                     char extension[20]="";
                     strcat (extension, "_");
                     switch (instrument) {
@@ -302,16 +302,7 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                         }
                     strcat (extension, ".chart");
                     chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
-                    if (chartfile==NULL) {
-                        switch (instrument) {
-                            case DRUMS: printf ("Drums "); break;
-                            case BASS: printf ("Bass "); break;
-                            case GUITAR: printf ("Guitar "); break;
-                            }
-                        printf ("chart file for %s not abaliable.\n", MusicStream->title);
-                        instrument--;
-                        }
-                    }
+                }
 
                 if (chartfile==NULL) Error ("No chart files are avaliable");
 
@@ -327,7 +318,7 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                     chart[i].hit=false;
                     chart[i].hold=chart[i].end>chart[i].time;
                     chart[i].chord=0;
-                    if (extras[ALLHOPO]||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
+                    if (allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
                     else chart[i].hopo=false;
                     for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
                     }
@@ -344,6 +335,48 @@ highway::~highway () {
                   delete[] color;
                   }
 
+void highway::reset () {
+        delete[] chart;
+        
+        basescore=1;
+        progress=score=streak=0;
+        rockmeter=500;
+
+        FILE *chartfile;
+        {
+            char extension[20]="";
+            strcat (extension, "_");
+            switch (instrument) {
+                case DRUMS: strcat (extension,"dru"); break;
+                case BASS: strcat (extension, "bas"); break;
+                case GUITAR: strcat (extension, "gui"); break;
+                }
+            strcat (extension, ".chart");
+            chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
+        }
+
+        if (chartfile==NULL) Error ("No chart files are avaliable");
+
+        CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
+
+        fread (&bpm, sizeof(int), 1, chartfile);
+        fread (&size, sizeof(int), 1, chartfile);
+        chart=new note[(size>50000)?(size=0):(size)];
+        for (int i=0;i<size;i++) {
+            fread (&chart[i].type, sizeof (char), 1, chartfile);
+            fread (&chart[i].time, sizeof (int), 1, chartfile);
+            fread (&chart[i].end, sizeof (int), 1, chartfile);
+            chart[i].hit=false;
+            chart[i].hold=chart[i].end>chart[i].time;
+            chart[i].chord=0;
+            if (allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type)) chart[i].hopo=true;
+            else chart[i].hopo=false;
+            for (int j=0;fret[j];j++) if ((chart[i].type>>j)%2) chart[i].chord++;
+            }
+        for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
+        CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
+}
+
 int highway::multiplier () {
     if (streak>30) return 4;
     return (streak/10)+1;
@@ -354,7 +387,7 @@ long long int highway::refresh (Uint8* keyboard) {
                     int i;
                     char fretaux, newfretstate[5], newpickstate[5];
                     bool picked;
-
+                    
                     if (time==~0) return score/10000;
 
                     for (i=0;i<5;i++) {

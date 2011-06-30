@@ -83,6 +83,27 @@ void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayer
                 case SDL_QUIT: exit(0); break;
                 }
             }
+        if (keyboard[SDLK_ESCAPE]) {
+                        song->pause();
+                        menu *pause=new menu ("Pause Menu", SIZEX/2, SIZEY/2);
+                        pause->addOpt("Resume");
+                        pause->addOpt("Restart");
+                        pause->addOpt("Exit");
+                        while (pause->navigate());
+                        switch (pause->opt()) {
+                            case 1: done=0; break;
+                            case 2:
+                                song->unload();
+                                song->load();
+                                for (int i=0;i<nPlayers;i++) players[i]->reset();
+                                break;
+                            case 3:
+                                done=1;
+                                break;
+                            }
+                        song->play();
+                        }
+
         }
 }
 
@@ -99,7 +120,7 @@ int main (int argc, char *argv[]) {
    
     initwindow(SIZEX, SIZEY, "ITA Hero", (getmaxwidth()-SIZEX)/2, (getmaxheight()-SIZEY-50)/2, true);
     SDL_Surface *screen;
-    screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE);
     //screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
 
     SDL_WM_SetCaption ( "ITA Hero", NULL );

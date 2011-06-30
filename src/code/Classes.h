@@ -57,9 +57,10 @@ class music {
         irrklang::ISound* sound;
         irrklang::ISoundSource* source, *errorsource[NERROR];
         unsigned int start, limit;
+        char *filename;
       public:
         irrklang::ISoundEffectControl* FX;
-        char *filename, *title, *artist;
+        char *title, *artist;
         music (FILE* songs, irrklang::ISoundEngine *eng);
         ~music ();
         void load (float speed, int starts, int ends);
@@ -74,6 +75,7 @@ class music {
         void hitting(char instrument, bool active);
         bool pause ();
         int time ();
+      friend class highway;
       };
 
 class highway {
@@ -86,7 +88,7 @@ class highway {
         music *MusicStream;
         int progress, bpm, size;
         int time_delay, timing_window;
-        bool godmode, practice;
+        bool allhopo, godmode, practice;
         long long int basescore, score;
         int streak, rockmeter;
         drawer *visual;
@@ -94,6 +96,7 @@ class highway {
       public:
         highway (SDL_Surface *visual, music *MusicStream, char instrument, int *extras, char *fret, char *pick, int location, int width, int height, int *color); //in progress
         ~highway (); //in progress
+        void reset();
         int multiplier (); //done
         int preliminary(); //to-do | usa antes de começar a tocar a música
         long long int refresh(Uint8* keyboard); //in progress
