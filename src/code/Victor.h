@@ -348,7 +348,7 @@ highway::highway (SDL_Surface *screen, music* stream, en_instrument instr, en_di
                         cond=false;
                         switch (difficulty) {
                             case EASY:
-                                for (int j=4;chart[i].chord>1;j++) {
+                                for (int j=4;chart[i].chord>1;j--) {
                                     if ((chart[i].type&~(1<<j))!=chart[i].type) {
                                         chart[i].type=chart[i].type&~(1<<j);
                                         chart[i].chord--;
@@ -361,20 +361,20 @@ highway::highway (SDL_Surface *screen, music* stream, en_instrument instr, en_di
                                     }
                                 break;
                             case MEDIUM:
-                                for (int j=4;chart[i].chord>2;j++) {
-                                    if (chart[i].type&(~(1<<j))!=chart[i].type) {
+                                for (int j=4;chart[i].chord>2;j--) {
+                                    if ((chart[i].type&~(1<<j))!=chart[i].type) {
                                         chart[i].type=chart[i].type&(~(1<<j));
                                         chart[i].chord--;
                                         }
                                     }
                                 if (chart[i].type>=(1<<4)) chart[i].type=chart[i].type>>1;
-                                if (chart[i].time-chart[i-1].time<200||(chart[i].hopo==2&&chart[i].time-chart[i-1].time<300)) {
+                                if (chart[i].time-chart[i-1].time<200||(chart[i].chord>1&&chart[i].time-chart[i-1].time<300)) {
                                     cond=true;
                                     size--;
                                 }
                                 break;
                             case HARD:
-                                if (chart[i].time-chart[i-1].time<80||(chart[i].hopo>=2&&chart[i].time-chart[i-1].time<150)) {
+                                if (chart[i].time-chart[i-1].time<100||(chart[i].chord>=2&&chart[i].time-chart[i-1].time<150)) {
                                     cond=true;
                                     size--;
                                     }
