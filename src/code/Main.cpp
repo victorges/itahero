@@ -6,15 +6,11 @@
 
 //#define FULLSCREEN
 
-#define GUITAR 0
-#define BASS 1
-#define DRUMS 2
+enum en_instrument {GUITAR, BASS, DRUMS};
 
-#define HYPERSPEED 0
-#define PRECISION 1
-#define GODMODE 2
-#define ALLHOPO 3
-#define PRACTICE 9
+enum en_difficulty {EASY, MEDIUM, HARD, EXPERT};
+
+enum en_extras {HYPERSPEED, PRECISION, GODMODE, ALLHOPO, PRACTICE=9};
 
 #define NERROR 5
 
@@ -154,7 +150,7 @@ int main (int argc, char *argv[]) {
 
     char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}, {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5}};
     char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{1, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
+    int playersextras[4][10]={{0, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
 
     menu *startmenu=new menu(" - Main Menu");
     startmenu->addOpt("Singleplayer");
@@ -194,7 +190,7 @@ int main (int argc, char *argv[]) {
                             while (instrm->navigate()) ChosenSong->preview(true);
                             cleardevice(); swapbuffers(); cleardevice();
                             if (!instrm->cancel()) {
-                                int instrument;
+                                en_instrument instrument;
                                 switch (instrm->opts()[0]) {
                                     case 'G': instrument=GUITAR; break;
                                     case 'B': instrument=BASS; break;
@@ -202,7 +198,7 @@ int main (int argc, char *argv[]) {
                                     }
                                 ChosenSong->preview(false);
                                 ChosenSong->load();
-                                highway *player=new highway (screen, ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
+                                highway *player=new highway (screen, ChosenSong, instrument, EXPERT, playersextras[0], playersfret[0], playerspick[0]);
                                 PlaySong (screen, ChosenSong, &player);
                                 ChosenSong->unload();
                                 ChosenSong=NULL;
@@ -247,7 +243,8 @@ int main (int argc, char *argv[]) {
                             cleardevice(); swapbuffers(); cleardevice();
                             if (!ordmenu->cancel()) {
                                 menu *instrm;
-                                int i, instrument[nPlayers];
+                                int i;
+                                en_instrument instrument[nPlayers];
                                 for (i=0;i>=0&&i<nPlayers;i++) {
                                     sprintf (string, " - Choose instrument for Player %d", i+1);
                                     instrm=new menu(string);
@@ -269,7 +266,7 @@ int main (int argc, char *argv[]) {
                                     ChosenSong->preview(false);
                                     ChosenSong->load();
                                     highway *players[nPlayers];
-                                    for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], playersextras[j], playersfret[j], playerspick[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
+                                    for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], EXPERT, playersextras[j], playersfret[j], playerspick[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
                                     PlaySong (screen, ChosenSong, players, nPlayers);
                                     ChosenSong->unload();
                                     for (int j=0;j<nPlayers;j++) delete players[j];
@@ -310,7 +307,7 @@ int main (int argc, char *argv[]) {
                             while (instrm->navigate()) ChosenSong->preview(true);
                             cleardevice(); swapbuffers(); cleardevice();
                             if (!instrm->cancel()) {
-                                int instrument;
+                                en_instrument instrument;
                                 switch (instrm->opts()[0]) {
                                     case 'G': instrument=GUITAR; break;
                                     case 'B': instrument=BASS; break;
@@ -357,7 +354,7 @@ int main (int argc, char *argv[]) {
                                                 case 4: ChosenSong->load(1.0, from, to+1); break;
                                                 }
                                             playersextras[0][PRACTICE]=1;
-                                            highway *player=new highway (screen, ChosenSong, instrument, playersextras[0], playersfret[0], playerspick[0]);
+                                            highway *player=new highway (screen, ChosenSong, instrument, EXPERT, playersextras[0], playersfret[0], playerspick[0]);
                                             PlaySong (screen, ChosenSong, &player);
                                             ChosenSong->unload();
                                             delete player;
