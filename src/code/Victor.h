@@ -1,11 +1,15 @@
-drawer::drawer (SDL_Surface *surf):surface(surf), keycolor(SDL_MapRGBA ( surface->format, 0, 255, 255, 255 )) {}
+drawer::drawer (SDL_Surface *surf): surface(surf) {
+    keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
+}
 
-drawer::drawer (int width, int height, int bpp, Uint32 flags):
-    surface(SDL_SetVideoMode(width, height, bpp, flags)), keycolor(SDL_MapRGBA ( surface->format, 0, 255, 255, 255 )) {}
+drawer::drawer (int width, int height, int bpp, Uint32 flags): surface(SDL_SetVideoMode(width, height, bpp, flags)) {
+    keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
+}
 
 drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask):
-    surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)),
-    keycolor(SDL_MapRGBA ( surface->format, 0, 255, 255, 255 )) {}
+    surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)) {
+        keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
+}
     
 void drawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     maincolor=SDL_MapRGBA(surface->format, R, G, B, A);
