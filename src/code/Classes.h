@@ -14,6 +14,9 @@ class drawer {
         Uint32 &get_pixel ( int x, int y);
         Uint32 maincolor;
         Uint32 keycolor;
+        char font[20];
+        SDL_Color textcolor;
+        int textsize;
         void check_unlock ();
         void check_lock ();
         SDL_Surface* load_image (char *name);
@@ -25,6 +28,7 @@ class drawer {
         drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask); //cria surface qualquer
         drawer (char filename[]);
         ~drawer ();
+        void textxy ( char message[], int x, int y, SDL_Color *color, char f[], int size); 
         drawer* resize ( int ini_w, int ini_h, int end_w, int end_h );
         Uint8 get_pixel_color (int x, int y, char c);
         void put_pixel (int x, int y, Uint32 pixel);

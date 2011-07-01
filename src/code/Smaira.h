@@ -25,6 +25,29 @@ void drawer::put_pixel ( int x, int y, Uint32 pixel ){
         get_pixel ( x, y ) = pixel;
 }
 
+void drawer::apply_surface ( int x, int y, SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip = NULL ){
+    SDL_Rect offset;
+    
+    offset.x = x;
+    offset.y = y;
+    
+    SDL_BlitSurface ( source, clip, destination, &offset );
+}
+
+void drawer::textxy ( char message[], int x, int y, SDL_Color *color = NULL , char f[] = NULL, int size = 0){
+    if(size == 0) size = textsize;
+    if(color == NULL) color = &textcolor;
+    if(f == NULL)
+        f = font;
+    TTF_Font *fnt;
+    fnt = TTF_OpenFont( FilePath("Font/",f,".ttf"), size );
+    SDL_Surface *text;
+    text = TTF_RenderText_Solid( fnt, message, *color );
+    apply_surface ( x, y, text, surface);
+    SDL_FreeSurface(text);
+    TTF_CloseFont ( fnt );
+}
+
 void drawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0 ){
     if(color == 0) color = this->maincolor;
     if ( end_x != ini_x ){
@@ -120,15 +143,6 @@ SDL_Surface* drawer::load_image ( char *name ){
     SDL_FreeSurface ( loaded );
     
     return optimized;
-}
-
-void drawer::apply_surface ( int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip = NULL ){
-    SDL_Rect offset;
-    
-    offset.x = x;
-    offset.y = y;
-    
-    SDL_BlitSurface ( source, clip, destination, &offset );
 }
 
 drawer* drawer::resize ( int ini_w, int ini_h, int end_w, int end_h ){

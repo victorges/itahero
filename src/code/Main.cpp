@@ -31,13 +31,6 @@ void strcat (char destiny[], char add[]) {
      destiny[i+j]=0;
 }
 
-int strcmp (char first[], char second[]) {
-    for (int i=0;;i++) {
-        if (first[i]-second[i]) return (first[i]-second[i]);
-        if (first[i]==0) return 0;
-        }
-}
-
 char *FilePath (char prefix[], char filename[], char suffix[]) {
      static char location[100];
      location[0]=0;
