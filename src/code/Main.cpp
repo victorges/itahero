@@ -4,7 +4,7 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-#define FULLSCREEN
+//#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -124,6 +124,7 @@ int main (int argc, char *argv[]) {
     #else
     screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
     #endif
+    SDL_ShowCursor(SDL_DISABLE);
 
     SDL_WM_SetCaption ( "ITA Hero", NULL );
 
