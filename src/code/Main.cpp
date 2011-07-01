@@ -4,7 +4,7 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-//#define FULLSCREEN
+#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
