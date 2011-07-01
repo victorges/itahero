@@ -202,7 +202,7 @@ void music::unload () {
      for (int i=0;i<NERROR;i++) engine->removeSoundSource (errorsource[i]);
 }
 
-bool music::isInstrumentAvaliable (int instrument) {
+bool music::isInstrumentAvaliable (en_instrument instrument) {
     char extension[20]="";
     strcat (extension, "_");
     switch (instrument) {
@@ -294,8 +294,8 @@ int music::time () {
 }
 
 
-highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
-                  visual(new drawer(screen)), MusicStream(stream), instrument(instr), time_delay(300+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
+highway::highway (SDL_Surface *screen, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
+                  visual(new drawer(screen)), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
                 {
                 FILE *chartfile=NULL;
                 int i;
@@ -336,7 +336,47 @@ highway::highway (SDL_Surface *screen, music* stream, char instr, int *extras, c
                 fread (&size, sizeof(int), 1, chartfile);
                 chart=new note[(size>50000)?(size=0):(size)];
                 for (i=0;i<size;i++) {
-                    chart[i](chartfile);
+                    bool cond;
+                    do {
+                        chart[i](chartfile);
+                        if (i==0) break;
+                        
+                        cond=false;
+                        switch (difficulty) {
+                            case EASY:
+                                for (int j=4;chart[i].chord>1;j++) {
+                                    if ((chart[i].type&~(1<<j))!=chart[i].type) {
+                                        chart[i].type=chart[i].type&~(1<<j);
+                                        chart[i].chord--;
+                                        }
+                                    }
+                                if (chart[i].type>=(1<<3)) chart[i].type=chart[i].type>>2;
+                                if (chart[i].time-chart[i-1].time<300) {
+                                    cond=true;
+                                    size--;
+                                    }
+                                break;
+                            case MEDIUM:
+                                for (int j=4;chart[i].chord>2;j++) {
+                                    if (chart[i].type&(~(1<<j))!=chart[i].type) {
+                                        chart[i].type=chart[i].type&(~(1<<j));
+                                        chart[i].chord--;
+                                        }
+                                    }
+                                if (chart[i].type>=(1<<4)) chart[i].type=chart[i].type>>1;
+                                if (chart[i].time-chart[i-1].time<200||(chart[i].hopo==2&&chart[i].time-chart[i-1].time<300)) {
+                                    cond=true;
+                                    size--;
+                                }
+                                break;
+                            case HARD:
+                                if (chart[i].time-chart[i-1].time<80||(chart[i].hopo>=2&&chart[i].time-chart[i-1].time<150)) {
+                                    cond=true;
+                                    size--;
+                                    }
+                                break;
+                            }
+                        } while (cond&&i<size);
                     chart[i].hopo=(allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type));
                     }
                 for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
