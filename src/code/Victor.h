@@ -4,7 +4,10 @@ void drawer::settextstyle (char fnt[]="lazy", SDL_Color *tcolor=NULL, int tsize=
     else textcolor=*tcolor;
     textsize=tsize;
     font=TTF_OpenFont (FilePath("Font/", fnt, ".ttf"), textsize);
-    if (font==NULL) Error ("Error loading font");
+    if (font==NULL) {
+        printf ("Error loading font");
+        settextstyle();
+        }
 }
 
 drawer::drawer (SDL_Surface *surf): surface(surf) {
