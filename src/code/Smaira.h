@@ -1,5 +1,6 @@
 drawer::~drawer (){
     SDL_FreeSurface ( surface );
+    TTF_CloseFont(font);
 }
 
 drawer::drawer (char filename[]){
@@ -11,6 +12,8 @@ drawer::drawer (char filename[]){
         if ( surface != NULL )
             SDL_SetColorKey ( surface,SDL_SRCCOLORKEY, keycolor = SDL_MapRGBA ( surface->format, 0, 255, 255, 255 ) );
     }
+    font=NULL;
+    settextstyle();
     SDL_FreeSurface ( loaded );
 }
 
@@ -35,17 +38,17 @@ void drawer::apply_surface ( int x, int y, SDL_Surface *source, SDL_Surface *des
 }
 
 void drawer::textxy ( char message[], int x, int y, SDL_Color *color = NULL , char f[] = NULL, int size = 0){
+    TTF_Font *fnt;
     if(size == 0) size = textsize;
     if(color == NULL) color = &textcolor;
-    if(f == NULL)
-        f = font;
-    TTF_Font *fnt;
-    fnt = TTF_OpenFont( FilePath("Font/",f,".ttf"), size );
+    if(f == NULL) fnt = font;
+    else fnt = TTF_OpenFont( FilePath("Font/",f,".ttf"), size );
+    if (fnt==NULL) Error ("Font not found");
     SDL_Surface *text;
     text = TTF_RenderText_Solid( fnt, message, *color );
     apply_surface ( x, y, text, surface);
     SDL_FreeSurface(text);
-    TTF_CloseFont ( fnt );
+    if (fnt!=font) TTF_CloseFont (fnt);
 }
 
 void drawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0 ){
@@ -130,7 +133,7 @@ void drawer::check_lock (){
         SDL_LockSurface ( surface );
 }
 
-SDL_Surface* drawer::load_image ( char *name ){
+/*SDL_Surface* drawer::load_image ( char *name ){
     SDL_Surface *loaded = NULL;
     SDL_Surface *optimized = NULL;
     
@@ -143,7 +146,7 @@ SDL_Surface* drawer::load_image ( char *name ){
     SDL_FreeSurface ( loaded );
     
     return optimized;
-}
+}*/
 
 drawer* drawer::resize ( int ini_w, int ini_h, int end_w, int end_h ){
     int add_w, add_h;

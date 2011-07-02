@@ -1,10 +1,11 @@
-#include <graphics/graphics.h>
+//#include <graphics/graphics.h>
+#include <time.h>
 #include <irrKlang/irrKlang.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-//#define FULLSCREEN
+#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -49,21 +50,16 @@ void sfscanf (FILE *file, char CheckString[]) {
      if (CheckString[i]) Error ("Soundlist file corrupted");
 }
 
-void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayers=1) {
+void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) {
     song->play();
     SDL_Event event;
     Uint8* keyboard=SDL_GetKeyState(NULL);
     bool done=false;
-    SDL_Rect all;
-    all.x=0;
-    all.y=0;
-    all.h=SIZEY-1;
-    all.w=SIZEX-1;
     while (!done) {
-        swapbuffers();
-        SDL_Flip(screen);
-        SDL_FillRect(screen, &all, 0);
-        cleardevice();
+        //swapbuffers();
+        screen->Flip();
+        screen->clear();
+        //cleardevice();
         for (int i=0;i<nPlayers;i++) {
             players[i]->refresh(keyboard);
             if (!players[i]->alive()) done=true;
@@ -77,7 +73,7 @@ void PlaySong (SDL_Surface *screen, music *song, highway *players[], int nPlayer
             }
         if (keyboard[SDLK_ESCAPE]) {
                         song->pause();
-                        menu *pause=new menu ("Pause Menu", SIZEX/2, SIZEY/2);
+                        menu *pause=new menu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
                         pause->addOpt("Resume");
                         pause->addOpt("Restart");
                         pause->addOpt("Exit");
@@ -117,12 +113,12 @@ int main (int argc, char *argv[]) {
     char string[200];
     int nSongs;
    
-    initwindow(SIZEX, SIZEY, "ITA Hero", (SDL_GetVideoInfo()->current_w-SIZEX)/2, (SDL_GetVideoInfo()->current_h-SIZEY-50)/2, true);
-    SDL_Surface *screen;
+    //initwindow(SIZEX, SIZEY, "ITA Hero", (SDL_GetVideoInfo()->current_w-SIZEX)/2, (SDL_GetVideoInfo()->current_h-SIZEY-50)/2, true);
+    drawer *screen;
     #ifndef FULLSCREEN
-    screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE);
+    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE);
     #else
-    screen = SDL_SetVideoMode(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
+    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
     #endif
     SDL_ShowCursor(SDL_DISABLE);
 
@@ -153,7 +149,7 @@ int main (int argc, char *argv[]) {
     char playerspick[4][3]={"", "", "", ""};
     int playersextras[4][10]={{0, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
 
-    menu *startmenu=new menu(" - Main Menu");
+    menu *startmenu=new menu(screen, " - Main Menu");
     startmenu->addOpt("Singleplayer");
     startmenu->addOpt("Multiplayer");
     startmenu->addOpt("Practice");
@@ -162,17 +158,19 @@ int main (int argc, char *argv[]) {
     bool done=0;
     while (!done) {
         while (startmenu->navigate());
-        cleardevice(); swapbuffers(); cleardevice();
+        //cleardevice(); swapbuffers(); cleardevice();
+        screen->clear();
         switch (startmenu->opts()[0]) {
             case 'S':
                 {
-                    menu *diffic=new menu(" - Choose difficulty");
+                    menu *diffic=new menu(screen, " - Choose difficulty");
                     diffic->addOpt("Easy");
                     diffic->addOpt("Medium");
                     diffic->addOpt("Hard");
                     diffic->addOpt("Expert");
                     while (diffic->navigate());
-                    cleardevice(); swapbuffers(); cleardevice();
+                    //cleardevice(); swapbuffers(); cleardevice();
+                    screen->clear();
                     if (!diffic->cancel()) {
                         en_difficulty difficulty;
                         switch (diffic->opt()) {
@@ -181,7 +179,7 @@ int main (int argc, char *argv[]) {
                             case 3: difficulty=HARD; break;
                             case 4: difficulty=EXPERT; break;
                             }
-                        menu *songmenu=new menu(" - Choose song to play");
+                        menu *songmenu=new menu(screen, " - Choose song to play");
                         for (int i=0;i<nSongs;i++) {
                             sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                             songmenu->addOpt(string);
@@ -197,14 +195,16 @@ int main (int argc, char *argv[]) {
                                     }
                                 ChosenSong->preview(true);
                                 }
-                            cleardevice(); swapbuffers(); cleardevice();
+                            //cleardevice(); swapbuffers(); cleardevice();
+                            screen->clear();
                             if (!songmenu->cancel()) {
-                                menu *instrm=new menu(" - Choose instrument");
+                                menu *instrm=new menu(screen, " - Choose instrument");
                                 if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                                 if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                 if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                                 while (instrm->navigate()) ChosenSong->preview(true);
-                                cleardevice(); swapbuffers(); cleardevice();
+                                //cleardevice(); swapbuffers(); cleardevice();
+                                screen->clear();
                                 if (!instrm->cancel()) {
                                     en_instrument instrument;
                                     switch (instrm->opts()[0]) {
@@ -234,12 +234,13 @@ int main (int argc, char *argv[]) {
             case 'M':
                 {
                     int nPlayers;
-                    menu *ordmenu=new menu (" - How many people are going to play?");
+                    menu *ordmenu=new menu (screen, " - How many people are going to play?");
                     ordmenu->addOpt("2");
                     ordmenu->addOpt("3");
                     ordmenu->addOpt("4");
                     while(ordmenu->navigate());
-                    cleardevice(); swapbuffers(); cleardevice();
+                    //cleardevice(); swapbuffers(); cleardevice();
+                    screen->clear();
                     nPlayers=ordmenu->opt()+1;
                     if (!ordmenu->cancel()) {
                         int i;
@@ -247,13 +248,14 @@ int main (int argc, char *argv[]) {
                         for (i=0;i>=0&&i<nPlayers;i++) {
                             delete ordmenu;
                             sprintf (string, " - Choose difficulty for Player %d", i+1);
-                            ordmenu=new menu(string);
+                            ordmenu=new menu(screen, string);
                             ordmenu->addOpt("Easy");
                             ordmenu->addOpt("Medium");
                             ordmenu->addOpt("Hard");
                             ordmenu->addOpt("Expert");
                             while(ordmenu->navigate());
-                            cleardevice(); swapbuffers(); cleardevice();
+                            //cleardevice(); swapbuffers(); cleardevice();
+                            screen->clear();
                             if (ordmenu->cancel()) i-=2;
                             else
                                 switch (ordmenu->opt()) {
@@ -265,7 +267,7 @@ int main (int argc, char *argv[]) {
                             }
                         if (i==nPlayers) {
                             delete ordmenu;
-                            ordmenu=new menu(" - Choose song to play");
+                            ordmenu=new menu(screen, " - Choose song to play");
                             for (i=0;i<nSongs;i++) {
                                 sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                                 ordmenu->addOpt(string);
@@ -280,18 +282,20 @@ int main (int argc, char *argv[]) {
                                         }
                                     ChosenSong->preview(true);
                                     }
-                                cleardevice(); swapbuffers(); cleardevice();
+                                //cleardevice(); swapbuffers(); cleardevice();
+                                screen->clear();
                                 if (!ordmenu->cancel()) {
                                     menu *instrm;
                                     en_instrument instrument[nPlayers];
                                     for (i=0;i>=0&&i<nPlayers;i++) {
                                         sprintf (string, " - Choose instrument for Player %d", i+1);
-                                        instrm=new menu(string);
+                                        instrm=new menu(screen, string);
                                         if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                                         if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                         if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                                         while(instrm->navigate()) ChosenSong->preview(true);
-                                        cleardevice(); swapbuffers(); cleardevice();
+                                        //cleardevice(); swapbuffers(); cleardevice();
+                                        screen->clear();
                                         if (instrm->cancel()) i-=2;
                                         else
                                             switch (instrm->opts()[0]) {
@@ -322,7 +326,7 @@ int main (int argc, char *argv[]) {
                 break;
             case 'P':
                 {
-                    menu *songmenu=new menu(" - Choose song to practice");
+                    menu *songmenu=new menu(screen, " - Choose song to practice");
                     for (int i=0;i<nSongs;i++) {
                         sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                         songmenu->addOpt(string);
@@ -338,14 +342,16 @@ int main (int argc, char *argv[]) {
                                 }
                             ChosenSong->preview(true);
                             }
-                        cleardevice(); swapbuffers(); cleardevice();
+                        //cleardevice(); swapbuffers(); cleardevice();
+                        screen->clear();
                         if (!songmenu->cancel()) {
-                            menu *instrm=new menu(" - Choose instrument");
+                            menu *instrm=new menu(screen, " - Choose instrument");
                             if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                             if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                             if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                             while (instrm->navigate()) ChosenSong->preview(true);
-                            cleardevice(); swapbuffers(); cleardevice();
+                            //cleardevice(); swapbuffers(); cleardevice();
+                            screen->clear();
                             if (!instrm->cancel()) {
                                 en_instrument instrument;
                                 switch (instrm->opts()[0]) {
@@ -353,13 +359,14 @@ int main (int argc, char *argv[]) {
                                     case 'B': instrument=BASS; break;
                                     case 'D': instrument=DRUMS; break;
                                     }
-                                menu *diffic=new menu(" - Choose difficulty");
+                                menu *diffic=new menu(screen, " - Choose difficulty");
                                 diffic->addOpt("Easy");
                                 diffic->addOpt("Medium");
                                 diffic->addOpt("Hard");
                                 diffic->addOpt("Expert");
                                 while (diffic->navigate());
-                                cleardevice(); swapbuffers(); cleardevice();
+                                //cleardevice(); swapbuffers(); cleardevice();
+                                screen->clear();
                                 if (!diffic->cancel()) {
                                     en_difficulty difficulty;
                                     switch (diffic->opt()) {
@@ -368,15 +375,16 @@ int main (int argc, char *argv[]) {
                                         case 3: difficulty=HARD; break;
                                         case 4: difficulty=EXPERT; break;
                                         }
-                                    menu *speed=new menu(" - Choose speed");
+                                    menu *speed=new menu(screen, " - Choose speed");
                                     speed->addOpt("Slowest");
                                     speed->addOpt("Slower");
                                     speed->addOpt("Slow");
                                     speed->addOpt("Full Speed");
                                     while (speed->navigate()) ChosenSong->preview(true);
-                                    cleardevice(); swapbuffers(); cleardevice();
+                                    //cleardevice(); swapbuffers(); cleardevice();
+                                    screen->clear();
                                     if (!speed->cancel()) {
-                                        menu *section=new menu (" - Choose section (starting point)");
+                                        menu *section=new menu (screen, " - Choose section (starting point)");
                                         int from, to;
                                         for (int i=1;i<=16;i++) {
                                             sprintf (string, "Section %d", i);
@@ -387,10 +395,11 @@ int main (int argc, char *argv[]) {
                                             if (from!=section->opt()-1) from=section->opt()-1;
                                             ChosenSong->preview(true, from);
                                             }
-                                        cleardevice(); swapbuffers(); cleardevice();
+                                        //cleardevice(); swapbuffers(); cleardevice();
+                                        screen->clear();
                                         if (!section->cancel()) {
                                             delete section;
-                                            section=new menu (" - Choose section (ending point)");
+                                            section=new menu (screen, " - Choose section (ending point)");
                                             for (int i=from+1;i<=16;i++) {
                                                 sprintf (string, "Section %d", i);
                                                 section->addOpt(string);
@@ -399,7 +408,8 @@ int main (int argc, char *argv[]) {
                                                 if (to!=section->opt()+from-1) to=section->opt()+from-1;
                                                 ChosenSong->preview(true, to);
                                                 }
-                                            cleardevice(); swapbuffers(); cleardevice();
+                                            //cleardevice(); swapbuffers(); cleardevice();
+                                            screen->clear();
                                             if (!section->cancel()) {
                                                 ChosenSong->preview(false);
                                                 switch (speed->opt()) {
@@ -433,7 +443,7 @@ int main (int argc, char *argv[]) {
                 break;
             case 'O':
                 {
-                    menu *options=new menu(" - Options");
+                    menu *options=new menu(screen, " - Options");
                     options->addOpt("Controls");
                     options->addOpt("Extras");
                     options->addOpt("Back");
@@ -447,20 +457,22 @@ int main (int argc, char *argv[]) {
                             }
                         if (options->cancel()) doneopt=1;
                         }
-                    cleardevice(); swapbuffers(); cleardevice();
+                    //cleardevice(); swapbuffers(); cleardevice();
+                    screen->clear();
                     delete options;
                 }
                 break;
             case 'E': done=1; break;
             }
         if (startmenu->cancel()) done=1;
-        cleardevice(); swapbuffers(); cleardevice();
+        //cleardevice(); swapbuffers(); cleardevice();
+        screen->clear();
         }
     delete startmenu;
 
     engine->drop();
     SDL_Quit ();
     TTF_Quit ();
-    closegraph();
+    //closegraph();
     return 0;
 }

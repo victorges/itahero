@@ -1,22 +1,48 @@
+void drawer::settextstyle (char fnt[]="lazy", SDL_Color *tcolor=NULL, int tsize=15) {
+    TTF_CloseFont (font);
+    if (tcolor==NULL) textcolor.r=textcolor.g=textcolor.b=255;
+    else textcolor=*tcolor;
+    textsize=tsize;
+    font=TTF_OpenFont (FilePath("Font/", fnt, ".ttf"), textsize);
+    if (font==NULL) Error ("Error loading font");
+}
+
 drawer::drawer (SDL_Surface *surf): surface(surf) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
+    font=NULL;
+    settextstyle();
 }
 
 drawer::drawer (int width, int height, int bpp, Uint32 flags): surface(SDL_SetVideoMode(width, height, bpp, flags)) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
+    font=NULL;
+    settextstyle();
 }
 
-drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask):
-    surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)) {
-        keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
+drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask): surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)) {
+    keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
+    font=NULL;
+    settextstyle();
 }
-    
+
+int drawer::textheight(char string[]) {
+    int h;
+    TTF_SizeText(font, string, NULL, &h);
+    return h;
+}
+
+int drawer::textwidth(char string[]) {
+    int w;
+    TTF_SizeText(font, string, &w, NULL);
+    return w;
+}
+
 void drawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     maincolor=SDL_MapRGBA(surface->format, R, G, B, A);
 }
 
-void drawer::setcolor (Uint32 color) {
-    maincolor=color;
+Uint32 drawer::color (Uint8 R, Uint8 G, Uint8 B, Uint8 A=255) {
+    return SDL_MapRGBA(surface->format, R, G, B, A);
 }
 
 void drawer::Flip () {
@@ -24,12 +50,7 @@ void drawer::Flip () {
     }
 
 void drawer::clear () {
-    SDL_Rect all;
-    all.x=0;
-    all.y=0;
-    all.h=surface->w-1;
-    all.w=surface->h-1;
-    SDL_FillRect(surface, &all, 0);
+    SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
 }
 
 void note::operator()(FILE *chartfile) {
@@ -43,13 +64,14 @@ void note::operator()(FILE *chartfile) {
 }
 
 
-menu::menu (char head[]="", int x=50, int y=50): locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
+menu::menu (drawer *vsl, char head[]="", int x=50, int y=50): visual(vsl), locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
     int size;
+    visual->settextstyle("lazy", NULL, 35);
     for (size=0;head[size];size++);
     header=new char[++size];
     for (int i=0;i<size;i++) header[i]=head[i];
-    sizex=textwidth(header);
-    sizey=textheight(header);
+    sizex=visual->textwidth(header)+10;
+    sizey=visual->textheight(header);
     }
 
 menu::~menu () {
@@ -77,8 +99,8 @@ void menu::addOpt (char content[]) {
     end->content=new char[++size];
     if (end->content==NULL) Error ("Error loading menu");
     for (int i=0;i<size;i++) end->content[i]=content[i];
-    sizey+=textheight(end->content);
-    if (textwidth(end->content)>sizex) sizex=textwidth(end->content);
+    sizey+=visual->textheight(end->content);
+    if (visual->textwidth(end->content)+10>sizex) sizex=visual->textwidth(end->content)+10;
     nOpt++;
 }
 
@@ -113,8 +135,10 @@ char* menu::opts() {
 }*/
 
 bool menu::navigate () {  //SDL
+    visual->settextstyle("lazy", NULL, 35);
     print();
-    swapbuffers();
+    //swapbuffers();
+    visual->Flip();
     SDL_Event event;
     if (SDL_PollEvent(&event)) {
         if (event.type==SDL_KEYDOWN)
@@ -298,13 +322,13 @@ int music::time () {
 }
 
 
-highway::highway (SDL_Surface *screen, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
-                  visual(new drawer(screen)), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
+highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
+                  visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
                 {
                 FILE *chartfile=NULL;
                 int i;
                 if (col==0) {
-                    int col_default[]={COLOR(40,200,10), COLOR(200, 0, 0), COLOR(247, 236, 40), COLOR(10, 10, 200), COLOR(255, 102, 0)};
+                    int col_default[]={visual->color(40,200,10), visual->color(200, 0, 0), visual->color(247, 236, 40), visual->color(10, 10, 200), visual->color(255, 102, 0)};
                     col=col_default;
                 }
 
@@ -565,9 +589,12 @@ void *AllocateFile (char file_name[], size_t &size) {
 }
 
 void Error (char string[]) {
-     closegraph();
-     MessageBox(GetActiveWindow(), string, NULL, MB_OK);
-     exit(1);
+    //closegraph();
+    SDL_Quit ();
+    TTF_Quit ();
+    printf ("%s", string);
+    //MessageBox(GetActiveWindow(), string, NULL, MB_OK);
+    exit(1);
 }
 
 void CheckChartIntegrity (FILE *chartfile, char CheckString[]) {
