@@ -32,7 +32,7 @@ class drawer {
         int textwidth(char string[]);
         void textxy ( char message[], int x, int y ); 
         
-        drawer* resize ( int ini_w, int ini_h, int end_w, int end_h );
+        void resize ( int ini_w, int ini_h, int end_w, int end_h );
 
         Uint8 get_pixel_color (int x, int y, char c);
         void put_pixel (int x, int y, Uint32 pixel);

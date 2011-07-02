@@ -173,7 +173,7 @@ void drawer::check_lock (){
         SDL_LockSurface ( surface );
 }
 
-drawer* drawer::resize ( int ini_w, int ini_h, int end_w, int end_h ){
+void drawer::resize ( int ini_w, int ini_h, int end_w, int end_h ){
     int add_w, add_h;
     drawer *resized = new drawer( SDL_HWSURFACE, end_w, ini_h, surface->format->BitsPerPixel, surface->format->Rmask, surface->format->Gmask, surface->format->Bmask, 255 );
     drawer *resized2 = new drawer( SDL_HWSURFACE, end_w, ini_h, surface->format->BitsPerPixel, surface->format->Rmask, surface->format->Gmask, surface->format->Bmask, 255 );;
@@ -276,7 +276,7 @@ drawer* drawer::resize ( int ini_w, int ini_h, int end_w, int end_h ){
     delete resized;
     
     if( add_w != 0 || add_h != 0 )
-        return resized2->resize( end_w, end_h, end_w + add_w, end_h + add_h );
+        resized2->resize( end_w, end_h, end_w + add_w, end_h + add_h );
         
-    return resized2;
+    surface = resized2->surface;
 }
