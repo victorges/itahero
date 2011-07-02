@@ -4,7 +4,7 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-#define FULLSCREEN
+//#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -83,9 +83,13 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                         pause->addOpt("Exit");
                         while (pause->navigate());
                         switch (pause->opt()) {
+                            case 1:
+                                song->play();
+                                break;
                             case 2:
                                 song->reload();
                                 for (int i=0;i<nPlayers;i++) players[i]->reset();
+                                song->play();
                                 break;
                             case 3:
                                 done=1;
@@ -93,7 +97,6 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                             }
                         if (pause->cancel()) keyboard[SDLK_ESCAPE]=0;
                         delete pause;
-                        song->play();
                         }
 
         }

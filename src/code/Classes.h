@@ -143,8 +143,7 @@ void menu::print () {
 
 void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
-
-            notes[0]->apply_surface (0, 0, visual, NULL);
+            
             visual->line( location-180, SIZEY-1, location-180, 0, visual->color(255, 255, 255, 255));
             visual->line( location+170, SIZEY-1, location+170, 0, visual->color(255, 255, 255, 255));
             for (j=(time/(60*1000)/bpm)*(60*1000)/bpm;j<time+time_delay;j+=(60*1000)/bpm) {
@@ -165,10 +164,12 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                                 visual->bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20),color[i]);
                                 }
                             if (!chart[j].hit&&!chart[j].hopo) {
-                                visual->bar ( location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), color[i]);
+                                visual->bar (location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), color[i]);
+                                notes[i]->apply_surface(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+140), visual, NULL);
                                 }
                             if (!chart[j].hit&&chart[j].hopo) {
                                 visual->bar (location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), color[i]);
+                                hopos[i]->apply_surface(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+140), visual, NULL);
                                 }
                             }
                 }
