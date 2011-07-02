@@ -75,9 +75,11 @@ void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip =
     }
     SDL_Rect offset;
     
-    offset.x = x;
-    offset.y = y;
-    
+    if (changey) offset.y=0;
+    else offset.y = y;
+    if (changex) offset.x=0;
+    else offset.x = x;
+
     if(changex == false)
         SDL_BlitSurface ( surface, clip, destination->surface, &offset );
     else
