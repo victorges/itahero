@@ -30,12 +30,16 @@ void drawer::put_pixel ( int x, int y, Uint32 pixel ){
 
 void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip = NULL ){
     SDL_Rect clip2;
+    SDL_Rect offset;
+    offset.x=x;
+    offset.y=y;
     bool changex = false, changey = false;
     if( clip == NULL ){
         if(x<0){
             if(x+surface->w >= 0){
                 clip2.x = -x;
                 clip2.w = x + surface->w;
+                offset.x=0;
                 changex = true;
             }
             else
@@ -45,6 +49,7 @@ void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip =
             if(y+surface->h >= 0){
                 clip2.y = -y;
                 clip2.h = y + surface->h;
+                offset.y=0;
                 changey = true;
             }
             else
@@ -73,12 +78,6 @@ void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip =
             changex = true;
         }
     }
-    SDL_Rect offset;
-    
-    if (changey) offset.y=0;
-    else offset.y = y;
-    if (changex) offset.x=0;
-    else offset.x = x;
 
     if(changex == false)
         SDL_BlitSurface ( surface, clip, destination->surface, &offset );
