@@ -20,7 +20,6 @@ class drawer {
         Uint32 &get_pixel ( int x, int y);
         void check_unlock ();
         void check_lock ();
-        void apply_surface (int x, int y,SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip);
      public:
         drawer (SDL_Surface *surface); //cria drawer para uma surface já pronta
         drawer (int width, int height, int bpp, Uint32 flags); //cria surface para ser a tela
@@ -31,12 +30,13 @@ class drawer {
         void settextstyle (char font[], SDL_Color *textcolor, int textsize);
         int textheight(char string[]);
         int textwidth(char string[]);
-        void textxy ( char message[], int x, int y, SDL_Color *color, char f[], int size); 
+        void textxy ( char message[], int x, int y ); 
         
         drawer* resize ( int ini_w, int ini_h, int end_w, int end_h );
 
         Uint8 get_pixel_color (int x, int y, char c);
         void put_pixel (int x, int y, Uint32 pixel);
+        void apply_surface (int x, int y,drawer *destination, SDL_Rect *clip);
         void line (int ini_x, int ini_y, int end_x, int end_y, Uint32 color);
         void rectangle (int left, int top, int right, int bottom, Uint32 color);
         void bar (int left, int top, int right, int bottom, Uint32 color);
@@ -129,7 +129,7 @@ void menu::print () { //temporaria
     visual->bar(locx-10, locy-10, locx+sizex+10, locy+sizey+10, 0);
     //moveto(locx,locy);
     //outtext(header);
-    visual->textxy(header, locx, locy, NULL, NULL, 0);
+    visual->textxy(header, locx, locy);
     int y=visual->textheight(header);
     for (int curr=0;aux;curr++) {
         char string[100]="";
@@ -139,7 +139,7 @@ void menu::print () { //temporaria
             //outtext(" ");
             }
         strcat (string, aux->content);
-        visual->textxy(string, locx, locy+y, NULL, NULL, 0);
+        visual->textxy(string, locx, locy+y);
         //outtext (aux->content);
         y+=visual->textheight(aux->content);
         aux=aux->next;
@@ -199,17 +199,17 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                 sprintf (string, "%lld,%lld  %lld", score/basescore%10, (10*score/basescore%10), score/10000);
                 //moveto (location-300, SIZEY-140);
                 //outtext(string);
-                visual->textxy (string, posx-5, posy, NULL, NULL, 0);
+                visual->textxy (string, posx-5, posy);
                 posy+=visual->textheight(string);
                 //moverel(-textwidth(string), textheight(string));
                 sprintf (string, "%d  x%d", streak, multiplier());
                 //outtext(string);
-                visual->textxy (string, posx, posy, NULL, NULL, 0);
+                visual->textxy (string, posx, posy);
                 posy+=visual->textheight(string);
                 //moverel(-textwidth(string), textheight(string));
                 sprintf (string, "%d", rockmeter);
                 //outtext(string);
-                visual->textxy (string, posx, posy, NULL, NULL, 0);
+                visual->textxy (string, posx, posy);
                 }
 }
 /*backup

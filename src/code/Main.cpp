@@ -146,7 +146,7 @@ int main (int argc, char *argv[]) {
 //end of loading of song list
 
     char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}, {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5}};
-    char playerspick[4][3]={{SDLK_1, SDLK_2, 0}, "", "", ""};
+    char playerspick[4][3]={"", "", "", ""};
     int playersextras[4][10]={{0, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
 
     menu *startmenu=new menu(screen, " - Main Menu");

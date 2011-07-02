@@ -28,27 +28,20 @@ void drawer::put_pixel ( int x, int y, Uint32 pixel ){
         get_pixel ( x, y ) = pixel;
 }
 
-void drawer::apply_surface ( int x, int y, SDL_Surface *source, SDL_Surface *destination, SDL_Rect *clip = NULL ){
+void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip = NULL ){
     SDL_Rect offset;
     
     offset.x = x;
     offset.y = y;
     
-    SDL_BlitSurface ( source, clip, destination, &offset );
+    SDL_BlitSurface ( surface, clip, destination->surface, &offset );
 }
 
-void drawer::textxy ( char message[], int x, int y, SDL_Color *color = NULL , char f[] = NULL, int size = 0){
-    TTF_Font *fnt;
-    if(size == 0) size = textsize;
-    if(color == NULL) color = &textcolor;
-    if(f == NULL) fnt = font;
-    else fnt = TTF_OpenFont( FilePath("Font/",f,".ttf"), size );
-    if (fnt==NULL) Error ("Font not found");
-    SDL_Surface *text;
-    text = TTF_RenderText_Solid( fnt, message, *color );
-    apply_surface ( x, y, text, surface);
-    SDL_FreeSurface(text);
-    if (fnt!=font) TTF_CloseFont (fnt);
+void drawer::textxy ( char message[], int x, int y ){
+    if (font==NULL) Error ("Font not found");
+    drawer *text = new drawer (TTF_RenderText_Solid ( font, message, textcolor ));
+    text->apply_surface ( x, y, this);
+    delete text;
 }
 
 void drawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0 ){
