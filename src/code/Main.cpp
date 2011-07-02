@@ -1,11 +1,10 @@
-//#include <graphics/graphics.h>
 #include <time.h>
 #include <irrKlang/irrKlang.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-#define FULLSCREEN
+//#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -15,10 +14,16 @@ enum en_extras {HYPERSPEED, PRECISION, GODMODE, ALLHOPO, PRACTICE=9};
 
 #define NERROR 5
 
-const int *resolutionx;
-const int *resolutiony;
-#define SIZEX (*resolutionx)
-#define SIZEY (*resolutiony)
+class {
+    int resolutionx;
+    int resolutiony;
+    public:
+        int resx() {return resolutionx;}
+        int resy() {return resolutiony;}
+    friend int main (int argc, char *argv[]);
+    } video;
+#define SIZEX (video.resx())
+#define SIZEY (video.resy())
 
 #include "Functions.h"
 #include "Classes.h"
@@ -56,10 +61,8 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
     Uint8* keyboard=SDL_GetKeyState(NULL);
     bool done=false;
     while (!done) {
-        //swapbuffers();
         screen->Flip();
         screen->clear();
-        //cleardevice();
         for (int i=0;i<nPlayers;i++) {
             players[i]->refresh(keyboard);
             if (!players[i]->alive()) done=true;
@@ -102,18 +105,17 @@ int main (int argc, char *argv[]) {
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
 
     #ifndef FULLSCREEN
-    resolutionx=new const int (1600>SDL_GetVideoInfo()->current_w?SDL_GetVideoInfo()->current_w:1600);
-    resolutiony=new const int (850>SDL_GetVideoInfo()->current_h?SDL_GetVideoInfo()->current_h:850);
+    video.resolutionx=1600>SDL_GetVideoInfo()->current_w?SDL_GetVideoInfo()->current_w:1600;
+    video.resolutiony=850>SDL_GetVideoInfo()->current_h?SDL_GetVideoInfo()->current_h:850;
     #else
-    resolutionx=new const int (SDL_GetVideoInfo()->current_w);
-    resolutiony=new const int (SDL_GetVideoInfo()->current_h);
+    video.resolutionx=SDL_GetVideoInfo()->current_w;
+    video.resolutiony=SDL_GetVideoInfo()->current_h;
     #endif
     
     size_t size;
     char string[200];
     int nSongs;
    
-    //initwindow(SIZEX, SIZEY, "ITA Hero", (SDL_GetVideoInfo()->current_w-SIZEX)/2, (SDL_GetVideoInfo()->current_h-SIZEY-50)/2, true);
     drawer *screen;
     #ifndef FULLSCREEN
     screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE);
@@ -121,7 +123,6 @@ int main (int argc, char *argv[]) {
     screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
     #endif
     SDL_ShowCursor(SDL_DISABLE);
-
     SDL_WM_SetCaption ( "ITA Hero", NULL );
 
 //load song list
@@ -158,7 +159,6 @@ int main (int argc, char *argv[]) {
     bool done=0;
     while (!done) {
         while (startmenu->navigate());
-        //cleardevice(); swapbuffers(); cleardevice();
         screen->clear();
         switch (startmenu->opts()[0]) {
             case 'S':
@@ -169,7 +169,6 @@ int main (int argc, char *argv[]) {
                     diffic->addOpt("Hard");
                     diffic->addOpt("Expert");
                     while (diffic->navigate());
-                    //cleardevice(); swapbuffers(); cleardevice();
                     screen->clear();
                     if (!diffic->cancel()) {
                         en_difficulty difficulty;
@@ -195,7 +194,6 @@ int main (int argc, char *argv[]) {
                                     }
                                 ChosenSong->preview(true);
                                 }
-                            //cleardevice(); swapbuffers(); cleardevice();
                             screen->clear();
                             if (!songmenu->cancel()) {
                                 menu *instrm=new menu(screen, " - Choose instrument");
@@ -203,7 +201,6 @@ int main (int argc, char *argv[]) {
                                 if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                 if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                                 while (instrm->navigate()) ChosenSong->preview(true);
-                                //cleardevice(); swapbuffers(); cleardevice();
                                 screen->clear();
                                 if (!instrm->cancel()) {
                                     en_instrument instrument;
@@ -239,7 +236,6 @@ int main (int argc, char *argv[]) {
                     ordmenu->addOpt("3");
                     ordmenu->addOpt("4");
                     while(ordmenu->navigate());
-                    //cleardevice(); swapbuffers(); cleardevice();
                     screen->clear();
                     nPlayers=ordmenu->opt()+1;
                     if (!ordmenu->cancel()) {
@@ -254,7 +250,6 @@ int main (int argc, char *argv[]) {
                             ordmenu->addOpt("Hard");
                             ordmenu->addOpt("Expert");
                             while(ordmenu->navigate());
-                            //cleardevice(); swapbuffers(); cleardevice();
                             screen->clear();
                             if (ordmenu->cancel()) i-=2;
                             else
@@ -282,7 +277,6 @@ int main (int argc, char *argv[]) {
                                         }
                                     ChosenSong->preview(true);
                                     }
-                                //cleardevice(); swapbuffers(); cleardevice();
                                 screen->clear();
                                 if (!ordmenu->cancel()) {
                                     menu *instrm;
@@ -294,7 +288,6 @@ int main (int argc, char *argv[]) {
                                         if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                         if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                                         while(instrm->navigate()) ChosenSong->preview(true);
-                                        //cleardevice(); swapbuffers(); cleardevice();
                                         screen->clear();
                                         if (instrm->cancel()) i-=2;
                                         else
@@ -342,7 +335,6 @@ int main (int argc, char *argv[]) {
                                 }
                             ChosenSong->preview(true);
                             }
-                        //cleardevice(); swapbuffers(); cleardevice();
                         screen->clear();
                         if (!songmenu->cancel()) {
                             menu *instrm=new menu(screen, " - Choose instrument");
@@ -350,7 +342,6 @@ int main (int argc, char *argv[]) {
                             if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                             if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
                             while (instrm->navigate()) ChosenSong->preview(true);
-                            //cleardevice(); swapbuffers(); cleardevice();
                             screen->clear();
                             if (!instrm->cancel()) {
                                 en_instrument instrument;
@@ -365,7 +356,6 @@ int main (int argc, char *argv[]) {
                                 diffic->addOpt("Hard");
                                 diffic->addOpt("Expert");
                                 while (diffic->navigate());
-                                //cleardevice(); swapbuffers(); cleardevice();
                                 screen->clear();
                                 if (!diffic->cancel()) {
                                     en_difficulty difficulty;
@@ -381,7 +371,6 @@ int main (int argc, char *argv[]) {
                                     speed->addOpt("Slow");
                                     speed->addOpt("Full Speed");
                                     while (speed->navigate()) ChosenSong->preview(true);
-                                    //cleardevice(); swapbuffers(); cleardevice();
                                     screen->clear();
                                     if (!speed->cancel()) {
                                         menu *section=new menu (screen, " - Choose section (starting point)");
@@ -395,7 +384,6 @@ int main (int argc, char *argv[]) {
                                             if (from!=section->opt()-1) from=section->opt()-1;
                                             ChosenSong->preview(true, from);
                                             }
-                                        //cleardevice(); swapbuffers(); cleardevice();
                                         screen->clear();
                                         if (!section->cancel()) {
                                             delete section;
@@ -408,7 +396,6 @@ int main (int argc, char *argv[]) {
                                                 if (to!=section->opt()+from-1) to=section->opt()+from-1;
                                                 ChosenSong->preview(true, to);
                                                 }
-                                            //cleardevice(); swapbuffers(); cleardevice();
                                             screen->clear();
                                             if (!section->cancel()) {
                                                 ChosenSong->preview(false);
@@ -457,7 +444,6 @@ int main (int argc, char *argv[]) {
                             }
                         if (options->cancel()) doneopt=1;
                         }
-                    //cleardevice(); swapbuffers(); cleardevice();
                     screen->clear();
                     delete options;
                 }
@@ -465,7 +451,6 @@ int main (int argc, char *argv[]) {
             case 'E': done=1; break;
             }
         if (startmenu->cancel()) done=1;
-        //cleardevice(); swapbuffers(); cleardevice();
         screen->clear();
         }
     delete startmenu;
@@ -473,6 +458,5 @@ int main (int argc, char *argv[]) {
     engine->drop();
     SDL_Quit ();
     TTF_Quit ();
-    //closegraph();
     return 0;
 }

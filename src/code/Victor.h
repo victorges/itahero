@@ -102,8 +102,11 @@ void menu::addOpt (char content[]) {
     end->content=new char[++size];
     if (end->content==NULL) Error ("Error loading menu");
     for (int i=0;i<size;i++) end->content[i]=content[i];
+    
     sizey+=visual->textheight(end->content);
+    if (locy-sizey/2-10<0) locy=sizey/2+110;
     if (visual->textwidth(end->content)+10>sizex) sizex=visual->textwidth(end->content)+10;
+    if (locx-sizex/2-10<0) locx=sizex/2+110;
     nOpt++;
 }
 
@@ -328,6 +331,10 @@ int music::time () {
 highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
                 {
+
+                *notes
+
+
                 FILE *chartfile=NULL;
                 int i;
                 if (col==0) {

@@ -109,38 +109,33 @@ class highway {
         long long int basescore, score;
         int streak, rockmeter;
         drawer *visual;
+        drawer **notes, *art;
         void draw (int time);
       public:
-        highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height, int *color); //in progress
-        ~highway (); //in progress
+        highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height, int *color);
+        ~highway ();
         void reset();
-        int multiplier (); //done
+        int multiplier ();
         int preliminary(); //to-do | usa antes de começar a tocar a música
-        long long int refresh(Uint8* keyboard); //in progress
+        long long int refresh(Uint8* keyboard);
         bool alive();
     };
 
 class background; //to-do
 
-void menu::print () { //temporaria
+void menu::print () {
     option *aux=start;
-    //setfillstyle(SOLID_FILL, BLACK);
-    //bar (locx-10, locy-10, locx+sizex+10, locy+sizey+10);
-    visual->bar(locx-10, locy-10, locx+sizex+10, locy+sizey+10, 0);
-    //moveto(locx,locy);
-    //outtext(header);
-    visual->textxy(header, locx, locy);
+    visual->bar(locx-sizex/2-10, locy-sizey/2-10, locx+sizex/2+10, locy+sizey/2+10, 0);
+    visual->textxy(header, locx-sizex/2, locy-sizey/2);
+    
     int y=visual->textheight(header);
     for (int curr=0;aux;curr++) {
         char string[100]="";
-        //moveto (locx, locy+y);
         if (selected==curr) {
             strcat(string, " ");
-            //outtext(" ");
             }
         strcat (string, aux->content);
-        visual->textxy(string, locx, locy+y);
-        //outtext (aux->content);
+        visual->textxy(string, locx-sizex/2, locy-sizey/2+y);
         y+=visual->textheight(aux->content);
         aux=aux->next;
         }
@@ -149,23 +144,14 @@ void menu::print () { //temporaria
 void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
 
-            //setcolor (WHITE);
-            //line (location-180, SIZEY, location-180, SIZEY-SIZEY);
             visual->line( location-180, SIZEY-1, location-180, 0, visual->color(255, 255, 255, 255));
-            //line (location+170, SIZEY, location+170, 0);
             visual->line( location+170, SIZEY-1, location+170, 0, visual->color(255, 255, 255, 255));
-            //setcolor (DARKGRAY);
             for (j=(time/(60*1000)/bpm)*(60*1000)/bpm;j<time+time_delay;j+=(60*1000)/bpm) {
-                //line (location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100));
                 visual->line(location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), visual->color(127, 127, 127, 255));
                 }
             for (j=0;j<5;j++) {
-                //setcolor(color[j]);
-                //rectangle (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
                 visual->rectangle ( location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140, color[j]);
                 if (fretstate[j]) {
-                    //setfillstyle(SOLID_FILL, COLOR (GetRValue(color[j])<40?0:(GetRValue(color[j])-40), GetGValue(color[j])<40?0:(GetGValue(color[j])-40), GetBValue(color[j])<40?0:(GetBValue(color[j])-40)));
-                    //bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138);
                     visual->bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138, color[j]);
                     }
                 }
@@ -175,40 +161,27 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
-                                //if (!chart[j].hold) setfillstyle (SOLID_FILL, LIGHTGRAY);
-                                //else setfillstyle(SOLID_FILL, color[i]);
-                                //bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
                                 visual->bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20),color[i]);
                                 }
-                            //setfillstyle(SOLID_FILL, color[i]);
                             if (!chart[j].hit&&!chart[j].hopo) {
-                                //bar(location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
                                 visual->bar ( location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), color[i]);
                                 }
                             if (!chart[j].hit&&chart[j].hopo) {
-                                //bar(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
                                 visual->bar (location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), color[i]);
                                 }
                             }
                 }
             char string[50];
-            //setcolor (WHITE);
             if (!practice) {
                 int posx=location-300, posy=SIZEY-140;
                 visual->settextstyle("lazy", NULL, 20);
                 sprintf (string, "%lld,%lld  %lld", score/basescore%10, (10*score/basescore%10), score/10000);
-                //moveto (location-300, SIZEY-140);
-                //outtext(string);
                 visual->textxy (string, posx-5, posy);
                 posy+=visual->textheight(string);
-                //moverel(-textwidth(string), textheight(string));
                 sprintf (string, "%d  x%d", streak, multiplier());
-                //outtext(string);
                 visual->textxy (string, posx, posy);
                 posy+=visual->textheight(string);
-                //moverel(-textwidth(string), textheight(string));
                 sprintf (string, "%d", rockmeter);
-                //outtext(string);
                 visual->textxy (string, posx, posy);
                 }
 }
