@@ -29,12 +29,59 @@ void drawer::put_pixel ( int x, int y, Uint32 pixel ){
 }
 
 void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip = NULL ){
+    SDL_Rect clip2;
+    bool changex = false, changey = false;
+    if( clip == NULL ){
+        if(x<0){
+            if(x+surface->w >= 0){
+                clip2.x = -x;
+                clip2.w = x + surface->w;
+                changex = true;
+            }
+            else
+                return;
+        }
+        if(y<0){
+            if(y+surface->h >= 0){
+                clip2.y = -y;
+                clip2.h = y + surface->h;
+                changey = true;
+            }
+            else
+                return;
+        }
+        if(x + surface->w >= destination->surface->w){
+            if(x < destination->surface->w )
+                clip2.w = changex==true ? destination->surface->w - clip2.x : destination->surface->w - x;
+            else
+                return;
+        }
+        if(y + surface->h >= destination->surface->h){
+            if(y < destination->surface->h )
+                clip2.h = changey==true ? destination->surface->h - clip2.y : destination->surface->h - y;
+            else
+                return;
+        }
+        if(changex == true && changey == false){
+            clip2.y = 0;
+            clip2.h = surface->h;
+            changey = true;
+        }
+        if(changex == false && changey == true){
+            clip2.x = 0;
+            clip2.w = surface->w;
+            changex = true;
+        }
+    }
     SDL_Rect offset;
     
     offset.x = x;
     offset.y = y;
     
-    SDL_BlitSurface ( surface, clip, destination->surface, &offset );
+    if(changex == false)
+        SDL_BlitSurface ( surface, clip, destination->surface, &offset );
+    else
+        SDL_BlitSurface ( surface, &clip2, destination->surface, &offset );
 }
 
 void drawer::textxy ( char message[], int x, int y ){
@@ -125,21 +172,6 @@ void drawer::check_lock (){
     if ( SDL_MUSTLOCK ( surface ) )
         SDL_LockSurface ( surface );
 }
-
-/*SDL_Surface* drawer::load_image ( char *name ){
-    SDL_Surface *loaded = NULL;
-    SDL_Surface *optimized = NULL;
-    
-    loaded = IMG_Load ( name );
-    if ( loaded != NULL ){
-        optimized = SDL_DisplayFormat ( loaded );
-        if ( optimized != NULL )
-            SDL_SetColorKey ( optimized,SDL_SRCCOLORKEY,keycolor );
-    }
-    SDL_FreeSurface ( loaded );
-    
-    return optimized;
-}*/
 
 drawer* drawer::resize ( int ini_w, int ini_h, int end_w, int end_h ){
     int add_w, add_h;

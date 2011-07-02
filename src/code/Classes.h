@@ -157,12 +157,7 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                     }
                 }
             for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);
-            for (;chart[j].time-time<time_dela
-
-
-
-
-            y;j++) {
+            for (;chart[j].time-time<time_delay;j++) {
                 if (chart[j].hit==0||chart[j].end>chart[j].time)
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
