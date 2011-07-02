@@ -323,7 +323,7 @@ int music::time () {
 
 
 highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
-                  visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(100/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
+                  visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
                 {
                 FILE *chartfile=NULL;
                 int i;
@@ -480,8 +480,7 @@ long long int highway::refresh (Uint8* keyboard) {
                     while (progress<size&&time-chart[progress].time>timing_window) {
                         if (chart[progress].hit==false) {
                             rockmeter-=20;
-                            basescore+=(500000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
-                            if (streak>0) MusicStream->error();
+                            basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
                             streak=0;
                             MusicStream->hitting(instrument, false);
                             }
@@ -500,9 +499,9 @@ long long int highway::refresh (Uint8* keyboard) {
                                            rockmeter+=21-rockmeter/50;
                                            chart[j].hit=true;
                                            MusicStream->hitting(instrument);
-                                           basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                           basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
-                                           score+=500000*chart[j].chord*multiplier();
+                                           score+=1000000*chart[j].chord*multiplier();
                                            picked=chart[j].hopo=false;
                                            }
                                     }
@@ -551,9 +550,9 @@ long long int highway::refresh (Uint8* keyboard) {
                                         rockmeter+=21-rockmeter/50;
                                         chart[j].hit=true;
                                         MusicStream->hitting(instrument);
-                                        basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                        basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
-                                        score+=500000*chart[j].chord*multiplier();
+                                        score+=1000000*chart[j].chord*multiplier();
                                         picked=false;
                                         }
                                     }

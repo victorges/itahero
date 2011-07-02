@@ -72,10 +72,10 @@ class music {
         irrklang::ISoundEngine *engine;
         irrklang::ISound* sound;
         irrklang::ISoundSource* source, *errorsource[NERROR];
+        irrklang::ISoundEffectControl* FX;
         unsigned int start, section, limit;
         char *filename;
       public:
-        irrklang::ISoundEffectControl* FX;
         char *title, *artist;
         music (FILE* songs, irrklang::ISoundEngine *eng);
         ~music ();
