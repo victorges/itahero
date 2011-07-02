@@ -109,7 +109,7 @@ class highway {
         long long int basescore, score;
         int streak, rockmeter;
         drawer *visual;
-        drawer **notes, *art;
+        drawer **notes, **hopos, *art;
         void draw (int time);
       public:
         highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height, int *color);
@@ -144,6 +144,7 @@ void menu::print () {
 void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
             int j=progress;
 
+            notes[0]->apply_surface (0, 0, visual, NULL);
             visual->line( location-180, SIZEY-1, location-180, 0, visual->color(255, 255, 255, 255));
             visual->line( location+170, SIZEY-1, location+170, 0, visual->color(255, 255, 255, 255));
             for (j=(time/(60*1000)/bpm)*(60*1000)/bpm;j<time+time_delay;j+=(60*1000)/bpm) {
@@ -156,7 +157,12 @@ void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar 
                     }
                 }
             for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);
-            for (;chart[j].time-time<time_delay;j++) {
+            for (;chart[j].time-time<time_dela
+
+
+
+
+            y;j++) {
                 if (chart[j].hit==0||chart[j].end>chart[j].time)
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {

@@ -4,7 +4,7 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-//#define FULLSCREEN
+#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -13,6 +13,7 @@ enum en_difficulty {EASY, MEDIUM, HARD, EXPERT};
 enum en_extras {HYPERSPEED, PRECISION, GODMODE, ALLHOPO, PRACTICE=9};
 
 #define NERROR 5
+#define NART 1
 
 class {
     int resolutionx;

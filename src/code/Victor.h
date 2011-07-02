@@ -331,9 +331,25 @@ int music::time () {
 highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
                 {
+                {
+                    notes=new drawer*[5];
+                    notes[0]=new drawer(FilePath("Image/", "green", ".png"));
+                    notes[1]=new drawer(FilePath("Image/", "red", ".png"));
+                    notes[2]=new drawer(FilePath("Image/", "yellow", ".png"));
+                    notes[3]=new drawer(FilePath("Image/", "blue", ".png"));
+                    notes[4]=new drawer(FilePath("Image/", "orange", ".png"));
 
-                *notes
+                    hopos=new drawer*[5];
+                    hopos[0]=new drawer(FilePath("Image/", "greenhopo", ".png"));
+                    hopos[1]=new drawer(FilePath("Image/", "redhopo", ".png"));
+                    hopos[2]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
+                    hopos[3]=new drawer(FilePath("Image/", "bluehopo", ".png"));
+                    hopos[4]=new drawer(FilePath("Image/", "orangehopo", ".png"));
 
+                    char artname[100];
+                    sprintf (artname, "art%d", rand()%NART);
+                    art=new drawer(FilePath("Image/", artname, ".png"));
+                }
 
                 FILE *chartfile=NULL;
                 int i;
