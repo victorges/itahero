@@ -4,13 +4,15 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-//#define FULLSCREEN
+#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
 enum en_difficulty {EASY, MEDIUM, HARD, EXPERT};
 
 enum en_extras {HYPERSPEED, PRECISION, GODMODE, ALLHOPO, PRACTICE=9};
+
+enum en_notes {GREEN, RED, YELLOW, BLUE, ORANGE};
 
 #define NERROR 5
 #define NART 1
@@ -60,46 +62,69 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
     song->play();
     SDL_Event event;
     Uint8* keyboard=SDL_GetKeyState(NULL);
-    bool done=false;
+    bool done=false, bmenu=false;
+    menu *pause=new menu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
+    pause->addOpt("Resume");
+    pause->addOpt("Restart");
+    pause->addOpt("Exit");
     while (!done) {
+        int timams=clock()*1000/CLOCKS_PER_SEC;
+        char string[10];
         screen->Flip();
         screen->clear();
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_KEYDOWN: case SDL_KEYUP:
+                    if (event.type==SDL_KEYDOWN&&event.key.keysym.sym==SDLK_ESCAPE) bmenu=true;
+                    keyboard=SDL_GetKeyState(NULL);
+                    break;
+                case SDL_QUIT: exit(0); break;
+                }
+            }
         for (int i=0;i<nPlayers;i++) {
             players[i]->refresh(keyboard);
             if (!players[i]->alive()) done=true;
             }
         if (song->isFinished()) done=true;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_KEYDOWN: case SDL_KEYUP: keyboard=SDL_GetKeyState(NULL); break;
-                case SDL_QUIT: exit(0); break;
-                }
-            }
-        if (keyboard[SDLK_ESCAPE]) {
-                        song->pause();
-                        menu *pause=new menu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
-                        pause->addOpt("Resume");
-                        pause->addOpt("Restart");
-                        pause->addOpt("Exit");
-                        while (pause->navigate());
-                        switch (pause->opt()) {
-                            case 1:
-                                song->play();
-                                break;
-                            case 2:
-                                song->reload();
-                                for (int i=0;i<nPlayers;i++) players[i]->reset();
-                                song->play();
-                                break;
-                            case 3:
-                                done=1;
-                                break;
-                            }
-                        if (pause->cancel()) keyboard[SDLK_ESCAPE]=0;
-                        delete pause;
+        if (bmenu) {
+                song->pause();
+                while (pause->navigate());
+                switch (pause->opt()) {
+                    case 1:
+                        song->settimerel(-700);
+                        song->settimerel(-700);
+                        song->play();
+                        break;
+                    case 2:
+                        song->reload();
+                        for (int i=0;i<nPlayers;i++) players[i]->reset();
+                        song->play();
+                        break;
+                    case 3:
+                        done=1;
+                        break;
+                    }
+                if (pause->cancel()) {
+                    int backup=song->time();
+                    song->play();
+                    for (int i=0;song->time()>10&&i<100;i++) {
+                        screen->Flip();
+                        screen->clear();
+                        song->settimerel(-20);
+                        for (int i=0;i<nPlayers;i++) players[i]->draw();
                         }
-
+                    while (song->time()<backup) {
+                        screen->Flip();
+                        screen->clear();
+                        for (int i=0;i<nPlayers;i++) players[i]->draw();
+                        }
+                    }
+                bmenu=false;
+                }
+        sprintf (string, "%d\n", 1000/(clock()*1000/CLOCKS_PER_SEC-timams));
+        screen->textxy(string, 0, 0);
         }
+    delete pause;
 }
 
 int main (int argc, char *argv[]) {
@@ -124,7 +149,7 @@ int main (int argc, char *argv[]) {
     #ifndef FULLSCREEN
     screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE);
     #else
-    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
+    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_ASYNCBLIT | SDL_FULLSCREEN);
     #endif
     SDL_ShowCursor(SDL_DISABLE);
     SDL_WM_SetCaption ( "ITA Hero", NULL );

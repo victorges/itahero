@@ -35,6 +35,9 @@ class drawer {
         void resize ( int ini_w, int ini_h, int end_w, int end_h );
 
         Uint8 get_pixel_color (int x, int y, char c);
+        int get_height();
+        int get_width();
+        
         void put_pixel (int x, int y, Uint32 pixel);
         void apply_surface (int x, int y,drawer *destination, SDL_Rect *clip);
         void line (int ini_x, int ini_y, int end_x, int end_y, Uint32 color);
@@ -45,6 +48,7 @@ class drawer {
         void setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A);
         void Flip();
         void clear();
+        friend class highway;
 };
 
 class menu {
@@ -74,9 +78,8 @@ class music {
         irrklang::ISoundSource* source, *errorsource[NERROR];
         irrklang::ISoundEffectControl* FX;
         unsigned int start, section, limit;
-        char *filename;
       public:
-        char *title, *artist;
+        char *title, *artist, *filename;
         music (FILE* songs, irrklang::ISoundEngine *eng);
         ~music ();
         void load (float speed, int starts, int ends);
@@ -86,13 +89,16 @@ class music {
         bool isFinished ();
         void preview (bool active, int sixteenth);
         bool play ();
-        void error();
-        void lose();
-        void starpower(bool active);
-        void hitting(char instrument, bool active);
         bool pause ();
         int time ();
-      friend class highway;
+        
+        void settime(int time);
+        void settimerel(int dt);
+
+        void lose();
+        void error();
+        void starpower(bool active);
+        void hitting(char instrument, bool active);
       };
 
 class highway {
@@ -108,13 +114,16 @@ class highway {
         bool allhopo, godmode, practice;
         long long int basescore, score;
         int streak, rockmeter;
-        drawer *visual;
+        drawer *visual, *hway;
         drawer **notes, **hopos, *art;
-        void draw (int time);
+        int note_width, note_height;
+        int position3d (int dt);
+        int notex (int note);
       public:
         highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height, int *color);
         ~highway ();
         void reset();
+        void draw (int time);
         int multiplier ();
         int preliminary(); //to-do | usa antes de começar a tocar a música
         long long int refresh(Uint8* keyboard);
@@ -141,41 +150,49 @@ void menu::print () {
         }
 }
 
-void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
-            int j=progress;
+void highway::draw (int time=0) {
+            if (!time) time=MusicStream->time();
             
-            visual->line( location-180, SIZEY-1, location-180, 0, visual->color(255, 255, 255, 255));
-            visual->line( location+170, SIZEY-1, location+170, 0, visual->color(255, 255, 255, 255));
-            for (j=(time/(60*1000)/bpm)*(60*1000)/bpm;j<time+time_delay;j+=(60*1000)/bpm) {
-                visual->line(location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), visual->color(127, 127, 127, 255));
-                }
-            for (j=0;j<5;j++) {
-                visual->rectangle ( location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140, color[j]);
-                if (fretstate[j]) {
-                    visual->bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138, color[j]);
+            int i, j;
+
+            visual->line(notex(GREEN)-5, SIZEY-1, notex(GREEN)-5, 0, visual->color(255, 255, 255, 255));
+            visual->line(notex(ORANGE)+note_width+5, SIZEY-1, notex(ORANGE)+note_width+5, 0, visual->color(255, 255, 255, 255));
+
+            for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
+                visual->line(notex(GREEN)-5, position3d(j-time), notex(ORANGE)+note_width+5, position3d(j-time), visual->color(40, 40, 40, 255));
+                if ((j/(60*1000/bpm))%4==0) {
+                    visual->line(notex(GREEN)-5, position3d(j-time), notex(ORANGE)+note_width+5, position3d(j-time), visual->color(127, 127, 127, 255));
+                    visual->line(notex(GREEN)-5, position3d(j-time)+1, notex(ORANGE)+note_width+5, position3d(j-time)+1, visual->color(127, 127, 127, 255));
                     }
                 }
-            for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);
-            for (;chart[j].time-time<time_delay;j++) {
-                if (chart[j].hit==0||chart[j].end>chart[j].time)
+
+            for (j=0;j<5;j++) {
+                visual->rectangle (notex(j), position3d(0)+40, notex(j)+note_width, position3d(0), color[j]);
+                if (fretstate[j]) {
+                    visual->bar (notex(j), position3d(0)+40, notex(j)+note_width, position3d(0), color[j]);
+                    }
+                }
+            for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
+
+            while (position3d(chart[j].time-time)>-note_height) {
+                if (chart[j].hit==false||chart[j].end>chart[j].time)
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
-                                visual->bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20),color[i]);
+                                visual->bar (notex(i)+note_width/2-4, position3d(chart[j].time-time), notex(i)+note_width/2+4, position3d(chart[j].end-time), color[i]);
                                 }
                             if (!chart[j].hit&&!chart[j].hopo) {
-                                visual->bar (location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), color[i]);
-                                notes[i]->apply_surface(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+140), visual, NULL);
+                                notes[i]->apply_surface(notex(i), position3d(chart[j].time-time), visual, NULL);
                                 }
                             if (!chart[j].hit&&chart[j].hopo) {
-                                visual->bar (location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40), color[i]);
-                                hopos[i]->apply_surface(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+140), visual, NULL);
+                                hopos[i]->apply_surface(notex(i), position3d(chart[j].time-time), visual, NULL);
                                 }
                             }
+                    j++;
                 }
             char string[50];
             if (!practice) {
-                int posx=location-300, posy=SIZEY-140;
+                int posx=notex(GREEN)-125, posy=SIZEY-140;
                 visual->settextstyle("lazy", NULL, 20);
                 sprintf (string, "%lld,%lld  %lld", score/basescore%10, (10*score/basescore%10), score/10000);
                 visual->textxy (string, posx-5, posy);

@@ -40,6 +40,14 @@ int drawer::textwidth(char string[]) {
     return w;
 }
 
+int drawer::get_height() {
+    return surface->h;
+}
+
+int drawer::get_width() {
+    return surface->w;
+}
+
 void drawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     maincolor=SDL_MapRGBA(surface->format, R, G, B, A);
 }
@@ -285,6 +293,20 @@ bool music::play () {
      return true;
 }
 
+void music::settime(int time) {
+    if (time>0&&time<sound->getPlayLength()) sound->setPlayPosition(time);
+    else if (time<0) sound->setPlayPosition(0);
+    else if (time>sound->getPlayLength()) sound->setPlayPosition(sound->getPlayLength());
+    if (sound->getIsPaused()==false) for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(clock()*1000/CLOCKS_PER_SEC-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
+}
+
+void music::settimerel(int dt) {
+    if (time()+dt>0&&time()+dt<sound->getPlayLength()) sound->setPlayPosition(time()+dt);
+    else if (time()+dt<0) sound->setPlayPosition(0);
+    else if (time()+dt<sound->getPlayLength()) sound->setPlayPosition(sound->getPlayLength());
+    if (sound->getIsPaused()==false) start-=dt*CLOCKS_PER_SEC/1000;
+}
+
 void music::error () {
     int sel=rand()%NERROR;
     engine->play2D(errorsource[sel], false, false, false, true)->setVolume(0.8);
@@ -330,26 +352,30 @@ int music::time () {
 
 highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
-                {
+            {
                 {
                     notes=new drawer*[5];
-                    notes[0]=new drawer(FilePath("Image/", "green", ".png"));
-                    notes[1]=new drawer(FilePath("Image/", "red", ".png"));
-                    notes[2]=new drawer(FilePath("Image/", "yellow", ".png"));
-                    notes[3]=new drawer(FilePath("Image/", "blue", ".png"));
-                    notes[4]=new drawer(FilePath("Image/", "orange", ".png"));
+                    notes[GREEN]=new drawer(FilePath("Image/", "green", ".png"));
+                    notes[RED]=new drawer(FilePath("Image/", "red", ".png"));
+                    notes[YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
+                    notes[BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
+                    notes[ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
 
                     hopos=new drawer*[5];
-                    hopos[0]=new drawer(FilePath("Image/", "greenhopo", ".png"));
-                    hopos[1]=new drawer(FilePath("Image/", "redhopo", ".png"));
-                    hopos[2]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
-                    hopos[3]=new drawer(FilePath("Image/", "bluehopo", ".png"));
-                    hopos[4]=new drawer(FilePath("Image/", "orangehopo", ".png"));
+                    hopos[GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
+                    hopos[RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
+                    hopos[YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
+                    hopos[BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
+                    hopos[ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
+
+                    note_width=notes[GREEN]->get_width();
+                    note_height=notes[GREEN]->get_height();
 
                     char artname[100];
-                    sprintf (artname, "art%d", rand()%NART);
+                    sprintf (artname, "art%d", rand()%NART+1);
                     art=new drawer(FilePath("Image/", artname, ".png"));
                 }
+                hway=new drawer(SDL_HWSURFACE, 5*note_width+10, height, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
 
                 FILE *chartfile=NULL;
                 int i;
@@ -591,6 +617,15 @@ long long int highway::refresh (Uint8* keyboard) {
 
                     draw(time);
                     return score/10000;
+}
+
+int highway::position3d (int dt) {
+    return visual->get_height()-(dt*(visual->get_height()-100)/time_delay+140);
+}
+
+int highway::notex (int note) {
+    if (note<GREEN||note>ORANGE) return 0;
+    return location+(note_width+2)*note-5*note_width/2;
 }
 
 bool highway::alive() {
