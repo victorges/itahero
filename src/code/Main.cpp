@@ -3,6 +3,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
+#include <math.h>
 
 //#define FULLSCREEN
 
@@ -16,6 +17,7 @@ enum en_notes {GREEN, RED, YELLOW, BLUE, ORANGE};
 
 #define NERROR 5
 #define NART 1
+#define PI 3.14159265359
 
 class {
     int resolutionx;
