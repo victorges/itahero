@@ -122,7 +122,7 @@ class highway {
         int position3d (int dt);
         int notex (int note, int dt=0);
       public:
-        highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height, int *color);
+        highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height);
         ~highway ();
         void reset();
         void draw (int time);

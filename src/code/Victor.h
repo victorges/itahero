@@ -351,7 +351,7 @@ int music::time () {
 }
 
 
-highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3, int col[]=0):
+highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
             {
                 {
@@ -390,10 +390,7 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
 
                 FILE *chartfile=NULL;
                 int i;
-                if (col==0) {
-                    int col_default[]={visual->color(40,200,10), visual->color(200, 0, 0), visual->color(247, 236, 40), visual->color(10, 10, 200), visual->color(255, 102, 0)};
-                    col=col_default;
-                }
+                int col[]={visual->color(40,200,10), visual->color(200, 0, 0), visual->color(247, 236, 40), visual->color(10, 10, 200), visual->color(255, 102, 0)};
 
                 fretstate=new short int[5];
                 color=new int[5];
