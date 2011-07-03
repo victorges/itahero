@@ -346,5 +346,6 @@ void drawer::resize(int new_w, int new_h)
     temp = SDL_DisplayFormat(destination);            
 
     SDL_FreeSurface(destination);
+    SDL_FreeSurface(surface);
     surface = temp;
 }
