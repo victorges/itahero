@@ -153,6 +153,10 @@ void menu::print () {
         }
 }
 
+int highway::position3d (int dt) {
+    return visual->get_height()-(dt*(height-100)/time_delay+140);
+}
+
 void highway::draw (int time=0) {
             if (!time) time=MusicStream->time();
             
@@ -182,7 +186,7 @@ void highway::draw (int time=0) {
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
-                                visual->bar (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-4, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2+4, position3d(chart[j].end-time), color[i]);
+                                visual->line (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2, position3d(chart[j].time-time), notex(i, min(time_delay, chart[j].end-time))+note_width(min(time_delay, chart[j].end-time))/2, max(position3d(time_delay), position3d(chart[j].end-time)), color[i]);
                                 }
                             if (position3d(chart[j].time-time)<visual->get_height()) {
                                 if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time)][i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);

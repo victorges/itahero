@@ -5,7 +5,7 @@
 #include <SDL/SDL_ttf.h>
 #include <math.h>
 
-//#define FULLSCREEN
+#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
