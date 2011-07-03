@@ -173,7 +173,7 @@ void highway::draw (int time=0) {
             for (j=0;j<5;j++) {
                 visual->rectangle (notex(j), position3d(0)+40, notex(j)+note_width(), position3d(0), color[j]);
                 if (fretstate[j]) {
-                    visual->bar (notex(j), position3d(0)+40, notex(j)+note_width(), position3d(0), color[j]);
+                    visual->bar (notex(j), position3d(0), notex(j)+note_width(), position3d(0)+40, color[j]);
                     }
                 }
             for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
