@@ -27,7 +27,7 @@ class drawer {
         drawer (char filename[]);
         ~drawer ();
         
-        void settextstyle (char font[], SDL_Color *textcolor, int textsize);
+        void settextstyle (char font[]="lazy", SDL_Color *textcolor=NULL, int textsize=15);
         int textheight(char string[]);
         int textwidth(char string[]);
         void textxy ( char message[], int x, int y ); 
@@ -116,9 +116,11 @@ class highway {
         int streak, rockmeter;
         drawer *visual, *hway;
         drawer **notes, **hopos, *art;
-        int note_width, note_height;
+        int note_w, note_h;
+        int note_width(int dt=0);
+        int note_height(int dt=0);
         int position3d (int dt);
-        int notex (int note);
+        int notex (int note, int dt=0);
       public:
         highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height, int *color);
         ~highway ();
@@ -155,37 +157,37 @@ void highway::draw (int time=0) {
             
             int i, j;
 
-            visual->line(notex(GREEN)-5, SIZEY-1, notex(GREEN)-5, 0, visual->color(255, 255, 255, 255));
-            visual->line(notex(ORANGE)+note_width+5, SIZEY-1, notex(ORANGE)+note_width+5, 0, visual->color(255, 255, 255, 255));
+            visual->line(notex(GREEN)-5, position3d(0), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
+            visual->line(notex(ORANGE)+note_width()+5, position3d(0), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
 
             for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
-                visual->line(notex(GREEN)-5, position3d(j-time), notex(ORANGE)+note_width+5, position3d(j-time), visual->color(40, 40, 40, 255));
+                visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(40, 40, 40, 255));
                 if ((j/(60*1000/bpm))%4==0) {
-                    visual->line(notex(GREEN)-5, position3d(j-time), notex(ORANGE)+note_width+5, position3d(j-time), visual->color(127, 127, 127, 255));
-                    visual->line(notex(GREEN)-5, position3d(j-time)+1, notex(ORANGE)+note_width+5, position3d(j-time)+1, visual->color(127, 127, 127, 255));
+                    visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(127, 127, 127, 255));
+                    visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1, visual->color(127, 127, 127, 255));
                     }
                 }
                 
             for (j=0;j<5;j++) {
-                visual->rectangle (notex(j), position3d(0)+40, notex(j)+note_width, position3d(0), color[j]);
+                visual->rectangle (notex(j), position3d(0)+40, notex(j)+note_width(), position3d(0), color[j]);
                 if (fretstate[j]) {
-                    visual->bar (notex(j), position3d(0)+40, notex(j)+note_width, position3d(0), color[j]);
+                    visual->bar (notex(j), position3d(0)+40, notex(j)+note_width(), position3d(0), color[j]);
                     }
                 }
-            for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
+            for (j=progress;j>0&&position3d(chart[j].end-time)<height;j--);
 
-            while (position3d(chart[j].time-time)>-note_height) {
+            while (position3d(chart[j].time-time)>position3d(time_delay)) {
                 if (chart[j].hit==false||chart[j].end>chart[j].time)
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
-                                visual->bar (notex(i)+note_width/2-4, position3d(chart[j].time-time), notex(i)+note_width/2+4, position3d(chart[j].end-time), color[i]);
+                                visual->bar (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-4, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2+4, position3d(chart[j].end-time), color[i]);
                                 }
                             if (!chart[j].hit&&!chart[j].hopo) {
-                                notes[i]->apply_surface(notex(i), position3d(chart[j].time-time), visual, NULL);
+                                notes[i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
                                 }
-                            if (!chart[j].hit&&chart[j].hopo) {
-                                hopos[i]->apply_surface(notex(i), position3d(chart[j].time-time), visual, NULL);
+                            else if (!chart[j].hit) {
+                                hopos[i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
                                 }
                             }
                     j++;

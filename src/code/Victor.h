@@ -1,15 +1,3 @@
-void drawer::settextstyle (char fnt[]="lazy", SDL_Color *tcolor=NULL, int tsize=15) {
-    TTF_CloseFont (font);
-    if (tcolor==NULL) textcolor.r=textcolor.g=textcolor.b=255;
-    else textcolor=*tcolor;
-    textsize=tsize;
-    font=TTF_OpenFont (FilePath("Font/", fnt, ".ttf"), textsize);
-    if (font==NULL) {
-        printf ("Error loading font");
-        settextstyle();
-        }
-}
-
 drawer::drawer (SDL_Surface *surf): surface(surf) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
@@ -26,6 +14,18 @@ drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Ui
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
     settextstyle();
+}
+
+void drawer::settextstyle (char fnt[], SDL_Color *tcolor, int tsize) {
+    TTF_CloseFont (font);
+    if (tcolor==NULL) textcolor.r=textcolor.g=textcolor.b=255;
+    else textcolor=*tcolor;
+    textsize=tsize;
+    font=TTF_OpenFont (FilePath("Font/", fnt, ".ttf"), textsize);
+    if (font==NULL) {
+        printf ("Error loading font");
+        settextstyle();
+        }
 }
 
 int drawer::textheight(char string[]) {
@@ -369,14 +369,13 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
                     hopos[BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
                     hopos[ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
 
-                    note_width=notes[GREEN]->get_width();
-                    note_height=notes[GREEN]->get_height();
+                    note_w=notes[GREEN]->get_width();
+                    note_h=notes[GREEN]->get_height();
 
                     char artname[100];
                     sprintf (artname, "art%d", rand()%NART+1);
                     art=new drawer(FilePath("Image/", artname, ".png"));
                 }
-                hway=new drawer(SDL_HWSURFACE, 5*note_width+10, height, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
 
                 FILE *chartfile=NULL;
                 int i;
@@ -476,7 +475,6 @@ highway::~highway () {
                 for (int i=0;i<5;i++) delete hopos[i];
                 delete[] hopos;
                 delete art;
-                delete hway;
                 }
 
 void highway::reset () {
@@ -626,13 +624,21 @@ long long int highway::refresh (Uint8* keyboard) {
                     return score/10000;
 }
 
-int highway::position3d (int dt) {
-    return visual->get_height()-(dt*(visual->get_height()-100)/time_delay+140);
+int highway::note_width(int dt) {
+    return note_w+2-2*(visual->get_height()-position3d(dt))*note_w/(3*height);
 }
 
-int highway::notex (int note) {
+int highway::note_height(int dt) {
+    return note_h-2*(visual->get_height()-position3d(dt))*note_h/(3*height);
+}
+
+int highway::position3d (int dt) {
+    return visual->get_height()-(dt*(height-100)/time_delay+140);
+}
+
+int highway::notex (int note, int dt) {
     if (note<GREEN||note>ORANGE) return 0;
-    return location+(note_width+2)*note-5*note_width/2;
+    return location-(5*note_width(dt)/2)+(note_width(dt)*note);
 }
 
 bool highway::alive() {
