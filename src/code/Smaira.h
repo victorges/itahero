@@ -117,6 +117,14 @@ void drawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0
         }
         for ( int i = ini_x; i <= end_x; i++ )
             put_pixel ( i, ini_y + ( i - ini_x ) * ( end_y - ini_y ) / ( end_x - ini_x ), color );
+        if ( end_y != ini_y ){
+            if ( end_y < ini_y ){
+                end_x ^= ini_x ^= end_x ^= ini_x;
+                end_y ^= ini_y ^= end_y ^= ini_y;
+            }
+            for ( int i = ini_y; i <= end_y; i++ )
+                put_pixel ( ini_x + ( i - ini_y ) * ( end_x - ini_x ) / ( end_y - ini_y ), i, color );
+        }
     }
     else{
         if ( end_y < ini_y )
