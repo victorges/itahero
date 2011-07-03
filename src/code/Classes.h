@@ -43,6 +43,7 @@ class drawer {
         void line (int ini_x, int ini_y, int end_x, int end_y, Uint32 color);
         void rectangle (int left, int top, int right, int bottom, Uint32 color);
         void bar (int left, int top, int right, int bottom, Uint32 color);
+        void parallelogram (int x1, int y1, int x2, int y2, int w, Uint32 color);
         
         Uint32 color (Uint8 R, Uint8 G, Uint8 B, Uint8 A);
         void setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A);

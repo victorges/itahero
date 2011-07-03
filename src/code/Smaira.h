@@ -134,6 +134,12 @@ void drawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0
     }
 }
 
+void drawer::parallelogram (int x1, int y1, int x2, int y2, int w, Uint32 color){
+    if(color == 0) color = this->maincolor;
+    for( int i = 0; i<w; i++)
+        line(x1+i, y1, x2+i, y2, color);
+}
+
 void drawer::rectangle ( int left, int top, int right, int bottom, Uint32 color = 0 ){
     if(color == 0) color = this->maincolor;
     line ( left, top, right, top, color );
