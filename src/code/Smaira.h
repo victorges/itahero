@@ -205,8 +205,10 @@ void drawer::resize(int new_w, int new_h)
         new_h = new_w*surface->h/surface->w;
 
     if (surface->w == new_w && surface->h == new_h){
-        destination = SDL_DisplayFormat(surface);            
+        destination = SDL_DisplayFormat(surface);
+        SDL_FreeSurface(surface);
         surface = destination;
+        return;
     }
 
     Uint32 rmask = 0x000000ff,
@@ -216,6 +218,7 @@ void drawer::resize(int new_w, int new_h)
 
     destination = SDL_CreateRGBSurface(SDL_HWSURFACE, new_w, new_h, surface->format->BitsPerPixel, rmask, gmask, bmask, amask );
     SDL_Surface * temp = SDL_ConvertSurface(surface,destination->format,0);
+    SDL_FreeSurface(surface);
     surface = temp;
 
     const double blur = 1.0;
@@ -346,6 +349,5 @@ void drawer::resize(int new_w, int new_h)
     temp = SDL_DisplayFormat(destination);            
 
     SDL_FreeSurface(destination);
-    SDL_FreeSurface(surface);
     surface = temp;
 }

@@ -355,26 +355,37 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
             {
                 {
-                    notes=new drawer*[5];
-                    notes[GREEN]=new drawer(FilePath("Image/", "green", ".png"));
-                    notes[RED]=new drawer(FilePath("Image/", "red", ".png"));
-                    notes[YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
-                    notes[BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
-                    notes[ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
-
-                    hopos=new drawer*[5];
-                    hopos[GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
-                    hopos[RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
-                    hopos[YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
-                    hopos[BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
-                    hopos[ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
-
-                    note_w=notes[GREEN]->get_width();
-                    note_h=notes[GREEN]->get_height();
-
-                    char artname[100];
-                    sprintf (artname, "art%d", rand()%NART+1);
-                    art=new drawer(FilePath("Image/", artname, ".png"));
+                    notes=new drawer**[120];
+                    hopos=new drawer**[120];
+                    
+                    for (int i=10;i<120;i++) {
+                        notes[i]=new drawer*[5];
+                        notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
+                        notes[i][GREEN]->resize(i);
+                        notes[i][RED]=new drawer(FilePath("Image/", "red", ".png"));
+                        notes[i][RED]->resize(i);
+                        notes[i][YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
+                        notes[i][YELLOW]->resize(i);
+                        notes[i][BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
+                        notes[i][BLUE]->resize(i);
+                        notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
+                        notes[i][ORANGE]->resize(i);
+                        }
+                    for (int i=10;i<120;i++) {
+                        hopos[i]=new drawer*[5];
+                        hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
+                        hopos[i][GREEN]->resize(i);
+                        hopos[i][RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
+                        hopos[i][RED]->resize(i);
+                        hopos[i][YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
+                        hopos[i][YELLOW]->resize(i);
+                        hopos[i][BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
+                        hopos[i][BLUE]->resize(i);
+                        hopos[i][ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
+                        hopos[i][ORANGE]->resize(i);
+                        }
+                    note_w=notes[110][GREEN]->get_width();
+                    note_h=notes[110][GREEN]->get_height();
                 }
 
                 FILE *chartfile=NULL;
@@ -470,11 +481,16 @@ highway::~highway () {
                 delete[] pick;
                 delete[] chart;
                 delete[] color;
-                for (int i=0;i<5;i++) delete notes[i];
+                for (int i=0;i<5;i++) {
+                    for (int j=10;j<120;j++) delete notes[j][i];
+                    delete[] notes[i];
+                    }
                 delete[] notes;
-                for (int i=0;i<5;i++) delete hopos[i];
+                for (int i=0;i<5;i++) {
+                    for (int j=50;j<100;j++) delete hopos[j][i];
+                    delete[] hopos[i];
+                    }
                 delete[] hopos;
-                delete art;
                 }
 
 void highway::reset () {
@@ -625,11 +641,11 @@ long long int highway::refresh (Uint8* keyboard) {
 }
 
 int highway::note_width(int dt) {
-    return note_w+2-2*(visual->get_height()-position3d(dt))*note_w/(3*height);
+    return note_w+2-2*(visual->get_height()-position3d(dt))*(note_w)/(3*height);
 }
 
 int highway::note_height(int dt) {
-    return note_h-2*(visual->get_height()-position3d(dt))*note_h/(3*height);
+    return note_h-2*(visual->get_height()-position3d(dt))*(note_h)/(3*height);
 }
 
 int highway::position3d (int dt) {

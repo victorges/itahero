@@ -115,7 +115,7 @@ class highway {
         long long int basescore, score;
         int streak, rockmeter;
         drawer *visual, *hway;
-        drawer **notes, **hopos, *art;
+        drawer ***notes, ***hopos, *art;
         int note_w, note_h;
         int note_width(int dt=0);
         int note_height(int dt=0);
@@ -157,8 +157,8 @@ void highway::draw (int time=0) {
             
             int i, j;
 
-            visual->line(notex(GREEN)-5, position3d(0), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
-            visual->line(notex(ORANGE)+note_width()+5, position3d(0), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
+            visual->line(notex(GREEN, -1000)-5, position3d(-1000), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
+            visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
 
             for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
                 visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(40, 40, 40, 255));
@@ -174,7 +174,7 @@ void highway::draw (int time=0) {
                     visual->bar (notex(j), position3d(0)+40, notex(j)+note_width(), position3d(0), color[j]);
                     }
                 }
-            for (j=progress;j>0&&position3d(chart[j].end-time)<height;j--);
+            for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
 
             while (position3d(chart[j].time-time)>position3d(time_delay)) {
                 if (chart[j].hit==false||chart[j].end>chart[j].time)
@@ -183,11 +183,9 @@ void highway::draw (int time=0) {
                             if (chart[j].end>chart[j].time) {
                                 visual->bar (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-4, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2+4, position3d(chart[j].end-time), color[i]);
                                 }
-                            if (!chart[j].hit&&!chart[j].hopo) {
-                                notes[i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
-                                }
-                            else if (!chart[j].hit) {
-                                hopos[i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
+                            if (position3d(chart[j].time-time)<visual->get_height()) {
+                                if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time)][i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
+                                else if (!chart[j].hit) hopos[note_width(chart[j].time-time)][i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
                                 }
                             }
                     j++;
