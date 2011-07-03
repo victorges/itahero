@@ -351,14 +351,14 @@ int music::time () {
 }
 
 
-highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=175, int h=2*SIZEY/3, int col[]=0):
+highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3, int col[]=0):
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
             {
                 {
                     notes=new drawer**[120];
                     hopos=new drawer**[120];
                     
-                    for (int i=10;i<120;i++) {
+                    for (int i=1;i<120;i++) {
                         notes[i]=new drawer*[5];
                         notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
                         notes[i][GREEN]->resize(i);
@@ -371,7 +371,7 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
                         notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
                         notes[i][ORANGE]->resize(i);
                         }
-                    for (int i=10;i<120;i++) {
+                    for (int i=1;i<120;i++) {
                         hopos[i]=new drawer*[5];
                         hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
                         hopos[i][GREEN]->resize(i);
@@ -481,13 +481,13 @@ highway::~highway () {
                 delete[] pick;
                 delete[] chart;
                 delete[] color;
-                for (int i=0;i<5;i++) {
-                    for (int j=10;j<120;j++) delete notes[j][i];
+                for (int i=10;i<120;i++) {
+                    for (int j=0;j<5;j++) delete notes[i][j];
                     delete[] notes[i];
                     }
                 delete[] notes;
-                for (int i=0;i<5;i++) {
-                    for (int j=50;j<100;j++) delete hopos[j][i];
+                for (int i=10;i<120;i++) {
+                    for (int j=0;j<5;j++) delete hopos[i][j];
                     delete[] hopos[i];
                     }
                 delete[] hopos;
@@ -646,10 +646,6 @@ int highway::note_width(int dt) {
 
 int highway::note_height(int dt) {
     return note_h-2*(visual->get_height()-position3d(dt))*(note_h)/(3*height);
-}
-
-int highway::position3d (int dt) {
-    return visual->get_height()-(dt*(height-100)/time_delay+140);
 }
 
 int highway::notex (int note, int dt) {
