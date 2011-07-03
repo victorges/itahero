@@ -161,7 +161,7 @@ void highway::draw (int time=0) {
             
             int i, j;
 
-            visual->bar(location-5*(note_width(GREEN)+55)/2, visual->get_height()-height-note_width(), location+5*(note_width(0)+50)/2, visual->get_height()-1, visual->color(0, 0, 1));
+            visual->bar(location-5*(note_width(GREEN)+51)/2, visual->get_height()-height-note_width(), location+5*(note_width(0)+50)/2, visual->get_height()-1, visual->color(0, 0, 1));
 
             visual->line(notex(GREEN, -1000)-5, position3d(-1000), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
             visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));

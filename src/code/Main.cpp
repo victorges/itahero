@@ -5,7 +5,7 @@
 #include <SDL/SDL_ttf.h>
 #include <math.h>
 
-//#define FULLSCREEN
+#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -122,7 +122,8 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                     }
                 bmenu=false;
                 }
-        sprintf (string, "%d\n", 1000/(clock()*1000/CLOCKS_PER_SEC-timams));
+        sprintf (string, "%d", 1000/(clock()*1000/CLOCKS_PER_SEC-timams));
+        screen->bar(0, 0, screen->textwidth(string), screen->textheight(string), screen->color(0, 0, 1));
         screen->textxy(string, 0, 0);
         }
     delete pause;
