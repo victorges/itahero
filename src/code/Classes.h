@@ -32,7 +32,7 @@ class drawer {
         int textwidth(char string[]);
         void textxy ( char message[], int x, int y ); 
         
-        void resize ( int ini_w, int ini_h, int end_w, int end_h );
+        void resize ( int end_w, int end_h );
 
         Uint8 get_pixel_color (int x, int y, char c);
         int get_height();
@@ -165,7 +165,7 @@ void highway::draw (int time=0) {
                     visual->line(notex(GREEN)-5, position3d(j-time)+1, notex(ORANGE)+note_width+5, position3d(j-time)+1, visual->color(127, 127, 127, 255));
                     }
                 }
-
+                
             for (j=0;j<5;j++) {
                 visual->rectangle (notex(j), position3d(0)+40, notex(j)+note_width, position3d(0), color[j]);
                 if (fretstate[j]) {

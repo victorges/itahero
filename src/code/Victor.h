@@ -293,11 +293,12 @@ bool music::play () {
      return true;
 }
 
-void music::settime(int time) {
-    if (time>0&&time<sound->getPlayLength()) sound->setPlayPosition(time);
-    else if (time<0) sound->setPlayPosition(0);
-    else if (time>sound->getPlayLength()) sound->setPlayPosition(sound->getPlayLength());
-    if (sound->getIsPaused()==false) for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(clock()*1000/CLOCKS_PER_SEC-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
+void music::settime(int atime) {
+    int dt=atime-time();
+    if (atime>0&&atime<sound->getPlayLength()) sound->setPlayPosition(atime);
+    else if (atime<0) sound->setPlayPosition(0);
+    else if (atime>sound->getPlayLength()) sound->setPlayPosition(sound->getPlayLength());
+    if (sound->getIsPaused()==false) start-=dt*CLOCKS_PER_SEC/1000;
 }
 
 void music::settimerel(int dt) {
@@ -464,13 +465,19 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
 }
 
 highway::~highway () {
-                  delete[] fretstate;
-                  delete[] fret;
-                  delete[] pickstate;
-                  delete[] pick;
-                  delete[] chart;
-                  delete[] color;
-                  }
+                delete[] fretstate;
+                delete[] fret;
+                delete[] pickstate;
+                delete[] pick;
+                delete[] chart;
+                delete[] color;
+                for (int i=0;i<5;i++) delete notes[i];
+                delete[] notes;
+                for (int i=0;i<5;i++) delete hopos[i];
+                delete[] hopos;
+                delete art;
+                delete hway;
+                }
 
 void highway::reset () {
         delete[] chart;

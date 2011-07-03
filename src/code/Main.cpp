@@ -4,7 +4,7 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
-#define FULLSCREEN
+//#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -107,10 +107,10 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                 if (pause->cancel()) {
                     int backup=song->time();
                     song->play();
-                    for (int i=0;song->time()>10&&i<100;i++) {
+                    for (int i=0;song->time()>10&&i<70;i++) {
                         screen->Flip();
                         screen->clear();
-                        song->settimerel(-20);
+                        song->settime(backup-15*(i+1));
                         for (int i=0;i<nPlayers;i++) players[i]->draw();
                         }
                     while (song->time()<backup) {
@@ -147,9 +147,9 @@ int main (int argc, char *argv[]) {
    
     drawer *screen;
     #ifndef FULLSCREEN
-    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE);
+    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE );
     #else
-    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_ASYNCBLIT | SDL_FULLSCREEN);
+    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
     #endif
     SDL_ShowCursor(SDL_DISABLE);
     SDL_WM_SetCaption ( "ITA Hero", NULL );
