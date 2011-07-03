@@ -202,8 +202,8 @@ Uint8 drawer::get_pixel_color ( int x, int y, char c ){
 
 int highway::position3d (int dt) {
     int y = visual->get_height()-(dt*(height-100)/time_delay+140);
-    double a = (3*526*(526-y)-(526-y)*(526-y))/(3.0*526);
-    return (int)(526-a-0.5);
+    double a = (3*height*(height-y)-(height-y)*(height-y))/(3.0*height);
+    return (int)(height-a-0.5);
     //esboço : precisa parar de tremer
     //return visual->get_height()-(dt*(height-100)/time_delay+140);
 }
