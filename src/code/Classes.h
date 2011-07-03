@@ -152,10 +152,6 @@ void menu::print () {
         }
 }
 
-int highway::position3d (int dt) {
-    return visual->get_height()-(dt*(height-100)/time_delay+140);
-}
-
 void highway::draw (int time=0) {
             if (!time) time=MusicStream->time();
             

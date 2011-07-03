@@ -150,14 +150,14 @@ void drawer::rectangle ( int left, int top, int right, int bottom, Uint32 color 
 
 void drawer::bar ( int left, int top, int right, int bottom, Uint32 color = 0 ){
     if(color == 0) color = maincolor;
-    /*for ( int i = left; i <= right; i++ )
-        line ( i, top, i, bottom, color );*/
-    SDL_Rect rect;
+    for ( int i = left; i <= right; i++ )
+        line ( i, top, i, bottom, color );
+    /*SDL_Rect rect;
     rect.x=left;
     rect.y=top;
     rect.w=right-left;
     rect.h=bottom-top;
-    SDL_FillRect(surface, &rect, color);
+    SDL_FillRect(surface, &rect, color);*/
 }
 
 Uint8 drawer::get_pixel_color ( int x, int y, char c ){
@@ -198,6 +198,14 @@ Uint8 drawer::get_pixel_color ( int x, int y, char c ){
     color = ( Uint8 ) temp;
     
     return color;
+}
+
+int highway::position3d (int dt) {
+    int y = visual->get_height()-(dt*(height-100)/time_delay+140);
+    double a = (3*526*(526-y)-(526-y)*(526-y))/(3.0*526);
+    return (int)(526-a-0.5);
+    //esboço : precisa parar de tremer
+    //return visual->get_height()-(dt*(height-100)/time_delay+140);
 }
 
 void drawer::check_unlock (){
