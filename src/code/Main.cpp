@@ -5,7 +5,7 @@
 #include <SDL/SDL_ttf.h>
 #include <math.h>
 
-#define FULLSCREEN
+//#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -73,7 +73,6 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
         int timams=clock()*1000/CLOCKS_PER_SEC;
         char string[10];
         screen->Flip();
-        screen->clear();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYDOWN: case SDL_KEYUP:

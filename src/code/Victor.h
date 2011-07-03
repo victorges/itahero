@@ -52,7 +52,7 @@ void drawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     maincolor=SDL_MapRGBA(surface->format, R, G, B, A);
 }
 
-Uint32 drawer::color (Uint8 R, Uint8 G, Uint8 B, Uint8 A=255) {
+Uint32 drawer::color (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     return SDL_MapRGBA(surface->format, R, G, B, A);
 }
 
@@ -481,12 +481,12 @@ highway::~highway () {
                 delete[] pick;
                 delete[] chart;
                 delete[] color;
-                for (int i=10;i<120;i++) {
+                for (int i=1;i<120;i++) {
                     for (int j=0;j<5;j++) delete notes[i][j];
                     delete[] notes[i];
                     }
                 delete[] notes;
-                for (int i=10;i<120;i++) {
+                for (int i=1;i<120;i++) {
                     for (int j=0;j<5;j++) delete hopos[i][j];
                     delete[] hopos[i];
                     }
@@ -641,11 +641,7 @@ long long int highway::refresh (Uint8* keyboard) {
 }
 
 int highway::note_width(int dt) {
-    return note_w+2-2*(visual->get_height()-position3d(dt))*(note_w)/(3*height);
-}
-
-int highway::note_height(int dt) {
-    return note_h-2*(visual->get_height()-position3d(dt))*(note_h)/(3*height);
+    return (note_w+2-2*(visual->get_height()-position3d(dt))*(note_w)/(3*height))*(width/5-8)/120;
 }
 
 int highway::notex (int note, int dt) {
@@ -674,11 +670,9 @@ void *AllocateFile (char file_name[], size_t &size) {
 }
 
 void Error (char string[]) {
-    //closegraph();
     SDL_Quit ();
     TTF_Quit ();
     printf ("%s", string);
-    //MessageBox(GetActiveWindow(), string, NULL, MB_OK);
     exit(1);
 }
 

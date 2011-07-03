@@ -149,9 +149,15 @@ void drawer::rectangle ( int left, int top, int right, int bottom, Uint32 color 
 }
 
 void drawer::bar ( int left, int top, int right, int bottom, Uint32 color = 0 ){
-    if(color == 0) color = this->maincolor;
-    for ( int i = left; i <= right; i++ )
-        line ( i, top, i, bottom, color );
+    if(color == 0) color = maincolor;
+    /*for ( int i = left; i <= right; i++ )
+        line ( i, top, i, bottom, color );*/
+    SDL_Rect rect;
+    rect.x=left;
+    rect.y=top;
+    rect.w=right-left;
+    rect.h=bottom-top;
+    SDL_FillRect(surface, &rect, color);
 }
 
 Uint8 drawer::get_pixel_color ( int x, int y, char c ){

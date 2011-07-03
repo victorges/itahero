@@ -45,8 +45,8 @@ class drawer {
         void bar (int left, int top, int right, int bottom, Uint32 color);
         void parallelogram (int x1, int y1, int x2, int y2, int w, Uint32 color);
         
-        Uint32 color (Uint8 R, Uint8 G, Uint8 B, Uint8 A);
-        void setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A);
+        Uint32 color (Uint8 R, Uint8 G, Uint8 B, Uint8 A=255);
+        void setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A=255);
         void Flip();
         void clear();
         friend class highway;
@@ -119,7 +119,6 @@ class highway {
         drawer ***notes, ***hopos, *art;
         int note_w, note_h;
         int note_width(int dt=0);
-        int note_height(int dt=0);
         int position3d (int dt);
         int notex (int note, int dt=0);
       public:
@@ -162,6 +161,8 @@ void highway::draw (int time=0) {
             
             int i, j;
 
+            visual->bar(location-5*(note_width(GREEN)+55)/2, visual->get_height()-height-note_width(), location+5*(note_width(0)+50)/2, visual->get_height()-1, visual->color(0, 0, 1));
+
             visual->line(notex(GREEN, -1000)-5, position3d(-1000), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
             visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
 
@@ -186,7 +187,7 @@ void highway::draw (int time=0) {
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
-                                visual->line (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2, position3d(chart[j].time-time), notex(i, min(time_delay, chart[j].end-time))+note_width(min(time_delay, chart[j].end-time))/2, max(position3d(time_delay), position3d(chart[j].end-time)), color[i]);
+                                visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, min(time_delay, chart[j].end-time))+note_width(min(time_delay, chart[j].end-time))/2-3, max(position3d(time_delay), position3d(chart[j].end-time)), 6, color[i]);
                                 }
                             if (position3d(chart[j].time-time)<visual->get_height()) {
                                 if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time)][i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
