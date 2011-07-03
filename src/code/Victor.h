@@ -638,7 +638,7 @@ long long int highway::refresh (Uint8* keyboard) {
 }
 
 int highway::note_width(int dt) {
-    return (note_w+2-2*(visual->get_height()-position3d(dt))*(note_w)/(3*height))*(width/5-8)/120;
+    return (note_w-2*(visual->get_height()-position3d(dt))*(note_w)/(3*height))*(width/5-8)/120;
 }
 
 int highway::notex (int note, int dt) {
