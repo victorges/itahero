@@ -1,0 +1,30 @@
+# Project: testingnetclient
+# Makefile created by Dev-C++ 4.9.9.2
+
+CPP  = g++.exe
+CC   = gcc.exe
+WINDRES = windres.exe
+RES  = 
+OBJ  = testingnetclient.o $(RES)
+LINKOBJ  = testingnetclient.o $(RES)
+LIBS =  -L"C:/Users/Owner/Dev-Cpp/lib" -lmingw32 -lSDLmain -lSDL -lSDL_net  
+INCS =  -I"C:/Users/Owner/Dev-Cpp/include" 
+CXXINCS =  -I"C:/Users/Owner/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"C:/Users/Owner/Dev-Cpp/include/c++/3.4.2/backward"  -I"C:/Users/Owner/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"C:/Users/Owner/Dev-Cpp/include/c++/3.4.2"  -I"C:/Users/Owner/Dev-Cpp/include" 
+BIN  = testingnetclient.exe
+CXXFLAGS = $(CXXINCS)  
+CFLAGS = $(INCS)  
+RM = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before testingnetclient.exe all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o "testingnetclient.exe" $(LIBS)
+
+testingnetclient.o: testingnetclient.cpp
+	$(CPP) -c testingnetclient.cpp -o testingnetclient.o $(CXXFLAGS)
