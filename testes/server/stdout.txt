@@ -1,0 +1,5 @@
+Server IP: 0, 38283
+INIT'd
+Attempting to kill
+Waiting for thread to be dead
+Exitcode 0
