@@ -200,12 +200,11 @@ Uint8 drawer::get_pixel_color ( int x, int y, char c ){
     return color;
 }
 
-int highway::position3d (int dt) {
+int highway::position3d (int dt, bool check) {
+    if (check&&dt>time_delay) dt=time_delay;
     int y = visual->get_height()-(dt*(height-100)/time_delay+140);
     double a = (3*height*(height-y)-(height-y)*(height-y))/(3.0*height);
     return (int)(height-a-0.5);
-    //esboço : precisa parar de tremer
-    //return visual->get_height()-(dt*(height-100)/time_delay+140);
 }
 
 void drawer::check_unlock (){

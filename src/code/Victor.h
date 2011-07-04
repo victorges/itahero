@@ -354,11 +354,18 @@ int music::time () {
 highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
             {
-                {
-                    notes=new drawer**[120];
-                    hopos=new drawer**[120];
+                if (notes==NULL&&hopos==NULL) {
+                    notes=new drawer**[300];
+                    hopos=new drawer**[300];
+                    char string[100];
                     
-                    for (int i=1;i<120;i++) {
+                    for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
+                        visual->clear();
+                        sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+40)-((width/5-8)/3-10)));
+                        visual->textxy(string, SIZEX/2-visual->textwidth(string)/2, 3*SIZEY/4);
+                        visual->Flip();
+                        
+                        
                         notes[i]=new drawer*[5];
                         notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
                         notes[i][GREEN]->resize(i);
@@ -370,8 +377,8 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
                         notes[i][BLUE]->resize(i);
                         notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
                         notes[i][ORANGE]->resize(i);
-                        }
-                    for (int i=1;i<120;i++) {
+                        
+                        
                         hopos[i]=new drawer*[5];
                         hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
                         hopos[i][GREEN]->resize(i);
@@ -384,10 +391,12 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
                         hopos[i][ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
                         hopos[i][ORANGE]->resize(i);
                         }
-                    note_w=notes[110][GREEN]->get_width();
-                    note_h=notes[110][GREEN]->get_height();
-                }
+                    SDL_Delay(500);
+                    }
 
+                note_w=(width/5-8);
+                note_h=(width/5-8);
+                
                 FILE *chartfile=NULL;
                 int i;
                 int col[]={visual->color(40,200,10), visual->color(200, 0, 0), visual->color(247, 236, 40), visual->color(10, 10, 200), visual->color(255, 102, 0)};
@@ -472,23 +481,27 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
 }
 
 highway::~highway () {
-                delete[] fretstate;
-                delete[] fret;
-                delete[] pickstate;
-                delete[] pick;
-                delete[] chart;
-                delete[] color;
-                for (int i=1;i<120;i++) {
-                    for (int j=0;j<5;j++) delete notes[i][j];
-                    delete[] notes[i];
-                    }
-                delete[] notes;
-                for (int i=1;i<120;i++) {
-                    for (int j=0;j<5;j++) delete hopos[i][j];
-                    delete[] hopos[i];
-                    }
-                delete[] hopos;
+        delete[] fretstate;
+        delete[] fret;
+        delete[] pickstate;
+        delete[] pick;
+        delete[] chart;
+        delete[] color;
+        if (notes!=NULL&&hopos!=NULL) {
+            for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
+                for (int j=0;j<5;j++) delete notes[i][j];
+                delete[] notes[i];
                 }
+            delete[] notes;
+            notes=NULL;
+            for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
+                for (int j=0;j<5;j++) delete hopos[i][j];
+                delete[] hopos[i];
+                }
+            delete[] hopos;
+            hopos=NULL;
+            }
+}
 
 void highway::reset () {
         delete[] chart;
@@ -637,13 +650,13 @@ long long int highway::refresh (Uint8* keyboard) {
                     return score/10000;
 }
 
-int highway::note_width(int dt) {
-    return (note_w-2*(visual->get_height()-position3d(dt))*(note_w)/(3*height))*(width/5-8)/120;
+int highway::note_width(int dt, bool check) {
+    return (note_w-2*(visual->get_height()-position3d(dt, check))*(note_w)/(3*height));
 }
 
-int highway::notex (int note, int dt) {
+int highway::notex (int note, int dt, bool check) {
     if (note<GREEN||note>ORANGE) return 0;
-    return location-(5*note_width(dt)/2)+(note_width(dt)*note);
+    return location-(5*note_width(dt, check)/2)+(note_width(dt, check)*note);
 }
 
 bool highway::alive() {

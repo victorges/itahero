@@ -116,11 +116,11 @@ class highway {
         long long int basescore, score;
         int streak, rockmeter;
         drawer *visual, *hway;
-        drawer ***notes, ***hopos, *art;
+        static drawer ***notes, ***hopos;
         int note_w, note_h;
-        int note_width(int dt=0);
-        int position3d (int dt);
-        int notex (int note, int dt=0);
+        int note_width(int dt=0, bool check=1);
+        int position3d (int dt, bool check=1);
+        int notex (int note, int dt=0, bool check=1);
       public:
         highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height);
         ~highway ();
@@ -131,6 +131,8 @@ class highway {
         long long int refresh(Uint8* keyboard);
         bool alive();
     };
+drawer*** highway::notes=NULL;
+drawer*** highway::hopos=NULL;
 
 class background; //to-do
 
@@ -157,8 +159,6 @@ void highway::draw (int time=0) {
             
             int i, j;
 
-            visual->bar(location-5*(note_width(GREEN)+51)/2, visual->get_height()-height-note_width(), location+5*(note_width(0)+50)/2, visual->get_height()-1, visual->color(0, 0, 1));
-
             visual->line(notex(GREEN, -1000)-5, position3d(-1000), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
             visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
 
@@ -172,22 +172,20 @@ void highway::draw (int time=0) {
                 
             for (j=0;j<5;j++) {
                 visual->rectangle (notex(j), position3d(0)+40, notex(j)+note_width(), position3d(0), color[j]);
-                if (fretstate[j]) {
-                    visual->bar (notex(j), position3d(0), notex(j)+note_width(), position3d(0)+40, color[j]);
-                    }
+                if (fretstate[j]) visual->bar (notex(j), position3d(0), notex(j)+note_width(), position3d(0)+40, color[j]);
                 }
             for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
 
-            while (position3d(chart[j].time-time)>position3d(time_delay)) {
+            while (position3d(chart[j].time-time, 0)>position3d(time_delay)-note_width(time_delay)) {
                 if (chart[j].hit==false||chart[j].end>chart[j].time)
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
-                                visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, min(time_delay, chart[j].end-time))+note_width(min(time_delay, chart[j].end-time))/2-3, max(position3d(time_delay), position3d(chart[j].end-time)), 6, color[i]);
+                                visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, color[i]);
                                 }
                             if (position3d(chart[j].time-time)<visual->get_height()) {
-                                if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time)][i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
-                                else if (!chart[j].hit) hopos[note_width(chart[j].time-time)][i]->apply_surface(notex(i, chart[j].time-time), position3d(chart[j].time-time), visual, NULL);
+                                if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, NULL);
+                                else if (!chart[j].hit) hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, NULL);
                                 }
                             }
                     j++;

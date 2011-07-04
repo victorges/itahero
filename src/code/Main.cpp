@@ -5,7 +5,7 @@
 #include <SDL/SDL_ttf.h>
 #include <math.h>
 
-#define FULLSCREEN
+//#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -73,6 +73,7 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
         int timams=clock()*1000/CLOCKS_PER_SEC;
         char string[10];
         screen->Flip();
+        screen->clear();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYDOWN: case SDL_KEYUP:
@@ -83,8 +84,8 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                 }
             }
         for (int i=0;i<nPlayers;i++) {
-            players[i]->refresh(keyboard);
-            if (!players[i]->alive()) done=true;
+            players[nPlayers-i-1]->refresh(keyboard);
+            if (!players[nPlayers-i-1]->alive()) done=true;
             }
         if (song->isFinished()) done=true;
         if (bmenu) {
@@ -112,12 +113,12 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                         screen->Flip();
                         screen->clear();
                         song->settime(backup-15*(i+1));
-                        for (int i=0;i<nPlayers;i++) players[i]->draw();
+                        for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
                         }
                     while (song->time()<backup) {
                         screen->Flip();
                         screen->clear();
-                        for (int i=0;i<nPlayers;i++) players[i]->draw();
+                        for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
                         }
                     }
                 bmenu=false;
@@ -179,7 +180,7 @@ int main (int argc, char *argv[]) {
 
     char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}, {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5}};
     char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{0, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
+    int playersextras[4][10]={{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
 
     menu *startmenu=new menu(screen, " - Main Menu");
     startmenu->addOpt("Singleplayer");
@@ -242,7 +243,7 @@ int main (int argc, char *argv[]) {
                                         }
                                     ChosenSong->preview(false);
                                     ChosenSong->load();
-                                    highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0]);
+                                    highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0], SIZEX/2, 700);
                                     PlaySong (screen, ChosenSong, &player);
                                     ChosenSong->unload();
                                     ChosenSong=NULL;
