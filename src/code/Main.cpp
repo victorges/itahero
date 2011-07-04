@@ -93,9 +93,21 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                 while (pause->navigate());
                 switch (pause->opt()) {
                     case 1:
-                        song->settimerel(-700);
-                        song->settimerel(-700);
-                        song->play();
+                        {
+                            int backup=song->time();
+                            song->play();
+                            for (int i=0;song->time()>10&&i<70;i++) {
+                                screen->Flip();
+                                screen->clear();
+                                song->settime(backup-15*(i+1));
+                                for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
+                                }
+                            while (song->time()<backup) {
+                                screen->Flip();
+                                screen->clear();
+                                for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
+                                }
+                            }
                         break;
                     case 2:
                         song->reload();
