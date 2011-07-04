@@ -39,7 +39,7 @@ class drawer {
         int get_width();
         
         void put_pixel (int x, int y, Uint32 pixel);
-        void apply_surface (int x, int y,drawer *destination, SDL_Rect *clip);
+        void apply_surface (int x, int y,drawer *destination, int top=0, SDL_Rect *clip=NULL);
         void line (int ini_x, int ini_y, int end_x, int end_y, Uint32 color);
         void rectangle (int left, int top, int right, int bottom, Uint32 color);
         void bar (int left, int top, int right, int bottom, Uint32 color);
@@ -116,7 +116,7 @@ class highway {
         long long int basescore, score;
         int streak, rockmeter;
         drawer *visual, *hway;
-        static drawer ***notes, ***hopos;
+        static drawer ***notes, ***hopos, **presser, **presserp;
         int note_w, note_h;
         int note_width(int dt=0, bool check=1);
         int position3d (int dt, bool check=1);
@@ -133,6 +133,8 @@ class highway {
     };
 drawer*** highway::notes=NULL;
 drawer*** highway::hopos=NULL;
+drawer** highway::presser=NULL;
+drawer** highway::presserp=NULL;
 
 class background; //to-do
 
@@ -171,24 +173,26 @@ void highway::draw (int time=0) {
                 }
                 
             for (j=0;j<5;j++) {
-                visual->rectangle (notex(j), position3d(0)+40, notex(j)+note_width(), position3d(0), color[j]);
-                if (fretstate[j]) visual->bar (notex(j), position3d(0), notex(j)+note_width(), position3d(0)+40, color[j]);
+                if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0), visual);
+                else presser[j]->apply_surface(notex(j), position3d(0), visual);
                 }
             for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
 
-            while (position3d(chart[j].time-time, 0)>position3d(time_delay)-note_width(time_delay)) {
-                if (chart[j].hit==false||chart[j].end>chart[j].time)
-                    for (int i=0;i<5;i++)
+            while (position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
+                if (chart[j].hit==false||chart[j].end>chart[j].time) {
+                    for (int i=0;i<5;i++) {
                         if ((chart[j].type>>i)%2) {
                             if (chart[j].end>chart[j].time) {
                                 visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, color[i]);
                                 }
                             if (position3d(chart[j].time-time)<visual->get_height()) {
-                                if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, NULL);
-                                else if (!chart[j].hit) hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, NULL);
+                                if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
+                                else if (!chart[j].hit) hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
                                 }
                             }
-                    j++;
+                        }
+                    }
+                j++;
                 }
             char string[50];
             if (!practice) {

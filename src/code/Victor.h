@@ -354,11 +354,36 @@ int music::time () {
 highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
                   visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
             {
-                if (notes==NULL&&hopos==NULL) {
+                if (notes==NULL&&hopos==NULL&&presser==NULL&&presserp==NULL) {
                     notes=new drawer**[300];
                     hopos=new drawer**[300];
-                    char string[100];
+
+                    presser=new drawer*[5];
+                    presserp=new drawer*[5];
+
+                    presser[GREEN]=new drawer(FilePath("Image/", "greenpresser", ".png"));
+                    presser[GREEN]->resize(width/5-28);
+                    presser[RED]=new drawer(FilePath("Image/", "redpresser", ".png"));
+                    presser[RED]->resize(width/5-28);
+                    presser[YELLOW]=new drawer(FilePath("Image/", "yellowpresser", ".png"));
+                    presser[YELLOW]->resize(width/5-28);
+                    presser[BLUE]=new drawer(FilePath("Image/", "bluepresser", ".png"));
+                    presser[BLUE]->resize(width/5-28);
+                    presser[ORANGE]=new drawer(FilePath("Image/", "orangepresser", ".png"));
+                    presser[ORANGE]->resize(width/5-28);
                     
+                    presserp[GREEN]=new drawer(FilePath("Image/", "greenpresserpressed", ".png"));
+                    presserp[GREEN]->resize(width/5-28);
+                    presserp[RED]=new drawer(FilePath("Image/", "redpresserpressed", ".png"));
+                    presserp[RED]->resize(width/5-28);
+                    presserp[YELLOW]=new drawer(FilePath("Image/", "yellowpresserpressed", ".png"));
+                    presserp[YELLOW]->resize(width/5-28);
+                    presserp[BLUE]=new drawer(FilePath("Image/", "bluepresserpressed", ".png"));
+                    presserp[BLUE]->resize(width/5-28);
+                    presserp[ORANGE]=new drawer(FilePath("Image/", "orangepresserpressed", ".png"));
+                    presserp[ORANGE]->resize(width/5-28);
+
+                    char string[100];
                     for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
                         visual->clear();
                         sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+40)-((width/5-8)/3-10)));
@@ -487,7 +512,15 @@ highway::~highway () {
         delete[] pick;
         delete[] chart;
         delete[] color;
-        if (notes!=NULL&&hopos!=NULL) {
+        if (notes!=NULL&&hopos!=NULL&&presser!=NULL&&presserp!=NULL) {
+            for (int i=0;i<5;i++) {
+                delete presser[i];
+                delete presserp[i];
+                }
+            delete[] presser;
+            presser=NULL;
+            delete[] presserp;
+            presserp=NULL;
             for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
                 for (int j=0;j<5;j++) delete notes[i][j];
                 delete[] notes[i];
@@ -563,7 +596,7 @@ long long int highway::refresh (Uint8* keyboard) {
                     while (progress<size&&time-chart[progress].time>timing_window) {
                         if (chart[progress].hit==false) {
                             rockmeter-=20;
-                            basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
+                            basescore+=(500000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
                             streak=0;
                             MusicStream->hitting(instrument, false);
                             }
@@ -582,9 +615,9 @@ long long int highway::refresh (Uint8* keyboard) {
                                            rockmeter+=21-rockmeter/50;
                                            chart[j].hit=true;
                                            MusicStream->hitting(instrument);
-                                           basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                           basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
-                                           score+=1000000*chart[j].chord*multiplier();
+                                           score+=500000*chart[j].chord*multiplier();
                                            picked=chart[j].hopo=false;
                                            }
                                     }
@@ -633,9 +666,9 @@ long long int highway::refresh (Uint8* keyboard) {
                                         rockmeter+=21-rockmeter/50;
                                         chart[j].hit=true;
                                         MusicStream->hitting(instrument);
-                                        basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                        basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
-                                        score+=1000000*chart[j].chord*multiplier();
+                                        score+=500000*chart[j].chord*multiplier();
                                         picked=false;
                                         }
                                     }

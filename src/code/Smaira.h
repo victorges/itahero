@@ -44,7 +44,7 @@ void drawer::put_pixel ( int x, int y, Uint32 pixel ){
         get_pixel ( x, y ) = pixel;
 }
 
-void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip = NULL ){
+void drawer::apply_surface ( int x, int y, drawer *destination, int top, SDL_Rect *clip ){
     SDL_Rect clip2;
     SDL_Rect offset;
     offset.x=x;
@@ -61,11 +61,11 @@ void drawer::apply_surface ( int x, int y, drawer *destination, SDL_Rect *clip =
             else
                 return;
         }
-        if(y<0){
-            if(y+surface->h >= 0){
-                clip2.y = -y;
-                clip2.h = y + surface->h;
-                offset.y=0;
+        if(y<top){
+            if(y+surface->h >= top){
+                clip2.y = top-y;
+                clip2.h = y - top + surface->h;
+                offset.y=top;
                 changey = true;
             }
             else
@@ -204,7 +204,11 @@ int highway::position3d (int dt, bool check) {
     if (check&&dt>time_delay) dt=time_delay;
     int y = visual->get_height()-(dt*(height-100)/time_delay+140);
     double a = (3*height*(height-y)-(height-y)*(height-y))/(3.0*height);
-    return (int)(height-a-0.5);
+    if (dt<=time_delay) return (int)(height-a-0.5);
+    else {
+        if (y>visual->get_height()-3*height/2) return (int)(height-a-0.5);
+        else return position3d(time_delay)-note_h*note_width(time_delay)/note_width(0);
+        }
 }
 
 void drawer::check_unlock (){
