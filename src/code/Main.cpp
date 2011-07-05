@@ -208,14 +208,16 @@ int main (int argc, char *argv[]) {
     songs[menumusic]->load(1.0, 2);
     songs[menumusic]->play(0.6);
     
-    for (int i=0;i<SIZEY;i++) {
+    for (int i=0, sttime=songs[menumusic]->time();i<SIZEY;i++) {
         wallpaper->apply_surface(0, 0, screen, SIZEY-i);
         screen->Flip();
+        while (songs[menumusic]->time()-sttime<5000*i/SIZEY);
         }
-    for (int i=0;i<SIZEX/2;i+=10) {
+    for (int i=0, sttime=songs[menumusic]->time();i<SIZEX/2;i+=5) {
         screen->clear();
         logo->apply_surface(i, 200, screen);
         screen->Flip();
+        while (songs[menumusic]->time()-sttime<2000*i/SIZEX);
         }
     delete wallpaper;
     wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
