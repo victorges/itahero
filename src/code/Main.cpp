@@ -192,7 +192,7 @@ int main (int argc, char *argv[]) {
     char playerspick[4][3]={"", "", "", ""};
     int playersextras[4][10]={{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
 
-    drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".jpg"));
+    drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
 
     screen->load_background(wallpaper);
     screen->clear();

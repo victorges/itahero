@@ -541,7 +541,9 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
         rockmart->resize(rockmart->get_width(), height-150);
 
         spbar=new drawer(FilePath("Image/", "starpower", ".png"));
+        spbar->resize(spbar->get_width(), (height-150)/3);
         spbarfilled=new drawer(FilePath("Image/", "starpowerfilled", ".png"));
+        spbarfilled->resize(spbarfilled->get_width(), (height-150)/3);
 
         note_w=(width/5-8);
         note_h=(width/5-8);
