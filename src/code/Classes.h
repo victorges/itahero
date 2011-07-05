@@ -33,7 +33,10 @@ class drawer {
         void settextstyle (char font[]="lazy", SDL_Color *textcolor=NULL, int textsize=15);
         int textheight(char string[]);
         int textwidth(char string[]);
-        void textxy ( char message[], int x, int y ); 
+        void textxy ( char message[], int x, int y );
+        
+        char *draw_name(int x, int y);
+        void draw_highscore(int x, int y, char *filename, int nplayers);
         
         void resize ( int new_w, int new_h = 0 );
 
@@ -98,6 +101,7 @@ class music {
         bool isFinished ();
         void preview (bool active, int sixteenth);
         bool play (float volume=1.0);
+        void include_record(char *name, long long int score, int nplayers);
         bool pause ();
         int time ();
         
@@ -109,11 +113,12 @@ class music {
         void error();
         void starpower(bool active);
         void hitting(char instrument, bool active);
+        void check_record_file(int nplayes);
       };
 
 class highway {
       private:
-        int location, width, height;
+        int width, height;
         char *fret, *pick, spkey, instrument;
         short int *fretstate, *pickstate;
         int *color;
@@ -121,8 +126,8 @@ class highway {
         music *MusicStream;
         int progress, bpm, size;
         int time_delay, timing_window;
+        long long int basescore;
         bool allhopo, godmode, practice;
-        long long int basescore, score;
         int streak, rockmeter, starpower;
         drawer *visual, *hway;
         int note_w, note_h;
@@ -133,6 +138,8 @@ class highway {
         drawer *rockmart, *spbar, *spbarfilled;
         int lasttime;
       public:
+        int location;
+        long long int score;
         static bool load();
         static void unload();
         highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, char spkey, int location, int width, int height);

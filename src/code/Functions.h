@@ -9,3 +9,4 @@ double min(double a, double b);
 int max(int a, int b);
 double max(double a, double b);
 double Lanczos(double x, int Radius);
+void strcpy(char olds[], char news[]);

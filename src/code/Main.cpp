@@ -5,7 +5,7 @@
 #include <SDL/SDL_ttf.h>
 #include <math.h>
 
-#define FULLSCREEN
+//#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -35,34 +35,10 @@ class {
 #include "Victor.h"
 #include "Smaira.h"
 
-void strcat (char destiny[], char add[]) {
-     int i, j;
-     for (i=0;destiny[i]!=0;i++);
-     for (j=0;add[j]!=0;j++) destiny[i+j]=add[j];
-     destiny[i+j]=0;
-}
-
-char *FilePath (char prefix[], char filename[], char suffix[]) {
-     static char location[100];
-     location[0]=0;
-     strcat (location, prefix);
-     strcat (location, filename);
-     strcat (location, suffix);
-     return location;
-}
-
-void sfscanf (FILE *file, char CheckString[]) {
-     int i;
-     for (i=0;CheckString[i];i++);
-     char string[i];
-     for (int j=0;j<i;j++) fscanf (file, "%c", &string[j]);
-     for (i=0;CheckString[i]&&string[i]==CheckString[i];i++);
-     if (CheckString[i]) Error ("Soundlist file corrupted");
-}
-
-void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) {
+long long int PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) {
     SDL_Event event;
     Uint8* keyboard=SDL_GetKeyState(NULL);
+    long long int actualscore = 0;
     bool done=false, bmenu=false;
     menu *pause=new menu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
     pause->addOpt("Resume");
@@ -141,7 +117,17 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                 bmenu=false;
                 }
         }
+    
     delete pause;
+    song->pause();
+    
+    if(song->isFinished())
+        for(int i=0; i<nPlayers; i++)
+            actualscore+=players[i]->score/10000;
+    else
+        actualscore = -1;
+    
+    return actualscore;
 }
 
 int main (int argc, char *argv[]) {
@@ -195,7 +181,7 @@ int main (int argc, char *argv[]) {
     char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}};
     char playerssp[4]={SDLK_SPACE, SDLK_RETURN, SDLK_TAB};
     char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
+    int playersextras[4][10]={{0, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
     menu::load_effects(engine);
 
     drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
@@ -247,6 +233,7 @@ int main (int argc, char *argv[]) {
         switch (startmenu->opts()[0]) {
             case 'S':
                 {
+                    long long int fscore;
                     menu *diffic=new menu(screen, " - Choose difficulty");
                     diffic->addOpt("Easy");
                     diffic->addOpt("Medium");
@@ -298,7 +285,19 @@ int main (int argc, char *argv[]) {
                                     ChosenSong->load();
                                     screen->load_background(NULL);
                                     highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0], playerssp[0], SIZEX/2, 7*SIZEX/20);
-                                    PlaySong (screen, ChosenSong, &player);
+                                    fscore = PlaySong (screen, ChosenSong, &player);
+                                    
+                                    if(fscore!=-1 && !playersextras[0][GODMODE]){
+                                        ChosenSong->check_record_file(1);
+                                        screen->settextstyle("lazy", NULL, 60);
+                                        char *stringaux;
+                                        stringaux = screen->draw_name(9*SIZEX/20, SIZEY/6);
+                                        ChosenSong->include_record(stringaux, fscore, 1);
+                                        SDL_Delay(3000);
+                                        screen->settextstyle("lazy", NULL, 36);
+                                        screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, 1);
+                                    }
+                                    
                                     screen->load_background(wallpaper);
                                     ChosenSong->unload();
                                     ChosenSong=NULL;
@@ -318,6 +317,7 @@ int main (int argc, char *argv[]) {
             case 'M':
                 {
                     int nPlayers;
+                    long long int fscore;
                     menu *ordmenu=new menu (screen, " - How many people are going to play?");
                     ordmenu->addOpt("2 players");
                     ordmenu->addOpt("3 players");
@@ -393,6 +393,20 @@ int main (int argc, char *argv[]) {
                                         screen->load_background(NULL);
                                         for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers), (SIZEX-20*i)/i);
                                         PlaySong (screen, ChosenSong, players, nPlayers);
+                                        
+                                        bool testgm = true;
+                                        for(int k = 0; k<nPlayers; k++) if(playersextras[k][GODMODE]) testgm = false;
+                                        if(fscore!=-1 && testgm){
+                                            ChosenSong->check_record_file(nPlayers);
+                                            screen->settextstyle("lazy", NULL, 60);
+                                            char *stringaux;
+                                            stringaux = screen->draw_name(9*SIZEX/20, SIZEY/6);
+                                            ChosenSong->include_record(stringaux, fscore, nPlayers);
+                                            SDL_Delay(3000);
+                                            screen->settextstyle("lazy", NULL, 36);
+                                            screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, nPlayers);
+                                        }
+                                        
                                         screen->load_background(wallpaper);
                                         ChosenSong->unload();
                                         for (int j=0;j<nPlayers;j++) delete players[j];

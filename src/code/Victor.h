@@ -950,3 +950,28 @@ void CheckChartIntegrity (FILE *chartfile, char CheckString[]) {
      for (i=0;CheckString[i]&&string[i]==CheckString[i];i++);
      if (CheckString[i]) Error ("Chart File corrupted");
 }
+
+void strcat (char destiny[], char add[]) {
+     int i, j;
+     for (i=0;destiny[i]!=0;i++);
+     for (j=0;add[j]!=0;j++) destiny[i+j]=add[j];
+     destiny[i+j]=0;
+}
+
+char *FilePath (char prefix[], char filename[], char suffix[]) {
+     static char location[100];
+     location[0]=0;
+     strcat (location, prefix);
+     strcat (location, filename);
+     strcat (location, suffix);
+     return location;
+}
+
+void sfscanf (FILE *file, char CheckString[]) {
+     int i;
+     for (i=0;CheckString[i];i++);
+     char string[i];
+     for (int j=0;j<i;j++) fscanf (file, "%c", &string[j]);
+     for (i=0;CheckString[i]&&string[i]==CheckString[i];i++);
+     if (CheckString[i]) Error ("Soundlist file corrupted");
+}

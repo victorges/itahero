@@ -14,6 +14,15 @@ double max(double a, double b){
     return (a>b) ? a : b;
 }
 
+void strcpy(char olds[], char news[]){
+    int i = 0;
+    while(news[i]!=0){
+        olds[i] = news[i];
+        i++;
+    }
+    olds[i] = 0;
+}
+
 drawer::~drawer (){
     SDL_FreeSurface ( surface );
     TTF_CloseFont(font);
@@ -219,6 +228,144 @@ void drawer::check_unlock (){
 void drawer::check_lock (){
     if ( SDL_MUSTLOCK ( surface ) )
         SDL_LockSurface ( surface );
+}
+
+char* drawer::draw_name(int x, int y){
+    SDL_Event event;
+    int cnt = 0;
+    char *name, aux[2];
+    name = (char*)malloc(4*sizeof(char));
+    aux[0] = 'A';
+    aux[1] = 0;
+    textxy(aux, x, y);
+    while(cnt<3) {
+        SDL_PollEvent(&event);
+        if (event.type==SDL_KEYDOWN){
+            switch (event.key.keysym.sym){
+                case SDLK_UP:
+                    bar(x, y, x+textwidth(aux), y+textheight(aux));
+                    aux[0] = (aux[0]-'A'+25)%26 + 'A';
+                    textxy(aux, x, y);
+                    break;
+                case SDLK_DOWN:
+                    bar(x, y, x+textwidth(aux), y+textheight(aux));
+                    aux[0] = (aux[0]-'A'+1)%26 + 'A';
+                    textxy(aux, x, y);
+                    break;
+                case SDLK_BACKSPACE:
+                    if(cnt!=0){
+                        bar(x, y, x+textwidth(aux), y+textheight(aux));
+                        cnt--;
+                        aux[0] = name[cnt];
+                        x = x-textwidth(aux);
+                    }
+                    break;
+                case SDLK_RETURN:
+                    name[cnt] = aux[0];
+                    x=x+textwidth(aux);
+                    cnt++;
+                    aux[0] = 'A';
+                    if(cnt!=3) textxy(aux, x, y);
+                    break;
+            }
+        }
+        else if (event.type==SDL_QUIT) exit(0);
+        Flip();
+        SDL_Delay(200);
+    }
+    name[3] = 0;
+    return name;
+}
+
+void music::check_record_file(int nplayers){
+    FILE *record = NULL;
+    char aux[2], musicname[20];
+    strcpy(musicname, filename);
+    sprintf(aux, "%d", nplayers);
+    strcat(musicname, aux);
+    record = fopen(FilePath("SAVEDATA/", musicname, ".rec"), "rb");
+    if(record != NULL){
+        fclose(record);
+        return;
+    }
+    fclose(record);
+    record = fopen(FilePath("SAVEDATA/", musicname, ".rec"), "wb");
+    char string[] = "AAA";
+    long long int pto = 0;
+    for(int i=0; i<10; i++){
+        fwrite(string, sizeof(char), 3, record);
+        fwrite(&pto, sizeof(long long int), 1, record);
+    }
+    fclose(record);
+}
+
+void music::include_record(char *name, long long int score, int nplayers){
+    char nome[10][4], aux[2], musicname[20];
+    strcpy(musicname, filename);
+    long long int pto[10];
+    int i;
+    sprintf(aux, "%d", nplayers);
+    strcat(musicname, aux);
+    FILE *record = fopen(FilePath("SAVEDATA/", musicname, ".rec"), "rb");
+    for(int i = 0; i<10; i++){
+        fread(nome[i], sizeof(char), 3, record);
+        nome[i][3]=0;
+        fread(&pto[i], sizeof(long long int), 1, record);
+    }
+    fclose(record);
+    for(i = 0; i<10; i++)
+        if(score > pto[i]){
+            for(int j = 9; j>i; j--){
+                nome[j][0] = nome[j-1][0];
+                nome[j][1] = nome[j-1][1];
+                nome[j][2] = nome[j-1][2];
+                pto[j] = pto[j-1];
+            }
+            strcpy(nome[i], name);
+            pto[i] = score;
+            i=10;
+        }
+    record = fopen(FilePath("SAVEDATA/", musicname, ".rec"), "wb");
+    for(int i=0; i<10; i++){
+        fwrite(nome[i], sizeof(char), 3, record);
+        fwrite(&pto[i], sizeof(long long int), 1, record);
+    }
+    fclose(record);
+}
+
+void drawer::draw_highscore(int x, int y, char *filename, int nplayers){
+    char nome[10][4], string[20], aux[2], musicname[20];
+    strcpy(musicname, filename);
+    long long int pto[10];
+    sprintf(aux, "%d", nplayers);
+    strcat(musicname, aux);
+    FILE *record = fopen(FilePath("SAVEDATA/", musicname, ".rec"), "rb");
+    for(int i = 0; i<10; i++){
+        fread(nome[i], sizeof(char), 3, record);
+        nome[i][3]=0;
+        fread(&pto[i], sizeof(long long int), 1, record);
+    }
+    fclose(record);
+    bar(0, 0, SIZEX, SIZEY);
+    textxy("   HIGHSCORE", x, y);
+    int h=textheight("HIGHSCORE");
+    for(int i = 0; i<10; i++){
+        sprintf(string, "%s %lld", nome[i], pto[i]);
+        textxy(string, x, y+(i+2)*h);
+    }
+    Flip();
+    SDL_Event event;
+    bool quit = false;
+    while(!quit){
+        SDL_PollEvent(&event);
+        if (event.type==SDL_KEYDOWN){
+             if (event.key.keysym.sym == SDLK_RETURN){
+                    quit = true;
+                    break;
+            }
+        }
+        else if (event.type==SDL_QUIT) exit(0);
+    }
 }
 
 double Lanczos(double x, int Radius){
