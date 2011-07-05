@@ -126,6 +126,7 @@ class highway {
         int notex (int note, int dt=0, bool check=1);
         static drawer ***notes, ***hopos, **presser, **presserp;
         drawer *rockmart, *spbar, *spbarfilled;
+        int lasttime;
       public:
         static bool load();
         static void unload();

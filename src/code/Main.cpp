@@ -281,8 +281,9 @@ int main (int argc, char *argv[]) {
                 {
                     int nPlayers;
                     menu *ordmenu=new menu (screen, " - How many people are going to play?");
-                    ordmenu->addOpt("2");
-                    ordmenu->addOpt("3");
+                    ordmenu->addOpt("2 players");
+                    ordmenu->addOpt("3 players");
+                    ordmenu->addOpt("4 players");
                     while(ordmenu->navigate());
                     screen->clear();
                     nPlayers=ordmenu->opt()+1;
@@ -351,7 +352,7 @@ int main (int argc, char *argv[]) {
                                         ChosenSong->load();
                                         highway *players[nPlayers];
                                         screen->load_background(NULL);
-                                        for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
+                                        for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers), (SIZEX-20*i)/i);
                                         PlaySong (screen, ChosenSong, players, nPlayers);
                                         screen->load_background(wallpaper);
                                         ChosenSong->unload();

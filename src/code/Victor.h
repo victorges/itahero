@@ -107,16 +107,13 @@ menu::~menu () {
 void menu::print () {
     option *aux=start;
     visual->bar(locx-sizex/2-10, locy-sizey/2-10, locx+sizex/2+10, locy+sizey/2+10, 0);
+    visual->rectangle(locx-sizex/2-11, locy-sizey/2-11, locx+sizex/2+11, locy+sizey/2+11, visual->color(100, 100, 100));
     visual->textxy(header, locx-sizex/2, locy-sizey/2);
 
     int y=visual->textheight(header);
     for (int curr=0;aux;curr++) {
-        char string[100]="";
-        if (selected==curr) {
-            strcat(string, " ");
-            }
-        strcat (string, aux->content);
-        visual->textxy(string, locx-sizex/2, locy-sizey/2+y);
+        if (curr==selected) visual->bar(locx-sizex/2-5, locy-sizey/2+y-2, locx-sizex/2+visual->textwidth(aux->content)+5, locy-sizey/2+y+visual->textheight(aux->content)+2, visual->color(223, 159, 26));
+        visual->textxy(aux->content, locx-sizex/2, locy-sizey/2+y);
         y+=visual->textheight(aux->content);
         aux=aux->next;
         }
@@ -141,6 +138,7 @@ void menu::addOpt (char content[]) {
     
     sizey+=visual->textheight(end->content);
     if (locy-sizey/2-10<0) locy=sizey/2+110;
+    if (locy+sizey/2+10>SIZEY) locy=SIZEY-sizey/2-110;
     if (visual->textwidth(end->content)+10>sizex) sizex=visual->textwidth(end->content)+10;
     if (locx-sizex/2-10<0) locx=sizex/2+110;
     nOpt++;
@@ -660,6 +658,7 @@ void highway::reset () {
         basescore=1;
         progress=score=streak=0;
         rockmeter=500;
+        starpower=0;
 
         FILE *chartfile;
         {
@@ -759,7 +758,6 @@ int highway::multiplier () {
 }
 
 long long int highway::refresh (Uint8* keyboard) {
-                    static int lasttime;
                     int time=MusicStream->time();
                     int i;
                     char fretaux, newfretstate[5], newpickstate[5];
