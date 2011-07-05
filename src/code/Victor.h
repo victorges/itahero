@@ -84,6 +84,8 @@ void note::operator()(FILE *chartfile) {
     for (int j=0;j<5;j++) if ((type>>j)%2) chord++;
 }
 
+irrklang::ISoundSource* menu::FXsource[5];
+irrklang::ISoundEngine* menu::engine;
 
 menu::menu (drawer *vsl, char head[]="", int x=3*SIZEX/8, int y=3*SIZEY/4): visual(vsl), locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
     int size;
@@ -103,6 +105,31 @@ menu::~menu () {
         start=aux;
         }
 }
+
+void menu::load_effects(irrklang::ISoundEngine *eng) {
+    char string[100];
+    size_t size;
+    void *soundfile;
+    engine=eng;
+    for (int i=0;i<3;i++) {
+        sprintf (string, "menu%d", i+1);
+        soundfile=AllocateFile(FilePath("FX/", string, ".ogg"), size);
+        if (soundfile==NULL) Error ("Menu Sound File not found");
+        FXsource[i]=engine->addSoundSourceFromMemory(soundfile, size, string);
+        free (soundfile);
+        if (FXsource[i]==NULL) Error ("Error loading Menu Sound File");
+        FXsource[i]->setStreamMode(irrklang::ESM_AUTO_DETECT);
+        }
+}
+
+void menu::play_effect(int id) {
+    engine->play2D(FXsource[id], false, false, false, true);
+}
+
+void menu::unload_effects() {
+    for (int i=0;i<3;i++) engine->removeSoundSource (FXsource[i]);
+}
+
 
 void menu::print () {
     option *aux=start;
@@ -185,7 +212,8 @@ bool menu::navigate () {  //SDL
             switch (event.key.keysym.sym) {
                 case SDLK_UP: selected=(selected+nOpt-1)%nOpt; return 1;
                 case SDLK_DOWN: selected=(selected+nOpt+1)%nOpt; return 1;
-                case SDLK_ESCAPE: case SDLK_BACKSPACE: selected=nOpt; case SDLK_RETURN: return 0;
+                case SDLK_ESCAPE: case SDLK_BACKSPACE: selected=nOpt; return 0;
+                case SDLK_RETURN: return 0;
                 }
         else if (event.type==SDL_QUIT) exit(0);
         }
@@ -285,6 +313,7 @@ bool music::isInstrumentAvaliable (en_instrument instrument) {
 }
 
 bool music::isFinished () {
+     if (sound==NULL) return 1;
      return sound->isFinished()||sound->getPlayPosition()>limit*sound->getPlayLength()/16;
 }
 
@@ -311,10 +340,10 @@ void music::preview (bool active, int sixteenth=8) {
     else if (sound!=NULL) unload();
 }
 
-bool music::play () {
+bool music::play (float volume) {
      if (!sound||!sound->getIsPaused()) return false;
+     sound->setVolume(volume);
      sound->setIsPaused(false);
-     sound->setVolume(1.0);
      for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(clock()*1000/CLOCKS_PER_SEC-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
      return true;
 }

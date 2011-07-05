@@ -58,6 +58,8 @@ class drawer {
 class menu {
     private:
       char *header;
+      static irrklang::ISoundSource *FXsource[5];
+      static irrklang::ISoundEngine *engine;
       struct option {
             char *content;
             option *next;
@@ -68,6 +70,9 @@ class menu {
     public:
       menu (drawer *vsl, char head[], int x, int y);
       ~menu ();
+      static void load_effects(irrklang::ISoundEngine *engine);
+      static void unload_effects();
+      static void play_effect (int id);
       void addOpt (char content[]);
       bool cancel();
       int opt();    //retorna posiçao escolhida apos navigate()
@@ -92,7 +97,7 @@ class music {
         bool isInstrumentAvaliable (en_instrument instrument);
         bool isFinished ();
         void preview (bool active, int sixteenth);
-        bool play ();
+        bool play (float volume=1.0);
         bool pause ();
         int time ();
         

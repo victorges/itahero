@@ -183,7 +183,7 @@ int main (int argc, char *argv[]) {
         }
     songs[nSongs-1]=new music (reader, engine);
     sfscanf (reader, "[/SONGS]");
-    if (fscanf (reader, "%s", string)!=EOF) Error ("Soundlist file corrupted");
+    if (fscanf (reader, "%s", string)!=EOF) Error ("Songlist file corrupted");
     fclose (reader);
 //end of loading of song list
 
@@ -191,10 +191,32 @@ int main (int argc, char *argv[]) {
     char playerssp[4]={SDLK_SPACE, SDLK_RETURN, SDLK_TAB};
     char playerspick[4][3]={"", "", "", ""};
     int playersextras[4][10]={{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
+    menu::load_effects(engine);
 
     drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
-
     screen->load_background(wallpaper);
+    drawer *logo=new drawer(FilePath("Image/", "Ita Hero", ".png"));
+
+
+    srand(clock());
+    int menumusic=2;
+    songs[menumusic]->load(1.0, 2);
+    songs[menumusic]->play(0.6);
+    
+    for (int i=0;i<SIZEY;i++) {
+        wallpaper->apply_surface(0, 0, screen, SIZEY-i);
+        screen->Flip();
+        }
+    for (int i=0;i<SIZEX/2;i+=10) {
+        screen->clear();
+        logo->apply_surface(i, 200, screen);
+        screen->Flip();
+        }
+    delete wallpaper;
+    wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
+    logo->apply_surface(wallpaper->get_width()/2, 200, wallpaper);
+    screen->load_background(wallpaper);
+    
     screen->clear();
     screen->setcolor(0, 0, 0);
     menu *startmenu=new menu(screen, " - Main Menu");
@@ -203,10 +225,18 @@ int main (int argc, char *argv[]) {
     startmenu->addOpt("Practice");
     startmenu->addOpt("Options");
     startmenu->addOpt("Exit");
+
     bool done=0;
     while (!done) {
-        while (startmenu->navigate());
-        wallpaper->apply_surface(0, 0, screen);
+        while (startmenu->navigate()) {
+            if (songs[menumusic]->isFinished()) {
+                songs[menumusic]->unload();
+                menumusic=rand()%nSongs;
+                songs[menumusic]->load(1.0, 3);
+                songs[menumusic]->play(0.5);
+                }
+            }
+        screen->clear();
         switch (startmenu->opts()[0]) {
             case 'S':
                 {
@@ -218,6 +248,7 @@ int main (int argc, char *argv[]) {
                     while (diffic->navigate());
                     screen->clear();
                     if (!diffic->cancel()) {
+                        songs[menumusic]->unload();
                         en_difficulty difficulty;
                         switch (diffic->opt()) {
                             case 1: difficulty=EASY; break;
@@ -310,6 +341,7 @@ int main (int argc, char *argv[]) {
                                     }
                             }
                         if (i==nPlayers) {
+                            songs[menumusic]->unload();
                             delete ordmenu;
                             ordmenu=new menu(screen, " - Choose song to play");
                             for (i=0;i<nSongs;i++) {
@@ -370,6 +402,7 @@ int main (int argc, char *argv[]) {
                 break;
             case 'P':
                 {
+                    songs[menumusic]->unload();
                     menu *songmenu=new menu(screen, " - Choose song to practice");
                     for (int i=0;i<nSongs;i++) {
                         sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
