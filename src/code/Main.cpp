@@ -61,7 +61,6 @@ void sfscanf (FILE *file, char CheckString[]) {
 }
 
 void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) {
-    song->play();
     SDL_Event event;
     Uint8* keyboard=SDL_GetKeyState(NULL);
     bool done=false, bmenu=false;
@@ -69,6 +68,12 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
     pause->addOpt("Resume");
     pause->addOpt("Restart");
     pause->addOpt("Exit");
+    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
+        screen->Flip();
+        screen->clear();
+        for (int j=0;j<nPlayers;j++) players[j]->draw(clock()*1000/CLOCKS_PER_SEC-i-3000);
+        }
+    song->play();
     while (!done) {
         int timams=clock()*1000/CLOCKS_PER_SEC;
         char string[10];

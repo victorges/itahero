@@ -140,7 +140,6 @@ class highway {
         void reset();
         void draw (int time);
         int multiplier ();
-        int preliminary(); //to-do | usa antes de começar a tocar a música
         long long int refresh(Uint8* keyboard);
         bool alive();
     };
