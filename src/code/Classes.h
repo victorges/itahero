@@ -69,18 +69,16 @@ class menu {
             } *start, *end;
       int selected, nOpt, locx, locy, sizex, sizey;
       drawer *visual;
-      void print();
     public:
       menu (drawer *vsl, char head[], int x, int y);
       ~menu ();
-      static void load_effects(irrklang::ISoundEngine *engine);
-      static void unload_effects();
-      static void play_effect (int id);
       void addOpt (char content[]);
       bool cancel();
+      void setopt(int sel);
       int opt();    //retorna posiçao escolhida apos navigate()
       char* opts();  //retorna string da opção escolhida
       bool navigate();
+      void print();
     };
 
 class music {

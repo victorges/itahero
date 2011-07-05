@@ -154,10 +154,11 @@ int main (int argc, char *argv[]) {
     #else
     screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
     #endif
+    screen->setcolor(0, 0, 0);
     SDL_ShowCursor(SDL_DISABLE);
     SDL_WM_SetCaption ( "ITA Hero", NULL );
 
-//load song list
+//load data
     FILE *reader;
     reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
     if (reader==NULL) Error ("Soundlist file not found");
@@ -176,13 +177,21 @@ int main (int argc, char *argv[]) {
     sfscanf (reader, "[/SONGS]");
     if (fscanf (reader, "%s", string)!=EOF) Error ("Songlist file corrupted");
     fclose (reader);
-//end of loading of song list
-
-    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}};
+    
+    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
     char playerssp[4]={SDLK_SPACE, SDLK_RETURN, SDLK_TAB};
     char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{0, 0, 0}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
-    menu::load_effects(engine);
+    int playersextras[4][10]={{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+    
+    reader=fopen(FilePath("SAVEDATA/", "data", ".dat"), "rb");
+    if (reader!=NULL) {
+        fread(playersfret, sizeof(char), 4*6, reader);
+        fread(playerssp, sizeof(char), 4, reader);
+        fread(playerspick, sizeof(char), 4*3, reader);
+        fread(playersextras, sizeof(char), 4*10, reader);
+        fclose(reader);
+        }
+//end of loading data
 
     drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
     screen->load_background(wallpaper);
@@ -193,25 +202,41 @@ int main (int argc, char *argv[]) {
     int menumusic=2;
     songs[menumusic]->load(1.0, 2);
     songs[menumusic]->play(0.6);
-    
-    for (int i=0, sttime=songs[menumusic]->time();i<SIZEY;i++) {
-        wallpaper->apply_surface(0, 0, screen, SIZEY-i);
-        screen->Flip();
-        while (songs[menumusic]->time()-sttime<5000*i/SIZEY);
-        }
-    for (int i=0, sttime=songs[menumusic]->time();i<SIZEX/2;i+=10) {
-        screen->clear();
-        logo->apply_surface(i, 200, screen);
-        screen->Flip();
-        while (songs[menumusic]->time()-sttime<1000*i/SIZEX);
-        }
+    {
+        SDL_Event event;
+        for (int i=0, sttime=songs[menumusic]->time();i<SIZEY;i++) {
+            wallpaper->apply_surface(0, 0, screen, SIZEY-i);
+            screen->Flip();
+            while (songs[menumusic]->time()-sttime<5000*i/SIZEY) highway::load();
+            }
+        for (int i=0, sttime=songs[menumusic]->time();i<SIZEX/2;i+=10) {
+            screen->clear();
+            logo->apply_surface(i, 200, screen);
+            screen->Flip();
+            while (songs[menumusic]->time()-sttime<1000*i/SIZEX) highway::load();
+            }
+        while (SDL_PollEvent(&event));
+        menu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
+        int sttime=clock()*1000/CLOCKS_PER_SEC;
+        while (event.type!=SDL_KEYDOWN) {
+            anykey.print();
+            screen->Flip();
+            SDL_PollEvent(&event);
+            if ((clock()*1000/CLOCKS_PER_SEC-sttime)/500%2) screen->setcolor(0, 0, 0);
+            else screen->setcolor(223, 159, 26);
+            }
+    }
+    screen->setcolor(0, 0, 0);
     delete wallpaper;
     wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
     logo->apply_surface(wallpaper->get_width()/2, 200, wallpaper);
     screen->load_background(wallpaper);
-    
+    {
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev));
+    }
+
     screen->clear();
-    screen->setcolor(0, 0, 0);
     menu *startmenu=new menu(screen, " - Main Menu");
     startmenu->addOpt("Singleplayer");
     startmenu->addOpt("Multiplayer");
@@ -239,7 +264,14 @@ int main (int argc, char *argv[]) {
                     diffic->addOpt("Medium");
                     diffic->addOpt("Hard");
                     diffic->addOpt("Expert");
-                    while (diffic->navigate());
+                    while (diffic->navigate()){
+                        if (songs[menumusic]->isFinished()) {
+                            songs[menumusic]->unload();
+                            menumusic=rand()%nSongs;
+                            songs[menumusic]->load(1.0, 3);
+                            songs[menumusic]->play(0.5);
+                            }
+                        }
                     screen->clear();
                     if (!diffic->cancel()) {
                         songs[menumusic]->unload();
@@ -286,17 +318,16 @@ int main (int argc, char *argv[]) {
                                     screen->load_background(NULL);
                                     highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0], playerssp[0], SIZEX/2, 7*SIZEX/20);
                                     fscore = PlaySong (screen, ChosenSong, &player);
-                                    
+                                    ChosenSong->check_record_file(1);
                                     if(fscore!=-1 && !playersextras[0][GODMODE]){
-                                        ChosenSong->check_record_file(1);
                                         screen->settextstyle("lazy", NULL, 60);
                                         char *stringaux;
                                         stringaux = screen->draw_name(9*SIZEX/20, SIZEY/6);
                                         ChosenSong->include_record(stringaux, fscore, 1);
                                         SDL_Delay(3000);
                                         screen->settextstyle("lazy", NULL, 36);
-                                        screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, 1);
-                                    }
+                                        }
+                                    screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, 1);
                                     
                                     screen->load_background(wallpaper);
                                     ChosenSong->unload();
@@ -322,7 +353,14 @@ int main (int argc, char *argv[]) {
                     ordmenu->addOpt("2 players");
                     ordmenu->addOpt("3 players");
                     ordmenu->addOpt("4 players");
-                    while(ordmenu->navigate());
+                    while(ordmenu->navigate()) {
+                        if (songs[menumusic]->isFinished()) {
+                            songs[menumusic]->unload();
+                            menumusic=rand()%nSongs;
+                            songs[menumusic]->load(1.0, 3);
+                            songs[menumusic]->play(0.5);
+                            }
+                        }
                     screen->clear();
                     nPlayers=ordmenu->opt()+1;
                     if (!ordmenu->cancel()) {
@@ -336,7 +374,14 @@ int main (int argc, char *argv[]) {
                             ordmenu->addOpt("Medium");
                             ordmenu->addOpt("Hard");
                             ordmenu->addOpt("Expert");
-                            while(ordmenu->navigate());
+                            while(ordmenu->navigate()) {
+                                if (songs[menumusic]->isFinished()) {
+                                    songs[menumusic]->unload();
+                                    menumusic=rand()%nSongs;
+                                    songs[menumusic]->load(1.0, 3);
+                                    songs[menumusic]->play(0.5);
+                                    }
+                                }
                             screen->clear();
                             if (ordmenu->cancel()) i-=2;
                             else
@@ -396,17 +441,16 @@ int main (int argc, char *argv[]) {
                                         
                                         bool testgm = true;
                                         for(int k = 0; k<nPlayers; k++) if(playersextras[k][GODMODE]) testgm = false;
+                                        ChosenSong->check_record_file(nPlayers);
                                         if(fscore!=-1 && testgm){
-                                            ChosenSong->check_record_file(nPlayers);
                                             screen->settextstyle("lazy", NULL, 60);
                                             char *stringaux;
                                             stringaux = screen->draw_name(9*SIZEX/20, SIZEY/6);
                                             ChosenSong->include_record(stringaux, fscore, nPlayers);
                                             SDL_Delay(3000);
                                             screen->settextstyle("lazy", NULL, 36);
-                                            screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, nPlayers);
-                                        }
-                                        
+                                            }
+                                        screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, nPlayers);
                                         screen->load_background(wallpaper);
                                         ChosenSong->unload();
                                         for (int j=0;j<nPlayers;j++) delete players[j];
@@ -543,10 +587,161 @@ int main (int argc, char *argv[]) {
                     options->addOpt("Back");
                     bool doneopt=0;
                     while (!doneopt) {
+                        screen->clear();
                         while (options->navigate());
                         switch (options->opts()[0]) {
-                            case 'C': break;
-                            case 'E': break;
+                            case 'C':
+                                {
+                                    menu *ordmenu;
+                                    bool donecontrol=0;
+                                    while (!donecontrol) {
+                                        screen->clear();
+                                        ordmenu = new menu (screen, " - Choose player to edit");
+                                        ordmenu->addOpt("Player 1");
+                                        ordmenu->addOpt("Player 2");
+                                        ordmenu->addOpt("Player 3");
+                                        ordmenu->addOpt("Player 4");
+                                        while (ordmenu->navigate()) {
+                                            if (songs[menumusic]->isFinished()) {
+                                                songs[menumusic]->unload();
+                                                menumusic=rand()%nSongs;
+                                                songs[menumusic]->load(1.0, 3);
+                                                songs[menumusic]->play(0.5);
+                                                }
+                                            }
+                                        if (!ordmenu->cancel()) {
+                                            int Chosen=ordmenu->opt()-1;
+                                            delete ordmenu;
+                                            bool doneconfig=0;
+                                            int selected=0;
+                                            while (!doneconfig) {
+                                                screen->clear();
+                                                ordmenu=new menu (screen, " - Configure keyboard");
+                                                sprintf (string, "Green fret: %s", SDL_GetKeyName((SDLKey)playersfret[Chosen][GREEN]));
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Red fret: %s", SDL_GetKeyName((SDLKey)playersfret[Chosen][RED]));
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Yellow fret: %s", SDL_GetKeyName((SDLKey)playersfret[Chosen][YELLOW]));
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Blue fret: %s", SDL_GetKeyName((SDLKey)playersfret[Chosen][BLUE]));
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Orange fret: %s", SDL_GetKeyName((SDLKey)playersfret[Chosen][ORANGE]));
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Starpower: %s", SDL_GetKeyName((SDLKey)playerssp[Chosen]));
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Pick: %s", playerspick[Chosen][0]?"Yes":"No");
+                                                ordmenu->addOpt(string);
+                                                if (playerspick[Chosen][0]) {
+                                                    sprintf (string, "Pick key: %s", SDL_GetKeyName((SDLKey)playerspick[Chosen][0]));
+                                                    ordmenu->addOpt(string);
+                                                    }
+                                                ordmenu->setopt(selected);
+                                                while (ordmenu->navigate()) {
+                                                    if (songs[menumusic]->isFinished()) {
+                                                        songs[menumusic]->unload();
+                                                        menumusic=rand()%nSongs;
+                                                        songs[menumusic]->load(1.0, 3);
+                                                        songs[menumusic]->play(0.5);
+                                                        }
+                                                    }
+                                                selected=ordmenu->opt();
+                                                if (!ordmenu->cancel()) {
+                                                    char *dest=NULL;
+                                                    switch (ordmenu->opt()) {
+                                                        case 1: dest=&playersfret[Chosen][GREEN]; break;
+                                                        case 2: dest=&playersfret[Chosen][RED]; break;
+                                                        case 3: dest=&playersfret[Chosen][YELLOW]; break;
+                                                        case 4: dest=&playersfret[Chosen][BLUE]; break;
+                                                        case 5: dest=&playersfret[Chosen][ORANGE]; break;
+                                                        case 6: dest=&playerssp[Chosen]; break;
+                                                        case 7:
+                                                            if (playerspick[Chosen][0]) {
+                                                                playerspick[Chosen][0]=0;
+                                                                break;
+                                                                }
+                                                            else playerspick[Chosen][1]=0;
+                                                        case 8: dest=&playerspick[Chosen][0]; break;
+                                                        }
+                                                    if (dest!=NULL) {
+                                                        menu aux(screen, "Press key to map", SIZEX/2, SIZEY/2);
+                                                        aux.navigate();
+                                                        SDL_Event event;
+                                                        SDL_WaitEvent(&event);
+                                                        while (event.type!=SDL_KEYDOWN) SDL_WaitEvent(&event);
+                                                        *dest=event.key.keysym.sym;
+                                                        }
+                                                    }
+                                                else doneconfig=1;
+                                                delete ordmenu;
+                                                }
+                                            }
+                                        else donecontrol=1;
+                                        }
+                                    delete ordmenu;
+                                }
+                                break;
+                            case 'E':
+                                {
+                                    menu *ordmenu;
+                                    bool donextras=0;
+                                    while (!donextras) {
+                                        screen->clear();
+                                        ordmenu = new menu (screen, " - Choose player to edit");
+                                        ordmenu->addOpt("Player 1");
+                                        ordmenu->addOpt("Player 2");
+                                        ordmenu->addOpt("Player 3");
+                                        ordmenu->addOpt("Player 4");
+                                        while (ordmenu->navigate()) {
+                                            if (songs[menumusic]->isFinished()) {
+                                                songs[menumusic]->unload();
+                                                menumusic=rand()%nSongs;
+                                                songs[menumusic]->load(1.0, 3);
+                                                songs[menumusic]->play(0.5);
+                                                }
+                                            }
+                                        if (!ordmenu->cancel()) {
+                                            int Chosen=ordmenu->opt()-1;
+                                            delete ordmenu;
+                                            bool doneconfig=0;
+                                            int selected=0;
+                                            while (!doneconfig) {
+                                                screen->clear();
+                                                ordmenu= new menu (screen, " - Extras");
+                                                sprintf (string, "Hyperspeed: %d", playersextras[Chosen][HYPERSPEED]);
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Precision Level: %d", playersextras[Chosen][PRECISION]);
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "God mode: %s", playersextras[Chosen][GODMODE]?"Yes":"No");
+                                                ordmenu->addOpt(string);
+                                                sprintf (string, "Always Hammmer-on: %s", playersextras[Chosen][ALLHOPO]?"Yes":"No");
+                                                ordmenu->addOpt(string);
+                                                ordmenu->setopt(selected);
+                                                while (ordmenu->navigate()) {
+                                                    if (songs[menumusic]->isFinished()) {
+                                                        songs[menumusic]->unload();
+                                                        menumusic=rand()%nSongs;
+                                                        songs[menumusic]->load(1.0, 3);
+                                                        songs[menumusic]->play(0.5);
+                                                        }
+                                                    }
+                                                selected=ordmenu->opt();
+                                                if (!ordmenu->cancel()) {
+                                                    switch (ordmenu->opt()) {
+                                                        case 1: playersextras[Chosen][HYPERSPEED]=(playersextras[Chosen][HYPERSPEED]+1)%6; break;
+                                                        case 2: playersextras[Chosen][PRECISION]=(playersextras[Chosen][PRECISION]+1)%3; break;
+                                                        case 3: playersextras[Chosen][GODMODE]=(playersextras[Chosen][GODMODE]+1)%2; break;
+                                                        case 4: playersextras[Chosen][ALLHOPO]=(playersextras[Chosen][ALLHOPO]+1)%2; break;
+                                                        }
+                                                    }
+                                                else doneconfig=1;
+                                                delete ordmenu;
+                                                }
+                                            }
+                                        else donextras=1;
+                                        }
+                                    delete ordmenu;
+                                }
+
                             case 'B': doneopt=1; break;
                             }
                         if (options->cancel()) doneopt=1;
@@ -561,6 +756,16 @@ int main (int argc, char *argv[]) {
         screen->clear();
         }
     delete startmenu;
+
+    FILE *writer;
+    writer=fopen(FilePath("SAVEDATA/", "data", ".dat"), "wb");
+    if (writer!=NULL) {
+        fwrite(playersfret, sizeof(char), 4*6, writer);
+        fwrite(playerssp, sizeof(char), 4, writer);
+        fwrite(playerspick, sizeof(char), 4*3, writer);
+        fwrite(playersextras, sizeof(char), 4*10, writer);
+        fclose(writer);
+        }
 
     highway::unload();
     engine->drop();

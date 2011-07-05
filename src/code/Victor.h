@@ -106,31 +106,6 @@ menu::~menu () {
         }
 }
 
-void menu::load_effects(irrklang::ISoundEngine *eng) {
-    char string[100];
-    size_t size;
-    void *soundfile;
-    engine=eng;
-    for (int i=0;i<3;i++) {
-        sprintf (string, "menu%d", i+1);
-        soundfile=AllocateFile(FilePath("FX/", string, ".ogg"), size);
-        if (soundfile==NULL) Error ("Menu Sound File not found");
-        FXsource[i]=engine->addSoundSourceFromMemory(soundfile, size, string);
-        free (soundfile);
-        if (FXsource[i]==NULL) Error ("Error loading Menu Sound File");
-        FXsource[i]->setStreamMode(irrklang::ESM_AUTO_DETECT);
-        }
-}
-
-void menu::play_effect(int id) {
-    engine->play2D(FXsource[id], false, false, false, true);
-}
-
-void menu::unload_effects() {
-    for (int i=0;i<3;i++) engine->removeSoundSource (FXsource[i]);
-}
-
-
 void menu::print () {
     option *aux=start;
     visual->bar(locx-sizex/2-10, locy-sizey/2-10, locx+sizex/2+10, locy+sizey/2+10, 0);
@@ -177,6 +152,10 @@ bool menu::cancel() {
 
 int menu::opt() {
     return selected+1;
+}
+
+void menu::setopt(int sel) {
+    if (sel>0&&(--sel)<nOpt) selected=sel;
 }
 
 char* menu::opts() {
