@@ -122,6 +122,7 @@ class highway {
         int *color;
         note *chart;
         music *MusicStream;
+        en_difficulty difficulty;
         int progress, bpm, size;
         int time_delay, timing_window;
         long long int basescore;

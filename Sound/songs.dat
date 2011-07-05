@@ -1,4 +1,4 @@
-[SONGS=6]
+[SONGS=7]
 FILE=escape
 TITLE=Escape Me
 ARTIST=Tiesto (feat. Cc Sheffield)
@@ -22,4 +22,8 @@ ARTIST=Dire Straits
 FILE=get up
 TITLE=Get Up
 ARTIST=David Guetta (feat. Chris Willis)
+~
+FILE=paisefilhos
+TITLE=Pais e Filhos
+ARTIST=Legião Urbana
 [/SONGS]

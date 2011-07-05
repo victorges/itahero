@@ -211,7 +211,7 @@ Uint8 drawer::get_pixel_color ( int x, int y, char c ){
 
 int highway::position3d (int dt, bool check) {
     if (check&&dt>time_delay) dt=time_delay;
-    int y = visual->get_height()-(dt*(height-100)/time_delay+140);
+    int y = visual->get_height()-(dt*(height-100)/time_delay+140*SIZEY/1080);
     double a = (3*height*(height-y)-(height-y)*(height-y))/(3.0*height);
     if (dt<=time_delay) return (int)(height-a-0.5);
     else {
@@ -237,41 +237,47 @@ char* drawer::draw_name(int x, int y){
     name = (char*)malloc(4*sizeof(char));
     aux[0] = 'A';
     aux[1] = 0;
+    int initx=x-textwidth("Initials:e"), inity=y;
+    textxy("Initials:", initx ,inity);
     textxy(aux, x, y);
     while(cnt<3) {
-        SDL_PollEvent(&event);
-        if (event.type==SDL_KEYDOWN){
-            switch (event.key.keysym.sym){
-                case SDLK_UP:
-                    bar(x, y, x+textwidth(aux), y+textheight(aux));
-                    aux[0] = (aux[0]-'A'+25)%26 + 'A';
-                    textxy(aux, x, y);
-                    break;
-                case SDLK_DOWN:
-                    bar(x, y, x+textwidth(aux), y+textheight(aux));
-                    aux[0] = (aux[0]-'A'+1)%26 + 'A';
-                    textxy(aux, x, y);
-                    break;
-                case SDLK_BACKSPACE:
-                    if(cnt!=0){
+        if (SDL_PollEvent(&event)) {
+            if (event.type==SDL_KEYDOWN){
+                switch (event.key.keysym.sym){
+                    case SDLK_UP:
                         bar(x, y, x+textwidth(aux), y+textheight(aux));
-                        cnt--;
-                        aux[0] = name[cnt];
-                        x = x-textwidth(aux);
-                    }
-                    break;
-                case SDLK_RETURN:
-                    name[cnt] = aux[0];
-                    x=x+textwidth(aux);
-                    cnt++;
-                    aux[0] = 'A';
-                    if(cnt!=3) textxy(aux, x, y);
-                    break;
+                        aux[0] = (aux[0]-'A'+25)%26 + 'A';
+                        textxy("Initials:", initx ,inity);
+                        textxy(aux, x, y);
+                        break;
+                    case SDLK_DOWN:
+                        bar(x, y, x+textwidth(aux), y+textheight(aux));
+                        aux[0] = (aux[0]-'A'+1)%26 + 'A';
+                        textxy("Initials:", initx ,inity);
+                        textxy(aux, x, y);
+                        break;
+                    case SDLK_BACKSPACE:
+                        if(cnt!=0){
+                            bar(x, y, x+textwidth(aux), y+textheight(aux));
+                            textxy("Initials:", initx ,inity);
+                            cnt--;
+                            aux[0] = name[cnt];
+                            x = x-textwidth(aux);
+                        }
+                        break;
+                    case SDLK_RETURN:
+                        name[cnt] = aux[0];
+                        x=x+textwidth(aux);
+                        cnt++;
+                        aux[0] = 'A';
+                        if(cnt!=3) textxy(aux, x, y);
+                        textxy("Initials:", initx ,inity);
+                        break;
+                }
             }
         }
         else if (event.type==SDL_QUIT) exit(0);
         Flip();
-        SDL_Delay(200);
     }
     name[3] = 0;
     return name;

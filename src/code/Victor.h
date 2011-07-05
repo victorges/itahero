@@ -166,20 +166,6 @@ char* menu::opts() {
     return "";
 }
 
-/*bool menu::navigate () {
-    print();
-    swapbuffers();
-    if (kbhit()) {
-        char c=getch();
-        switch (c) {
-            case 72: selected=(selected+nOpt-1)%nOpt; return 1;
-            case 80: selected=(selected+nOpt+1)%nOpt; return 1;
-            case 27: case 8: selected=nOpt; case 13: return 0;
-            }
-        }
-    return 1;
-}*/
-
 bool menu::navigate () {  //SDL
     highway::load();
     visual->settextstyle("lazy", NULL, 35);
@@ -471,8 +457,8 @@ void highway::unload() {
         }
 }
 
-highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", char spk=SDLK_SPACE, int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
-                  visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), starpower(0), progress(0), score(0), streak(0), rockmeter(500)
+highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty diff, int *extras, char frt[]="ZXCVB", char pck[]="", char spk=SDLK_SPACE, int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
+                  visual(vsl), MusicStream(stream), instrument(instr), difficulty(diff), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), starpower(0), progress(0), score(0), streak(0), rockmeter(500)
         {
         if (presser==NULL&&presserp==NULL) {
             presser=new drawer*[5];
@@ -562,12 +548,18 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
         color=new int[5];
         for (i=0;i<5;i++) color[i]=col[i];
         fret=new char[5];
-        for (i=0;i<5;i++) fret[i]=frt[i];
+        for (i=0;i<5;i++) {
+            fretstate[i]=0;
+            fret[i]=frt[i];
+            }
 
         for (size=0;pck[size];size++);
         pickstate=new short int[size];
         pick=new char[++size];
-        for (i=0;i<size;i++) pick[i]=pck[i];
+        for (i=0;i<size;i++) {
+            pickstate[i]=0;
+            pick[i]=pck[i];
+            }
 
         spkey=spk;
 
@@ -668,6 +660,9 @@ void highway::reset () {
         rockmeter=500;
         starpower=0;
 
+        for (int i=0;i<5;i++) fretstate[i]=0;
+        for (int i=0;pick[i];i++) pickstate[i]=0;
+
         FILE *chartfile;
         {
             char extension[20]="";
@@ -689,7 +684,47 @@ void highway::reset () {
         fread (&size, sizeof(int), 1, chartfile);
         chart=new note[(size>50000)?(size=0):(size)];
         for (int i=0;i<size;i++) {
-            chart[i](chartfile);
+            bool cond;
+            do {
+                chart[i](chartfile);
+                if (i==0) break;
+
+                cond=false;
+                switch (difficulty) {
+                    case EASY:
+                        for (int j=4;chart[i].chord>1;j--) {
+                            if ((chart[i].type&~(1<<j))!=chart[i].type) {
+                                chart[i].type=chart[i].type&~(1<<j);
+                                chart[i].chord--;
+                                }
+                            }
+                        if (chart[i].type>=(1<<3)) chart[i].type=chart[i].type>>2;
+                        if (chart[i].time-chart[i-1].time<300) {
+                            cond=true;
+                            size--;
+                            }
+                        break;
+                    case MEDIUM:
+                        for (int j=4;chart[i].chord>2;j--) {
+                            if ((chart[i].type&~(1<<j))!=chart[i].type) {
+                                chart[i].type=chart[i].type&(~(1<<j));
+                                chart[i].chord--;
+                                }
+                            }
+                        if (chart[i].type>=(1<<4)) chart[i].type=chart[i].type>>1;
+                        if (chart[i].time-chart[i-1].time<200||(chart[i].chord>1&&chart[i].time-chart[i-1].time<300)) {
+                            cond=true;
+                            size--;
+                        }
+                        break;
+                    case HARD:
+                        if (chart[i].time-chart[i-1].time<100||(chart[i].chord>=2&&chart[i].time-chart[i-1].time<150)) {
+                            cond=true;
+                            size--;
+                            }
+                        break;
+                    }
+                } while (cond&&i<size);
             chart[i].hopo=(allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type));
             }
         for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
@@ -718,7 +753,7 @@ void highway::draw (int time=0) {
                 }
             for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
 
-            while (position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
+            while (j<size&&position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
                 if (chart[j].hit==false||chart[j].end>chart[j].time)
                     for (int i=0;i<5;i++)
                         if ((chart[j].type>>i)%2) {

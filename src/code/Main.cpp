@@ -5,7 +5,7 @@
 #include <SDL/SDL_ttf.h>
 #include <math.h>
 
-//#define FULLSCREEN
+#define FULLSCREEN
 
 enum en_instrument {GUITAR, BASS, DRUMS};
 
@@ -68,6 +68,27 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
             players[nPlayers-i-1]->refresh(keyboard);
             if (!players[nPlayers-i-1]->alive()) done=true;
             }
+        if (done) {
+            song->pause();
+            menu lost(screen, "You Lost!", SIZEX/2, SIZEY/2);
+            lost.addOpt("Retry");
+            lost.addOpt("Exit");
+            while (lost.navigate()||lost.cancel());
+            switch (lost.opt()) {
+                case 1:
+                    song->reload();
+                    for (int i=0;i<nPlayers;i++) players[i]->reset();
+                    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
+                        screen->Flip();
+                        screen->clear();
+                        for (int j=0;j<nPlayers;j++) players[j]->draw(clock()*1000/CLOCKS_PER_SEC-i-3000);
+                        }
+                    song->play();
+                    done=0;
+                    break;
+                }
+            }
+
         if (song->isFinished()) done=true;
         if (bmenu) {
                 song->pause();
@@ -93,10 +114,16 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
                     case 2:
                         song->reload();
                         for (int i=0;i<nPlayers;i++) players[i]->reset();
+                        for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
+                            screen->Flip();
+                            screen->clear();
+                            for (int j=0;j<nPlayers;j++) players[j]->draw(clock()*1000/CLOCKS_PER_SEC-i-3000);
+                            }
                         song->play();
                         break;
                     case 3:
                         done=1;
+                        return -1;
                         break;
                     }
                 if (pause->cancel()) {
@@ -119,8 +146,7 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
         }
     
     delete pause;
-    song->pause();
-    
+
     if(song->isFinished())
         for(int i=0; i<nPlayers; i++)
             actualscore+=players[i]->score/10000;
@@ -209,11 +235,11 @@ int main (int argc, char *argv[]) {
             screen->Flip();
             while (songs[menumusic]->time()-sttime<5000*i/SIZEY) highway::load();
             }
-        for (int i=0, sttime=songs[menumusic]->time();i<SIZEX/2;i+=10) {
+        for (int i=0, sttime=songs[menumusic]->time();i<SIZEX-logo->get_width();i+=10) {
             screen->clear();
-            logo->apply_surface(i, 200, screen);
+            logo->apply_surface(i, (screen->get_height()-logo->get_height())/2, screen);
             screen->Flip();
-            while (songs[menumusic]->time()-sttime<1000*i/SIZEX) highway::load();
+            while (songs[menumusic]->time()-sttime<1000*i/(SIZEX-logo->get_width())) highway::load();
             }
         while (SDL_PollEvent(&event));
         menu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
@@ -229,7 +255,7 @@ int main (int argc, char *argv[]) {
     screen->setcolor(0, 0, 0);
     delete wallpaper;
     wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
-    logo->apply_surface(wallpaper->get_width()/2, 200, wallpaper);
+    logo->apply_surface(wallpaper->get_width()-logo->get_width(), (wallpaper->get_height()-logo->get_height())/2, wallpaper);
     screen->load_background(wallpaper);
     {
         SDL_Event ev;
@@ -324,7 +350,7 @@ int main (int argc, char *argv[]) {
                                         char *stringaux;
                                         stringaux = screen->draw_name(9*SIZEX/20, SIZEY/6);
                                         ChosenSong->include_record(stringaux, fscore, 1);
-                                        SDL_Delay(3000);
+                                        SDL_Delay(1000);
                                         screen->settextstyle("lazy", NULL, 36);
                                         }
                                     screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, 1);
@@ -436,8 +462,8 @@ int main (int argc, char *argv[]) {
                                         ChosenSong->load();
                                         highway *players[nPlayers];
                                         screen->load_background(NULL);
-                                        for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers), (SIZEX-20*i)/i);
-                                        PlaySong (screen, ChosenSong, players, nPlayers);
+                                        for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers), ((SIZEX-20*i)/i>7*SIZEX/20)?(7*SIZEX/20):((SIZEX-20*i)/i));
+                                        fscore = PlaySong (screen, ChosenSong, players, nPlayers);
                                         
                                         bool testgm = true;
                                         for(int k = 0; k<nPlayers; k++) if(playersextras[k][GODMODE]) testgm = false;
@@ -447,7 +473,7 @@ int main (int argc, char *argv[]) {
                                             char *stringaux;
                                             stringaux = screen->draw_name(9*SIZEX/20, SIZEY/6);
                                             ChosenSong->include_record(stringaux, fscore, nPlayers);
-                                            SDL_Delay(3000);
+                                            SDL_Delay(1000);
                                             screen->settextstyle("lazy", NULL, 36);
                                             }
                                         screen->draw_highscore(4*SIZEX/10, SIZEY/4, ChosenSong->filename, nPlayers);
