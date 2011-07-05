@@ -1,19 +1,28 @@
-drawer::drawer (SDL_Surface *surf): surface(surf) {
+drawer::drawer (SDL_Surface *surf): surface(surf), background(NULL) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
     settextstyle();
 }
 
-drawer::drawer (int width, int height, int bpp, Uint32 flags): surface(SDL_SetVideoMode(width, height, bpp, flags)) {
+drawer::drawer (int width, int height, int bpp, Uint32 flags): surface(SDL_SetVideoMode(width, height, bpp, flags)), background(NULL) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
     settextstyle();
 }
 
-drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask): surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)) {
+drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask): surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)), background(NULL) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
     settextstyle();
+}
+
+void drawer::load_background(drawer *background=NULL) {
+    if (background==NULL) {
+        this->background=NULL;
+        return;
+        }
+    this->background=background;
+    this->background->resize(surface->w,surface->h);
 }
 
 void drawer::settextstyle (char fnt[], SDL_Color *tcolor, int tsize) {
@@ -61,7 +70,8 @@ void drawer::Flip () {
     }
 
 void drawer::clear () {
-    SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+    if (background==NULL) SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+    else background->apply_surface(0, 0, this);
 }
 
 void note::operator()(FILE *chartfile) {
@@ -75,7 +85,7 @@ void note::operator()(FILE *chartfile) {
 }
 
 
-menu::menu (drawer *vsl, char head[]="", int x=50, int y=50): visual(vsl), locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
+menu::menu (drawer *vsl, char head[]="", int x=3*SIZEX/8, int y=3*SIZEY/4): visual(vsl), locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
     int size;
     visual->settextstyle("lazy", NULL, 35);
     for (size=0;head[size];size++);
@@ -91,6 +101,24 @@ menu::~menu () {
         aux=start->next;
         delete start;
         start=aux;
+        }
+}
+
+void menu::print () {
+    option *aux=start;
+    visual->bar(locx-sizex/2-10, locy-sizey/2-10, locx+sizex/2+10, locy+sizey/2+10, 0);
+    visual->textxy(header, locx-sizex/2, locy-sizey/2);
+
+    int y=visual->textheight(header);
+    for (int curr=0;aux;curr++) {
+        char string[100]="";
+        if (selected==curr) {
+            strcat(string, " ");
+            }
+        strcat (string, aux->content);
+        visual->textxy(string, locx-sizex/2, locy-sizey/2+y);
+        y+=visual->textheight(aux->content);
+        aux=aux->next;
         }
 }
 
@@ -149,9 +177,9 @@ char* menu::opts() {
 }*/
 
 bool menu::navigate () {  //SDL
+    highway::load();
     visual->settextstyle("lazy", NULL, 35);
     print();
-    //swapbuffers();
     visual->Flip();
     SDL_Event event;
     if (SDL_PollEvent(&event)) {
@@ -308,6 +336,10 @@ void music::settimerel(int dt) {
     if (sound->getIsPaused()==false) start-=dt*CLOCKS_PER_SEC/1000;
 }
 
+float music::speed() {
+    return sound->getPlaybackSpeed();
+}
+
 void music::error () {
     int sel=rand()%NERROR;
     engine->play2D(errorsource[sel], false, false, false, true)->setVolume(0.8);
@@ -318,8 +350,10 @@ void music::lose() {
 }
 
 void music::starpower(bool active=true) {
-    if (active) if (!FX->isDistortionSoundEffectEnabled()) FX->enableDistortionSoundEffect();
-    else if (FX->isDistortionSoundEffectEnabled()) FX->disableDistortionSoundEffect();
+    if (active) {
+        if (!FX->isFlangerSoundEffectEnabled()) FX->enableFlangerSoundEffect();
+        }
+    else if (FX->isFlangerSoundEffectEnabled()) FX->disableFlangerSoundEffect();
 }
 
 void music::hitting(char instrument, bool active=true) {
@@ -350,159 +384,250 @@ int music::time () {
          return (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed());
 }
 
+drawer*** highway::notes=NULL;
+drawer*** highway::hopos=NULL;
+drawer** highway::presser=NULL;
+drawer** highway::presserp=NULL;
 
-highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
-                  visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), progress(0), score(0), streak(0), rockmeter(500)
-            {
-                if (notes==NULL&&hopos==NULL&&presser==NULL&&presserp==NULL) {
-                    notes=new drawer**[300];
-                    hopos=new drawer**[300];
+bool highway::load() {
+    static int i=30;
+    if (i<150||(notes==NULL&&hopos==NULL)) {
+        if (notes==NULL&&hopos==NULL) {
+            i=30;
+            notes=new drawer**[300];
+            for (int i=0;i<300;i++) notes[i]=NULL;
+            hopos=new drawer**[300];
+            for (int i=0;i<300;i++) hopos[i]=NULL;
+            }
 
-                    presser=new drawer*[5];
-                    presserp=new drawer*[5];
+        notes[i]=new drawer*[6];
+        notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
+        notes[i][GREEN]->resize(i);
+        notes[i][RED]=new drawer(FilePath("Image/", "red", ".png"));
+        notes[i][RED]->resize(i);
+        notes[i][YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
+        notes[i][YELLOW]->resize(i);
+        notes[i][BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
+        notes[i][BLUE]->resize(i);
+        notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
+        notes[i][ORANGE]->resize(i);
+        notes[i][STARPOWER]=new drawer(FilePath("Image/", "spower", ".png"));
+        notes[i][STARPOWER]->resize(i);
+        
+        hopos[i]=new drawer*[6];
+        hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
+        hopos[i][GREEN]->resize(i);
+        hopos[i][RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
+        hopos[i][RED]->resize(i);
+        hopos[i][YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
+        hopos[i][YELLOW]->resize(i);
+        hopos[i][BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
+        hopos[i][BLUE]->resize(i);
+        hopos[i][ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
+        hopos[i][ORANGE]->resize(i);
+        hopos[i][STARPOWER]=new drawer(FilePath("Image/", "spowerhopo", ".png"));
+        hopos[i][STARPOWER]->resize(i);
 
-                    presser[GREEN]=new drawer(FilePath("Image/", "greenpresser", ".png"));
-                    presser[GREEN]->resize(width/5-28);
-                    presser[RED]=new drawer(FilePath("Image/", "redpresser", ".png"));
-                    presser[RED]->resize(width/5-28);
-                    presser[YELLOW]=new drawer(FilePath("Image/", "yellowpresser", ".png"));
-                    presser[YELLOW]->resize(width/5-28);
-                    presser[BLUE]=new drawer(FilePath("Image/", "bluepresser", ".png"));
-                    presser[BLUE]->resize(width/5-28);
-                    presser[ORANGE]=new drawer(FilePath("Image/", "orangepresser", ".png"));
-                    presser[ORANGE]->resize(width/5-28);
-                    
-                    presserp[GREEN]=new drawer(FilePath("Image/", "greenpresserpressed", ".png"));
-                    presserp[GREEN]->resize(width/5-28);
-                    presserp[RED]=new drawer(FilePath("Image/", "redpresserpressed", ".png"));
-                    presserp[RED]->resize(width/5-28);
-                    presserp[YELLOW]=new drawer(FilePath("Image/", "yellowpresserpressed", ".png"));
-                    presserp[YELLOW]->resize(width/5-28);
-                    presserp[BLUE]=new drawer(FilePath("Image/", "bluepresserpressed", ".png"));
-                    presserp[BLUE]->resize(width/5-28);
-                    presserp[ORANGE]=new drawer(FilePath("Image/", "orangepresserpressed", ".png"));
-                    presserp[ORANGE]->resize(width/5-28);
+        i++;
+        }
+}
 
-                    char string[100];
-                    for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
-                        visual->clear();
-                        sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+40)-((width/5-8)/3-10)));
-                        visual->textxy(string, SIZEX/2-visual->textwidth(string)/2, 3*SIZEY/4);
-                        visual->Flip();
-                        
-                        
-                        notes[i]=new drawer*[5];
-                        notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
-                        notes[i][GREEN]->resize(i);
-                        notes[i][RED]=new drawer(FilePath("Image/", "red", ".png"));
-                        notes[i][RED]->resize(i);
-                        notes[i][YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
-                        notes[i][YELLOW]->resize(i);
-                        notes[i][BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
-                        notes[i][BLUE]->resize(i);
-                        notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
-                        notes[i][ORANGE]->resize(i);
-                        
-                        
-                        hopos[i]=new drawer*[5];
-                        hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
-                        hopos[i][GREEN]->resize(i);
-                        hopos[i][RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
-                        hopos[i][RED]->resize(i);
-                        hopos[i][YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
-                        hopos[i][YELLOW]->resize(i);
-                        hopos[i][BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
-                        hopos[i][BLUE]->resize(i);
-                        hopos[i][ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
-                        hopos[i][ORANGE]->resize(i);
+void highway::unload() {
+    if (notes!=NULL||hopos!=NULL) {
+        if (notes) {
+            for (int i=0;i<300;i++) {
+                if (notes[i]) {
+                    for (int j=0;j<6;j++) {
+                        delete notes[i][j];
+                        notes[i][j]=NULL;
                         }
-                    SDL_Delay(500);
+                    delete[] notes[i];
+                    notes[i]=NULL;
                     }
-
-                note_w=(width/5-8);
-                note_h=(width/5-8);
-                
-                FILE *chartfile=NULL;
-                int i;
-                int col[]={visual->color(40,200,10), visual->color(200, 0, 0), visual->color(247, 236, 40), visual->color(10, 10, 200), visual->color(255, 102, 0)};
-
-                fretstate=new short int[5];
-                color=new int[5];
-                for (i=0;i<5;i++) color[i]=col[i];
-                fret=new char[5];
-                for (i=0;i<5;i++) fret[i]=frt[i];
-
-                for (size=0;pck[size];size++);
-                pickstate=new short int[size];
-                pick=new char[++size];
-                for (i=0;i<size;i++) pick[i]=pck[i];
-
-
-                {
-                    char extension[20]="";
-                    strcat (extension, "_");
-                    switch (instrument) {
-                        case DRUMS: strcat (extension,"dru"); break;
-                        case BASS: strcat (extension, "bas"); break;
-                        case GUITAR: strcat (extension, "gui"); break;
-                        }
-                    strcat (extension, ".chart");
-                    chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
                 }
-
-                if (chartfile==NULL) Error ("No chart files are avaliable");
-
-                CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
-
-                fread (&bpm, sizeof(int), 1, chartfile);
-                fread (&size, sizeof(int), 1, chartfile);
-                chart=new note[(size>50000)?(size=0):(size)];
-                for (i=0;i<size;i++) {
-                    bool cond;
-                    do {
-                        chart[i](chartfile);
-                        if (i==0) break;
-                        
-                        cond=false;
-                        switch (difficulty) {
-                            case EASY:
-                                for (int j=4;chart[i].chord>1;j--) {
-                                    if ((chart[i].type&~(1<<j))!=chart[i].type) {
-                                        chart[i].type=chart[i].type&~(1<<j);
-                                        chart[i].chord--;
-                                        }
-                                    }
-                                if (chart[i].type>=(1<<3)) chart[i].type=chart[i].type>>2;
-                                if (chart[i].time-chart[i-1].time<300) {
-                                    cond=true;
-                                    size--;
-                                    }
-                                break;
-                            case MEDIUM:
-                                for (int j=4;chart[i].chord>2;j--) {
-                                    if ((chart[i].type&~(1<<j))!=chart[i].type) {
-                                        chart[i].type=chart[i].type&(~(1<<j));
-                                        chart[i].chord--;
-                                        }
-                                    }
-                                if (chart[i].type>=(1<<4)) chart[i].type=chart[i].type>>1;
-                                if (chart[i].time-chart[i-1].time<200||(chart[i].chord>1&&chart[i].time-chart[i-1].time<300)) {
-                                    cond=true;
-                                    size--;
-                                }
-                                break;
-                            case HARD:
-                                if (chart[i].time-chart[i-1].time<100||(chart[i].chord>=2&&chart[i].time-chart[i-1].time<150)) {
-                                    cond=true;
-                                    size--;
-                                    }
-                                break;
-                            }
-                        } while (cond&&i<size);
-                    chart[i].hopo=(allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type));
+            delete[] notes;
+            notes=NULL;
+            }
+        if (hopos) {
+            for (int i=0;i<300;i++) {
+                if (hopos[i]) {
+                    for (int j=0;j<6;j++) {
+                        delete hopos[i][j];
+                        hopos[i][j]=NULL;
+                        }
+                    delete[] hopos[i];
+                    hopos[i]=NULL;
                     }
-                for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
-                CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
+                }
+            delete[] hopos;
+            hopos=NULL;
+            }
+        }
+}
+
+highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty difficulty, int *extras, char frt[]="ZXCVB", char pck[]="", char spk=SDLK_SPACE, int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
+                  visual(vsl), MusicStream(stream), instrument(instr), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), starpower(0), progress(0), score(0), streak(0), rockmeter(500)
+        {
+        if (presser==NULL&&presserp==NULL) {
+            presser=new drawer*[5];
+            presserp=new drawer*[5];
+
+            presser[GREEN]=new drawer(FilePath("Image/", "greenpresser", ".png"));
+            presser[GREEN]->resize(width/5-28);
+            presser[RED]=new drawer(FilePath("Image/", "redpresser", ".png"));
+            presser[RED]->resize(width/5-28);
+            presser[YELLOW]=new drawer(FilePath("Image/", "yellowpresser", ".png"));
+            presser[YELLOW]->resize(width/5-28);
+            presser[BLUE]=new drawer(FilePath("Image/", "bluepresser", ".png"));
+            presser[BLUE]->resize(width/5-28);
+            presser[ORANGE]=new drawer(FilePath("Image/", "orangepresser", ".png"));
+            presser[ORANGE]->resize(width/5-28);
+            
+            presserp[GREEN]=new drawer(FilePath("Image/", "greenpresserpressed", ".png"));
+            presserp[GREEN]->resize(width/5-28);
+            presserp[RED]=new drawer(FilePath("Image/", "redpresserpressed", ".png"));
+            presserp[RED]->resize(width/5-28);
+            presserp[YELLOW]=new drawer(FilePath("Image/", "yellowpresserpressed", ".png"));
+            presserp[YELLOW]->resize(width/5-28);
+            presserp[BLUE]=new drawer(FilePath("Image/", "bluepresserpressed", ".png"));
+            presserp[BLUE]->resize(width/5-28);
+            presserp[ORANGE]=new drawer(FilePath("Image/", "orangepresserpressed", ".png"));
+            presserp[ORANGE]->resize(width/5-28);
+            }
+
+        {
+            char string[100];
+            if (notes==NULL) notes=new drawer**[300];
+            if (hopos==NULL) hopos=new drawer**[300];
+            for (int i=(width/5-8)/3-10;i<width/5+30;i++) {
+                visual->clear();
+                sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+30)-((width/5-8)/3-10)));
+                visual->textxy(string, SIZEX/2-visual->textwidth(string)/2, 3*SIZEY/4);
+                visual->Flip();
+
+                if (notes[i]==NULL) {
+                    notes[i]=new drawer*[6];
+                    notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
+                    notes[i][GREEN]->resize(i);
+                    notes[i][RED]=new drawer(FilePath("Image/", "red", ".png"));
+                    notes[i][RED]->resize(i);
+                    notes[i][YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
+                    notes[i][YELLOW]->resize(i);
+                    notes[i][BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
+                    notes[i][BLUE]->resize(i);
+                    notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
+                    notes[i][ORANGE]->resize(i);
+                    notes[i][STARPOWER]=new drawer(FilePath("Image/", "spower", ".png"));
+                    notes[i][STARPOWER]->resize(i);
+                    }
+                if (hopos[i]==NULL) {
+                    hopos[i]=new drawer*[6];
+                    hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
+                    hopos[i][GREEN]->resize(i);
+                    hopos[i][RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
+                    hopos[i][RED]->resize(i);
+                    hopos[i][YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
+                    hopos[i][YELLOW]->resize(i);
+                    hopos[i][BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
+                    hopos[i][BLUE]->resize(i);
+                    hopos[i][ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
+                    hopos[i][ORANGE]->resize(i);
+                    hopos[i][STARPOWER]=new drawer(FilePath("Image/", "spowerhopo", ".png"));
+                    hopos[i][STARPOWER]->resize(i);
+                    }
+                }
+        }
+        rockmart=new drawer(FilePath("Image/", "rockmeter", ".png"));
+        rockmart->resize(rockmart->get_width(), height-150);
+
+        spbar=new drawer(FilePath("Image/", "starpower", ".png"));
+        spbarfilled=new drawer(FilePath("Image/", "starpowerfilled", ".png"));
+
+        note_w=(width/5-8);
+        note_h=(width/5-8);
+
+        FILE *chartfile=NULL;
+        int i;
+        int col[]={visual->color(40,200,10), visual->color(200, 0, 0), visual->color(247, 236, 40), visual->color(10, 10, 200), visual->color(255, 102, 0)};
+
+        fretstate=new short int[5];
+        color=new int[5];
+        for (i=0;i<5;i++) color[i]=col[i];
+        fret=new char[5];
+        for (i=0;i<5;i++) fret[i]=frt[i];
+
+        for (size=0;pck[size];size++);
+        pickstate=new short int[size];
+        pick=new char[++size];
+        for (i=0;i<size;i++) pick[i]=pck[i];
+
+        spkey=spk;
+
+        {
+            char extension[20]="";
+            strcat (extension, "_");
+            switch (instrument) {
+                case DRUMS: strcat (extension,"dru"); break;
+                case BASS: strcat (extension, "bas"); break;
+                case GUITAR: strcat (extension, "gui"); break;
+                }
+            strcat (extension, ".chart");
+            chartfile=fopen(FilePath("Chart/", MusicStream->filename, extension), "rb");
+        }
+
+        if (chartfile==NULL) Error ("No chart files are avaliable");
+
+        CheckChartIntegrity(chartfile, "Chrt.fle-chck|fr_corrupt%%4&$32@&*  5%%^ 1123581321");
+
+        fread (&bpm, sizeof(int), 1, chartfile);
+        fread (&size, sizeof(int), 1, chartfile);
+        chart=new note[(size>50000)?(size=0):(size)];
+        for (i=0;i<size;i++) {
+            bool cond;
+            do {
+                chart[i](chartfile);
+                if (i==0) break;
+
+                cond=false;
+                switch (difficulty) {
+                    case EASY:
+                        for (int j=4;chart[i].chord>1;j--) {
+                            if ((chart[i].type&~(1<<j))!=chart[i].type) {
+                                chart[i].type=chart[i].type&~(1<<j);
+                                chart[i].chord--;
+                                }
+                            }
+                        if (chart[i].type>=(1<<3)) chart[i].type=chart[i].type>>2;
+                        if (chart[i].time-chart[i-1].time<300) {
+                            cond=true;
+                            size--;
+                            }
+                        break;
+                    case MEDIUM:
+                        for (int j=4;chart[i].chord>2;j--) {
+                            if ((chart[i].type&~(1<<j))!=chart[i].type) {
+                                chart[i].type=chart[i].type&(~(1<<j));
+                                chart[i].chord--;
+                                }
+                            }
+                        if (chart[i].type>=(1<<4)) chart[i].type=chart[i].type>>1;
+                        if (chart[i].time-chart[i-1].time<200||(chart[i].chord>1&&chart[i].time-chart[i-1].time<300)) {
+                            cond=true;
+                            size--;
+                        }
+                        break;
+                    case HARD:
+                        if (chart[i].time-chart[i-1].time<100||(chart[i].chord>=2&&chart[i].time-chart[i-1].time<150)) {
+                            cond=true;
+                            size--;
+                            }
+                        break;
+                    }
+                } while (cond&&i<size);
+            chart[i].hopo=(allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type));
+            }
+        for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
+        CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 }
 
 highway::~highway () {
@@ -512,7 +637,7 @@ highway::~highway () {
         delete[] pick;
         delete[] chart;
         delete[] color;
-        if (notes!=NULL&&hopos!=NULL&&presser!=NULL&&presserp!=NULL) {
+        if (presser!=NULL&&presserp!=NULL) {
             for (int i=0;i<5;i++) {
                 delete presser[i];
                 delete presserp[i];
@@ -521,19 +646,10 @@ highway::~highway () {
             presser=NULL;
             delete[] presserp;
             presserp=NULL;
-            for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
-                for (int j=0;j<5;j++) delete notes[i][j];
-                delete[] notes[i];
-                }
-            delete[] notes;
-            notes=NULL;
-            for (int i=(width/5-8)/3-10;i<width/5+40;i++) {
-                for (int j=0;j<5;j++) delete hopos[i][j];
-                delete[] hopos[i];
-                }
-            delete[] hopos;
-            hopos=NULL;
             }
+        delete rockmart;
+        delete spbar;
+        delete spbarfilled;
 }
 
 void highway::reset () {
@@ -571,12 +687,77 @@ void highway::reset () {
         CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 }
 
+void highway::draw (int time=0) {
+            if (!time) time=MusicStream->time();
+
+            int i, j;
+
+            visual->line(notex(GREEN, -1000)-5, position3d(-1000), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
+            visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
+
+            for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
+                visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(40, 40, 40, 255));
+                if ((j/(60*1000/bpm))%4==0) {
+                    visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(127, 127, 127, 255));
+                    visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1, visual->color(127, 127, 127, 255));
+                    }
+                }
+
+            for (j=0;j<5;j++) {
+                if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0), visual);
+                else presser[j]->apply_surface(notex(j), position3d(0), visual);
+                }
+            for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
+
+            while (position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
+                if (chart[j].hit==false||chart[j].end>chart[j].time)
+                    for (int i=0;i<5;i++)
+                        if ((chart[j].type>>i)%2) {
+                            if (chart[j].end>chart[j].time) {
+                                if (chart[j].hold) {
+                                    if (starpower%2) visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, visual->color(0, 255, 255));
+                                    else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, color[i]);
+                                    }
+                                else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, visual->color(127, 127, 127));
+                                }
+                            if (position3d(chart[j].time-time)<visual->get_height()) {
+                                if (!chart[j].hit&&!chart[j].hopo) {
+                                    if (starpower%2) notes[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
+                                    else notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
+                                    }
+                                else if (!chart[j].hit) {
+                                    if (starpower%2) hopos[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
+                                    else hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
+                                    }
+                                }
+                            }
+                j++;
+                }
+            char string[50];
+            if (!practice) {
+                visual->settextstyle("lazy", NULL, 25);
+                int posx=notex(GREEN)-visual->textwidth("9999999"), posy=SIZEY-140;
+                sprintf (string, "%lld", score/10000);
+                visual->textxy (string, posx-5, posy);
+                posy+=visual->textheight(string);
+                sprintf (string, "%d", streak);
+                visual->textxy (string, posx, posy);
+                posy+=visual->textheight(string);
+                sprintf (string, "x%d", multiplier()*(starpower%2+1));
+                visual->textxy(string, posx, posy);
+                rockmart->apply_surface(notex(GREEN)-20, SIZEY-150-rockmart->get_height(), visual, SIZEY-150-rockmart->get_height()*rockmeter/1000);
+                spbarfilled->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbarfilled->get_height(), visual, SIZEY-150-spbarfilled->get_height()*starpower/100000);
+                spbar->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbar->get_height(), visual);
+                }
+}
+
 int highway::multiplier () {
     if (streak>30) return 4;
     return (streak/10)+1;
 }
 
 long long int highway::refresh (Uint8* keyboard) {
+                    static int lasttime;
                     int time=MusicStream->time();
                     int i;
                     char fretaux, newfretstate[5], newpickstate[5];
@@ -584,25 +765,25 @@ long long int highway::refresh (Uint8* keyboard) {
                     
                     if (time==~0) return score/10000;
 
-                    for (i=0;i<5;i++) {
-                        //newnewfretstate[i]=GetAsyncKeyState(fret[i])!=0;
-                        newfretstate[i]=keyboard[fret[i]]!=0;
+                    for (i=0;i<5;i++) newfretstate[i]=keyboard[fret[i]]!=0;
+                    for (i=0;pick[i];i++) newpickstate[i]=keyboard[pick[i]]!=0;
+                    
+                    if (keyboard[spkey]!=0&&!(starpower%2)&&starpower>50000) {
+                        starpower++;
+                        MusicStream->starpower();
                         }
-                    for (i=0;pick[i];i++) {
-                        //newpickstate[i]=GetAsyncKeyState(pick[i])!=0;
-                        newpickstate[i]=keyboard[pick[i]]!=0;
-                        }
-
+                        
                     while (progress<size&&time-chart[progress].time>timing_window) {
                         if (chart[progress].hit==false) {
-                            rockmeter-=20;
-                            basescore+=(500000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
+                            rockmeter-=20/(starpower%2+1);
+                            basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
                             streak=0;
                             MusicStream->hitting(instrument, false);
                             }
                         progress++;
                         }
                     if (chart[progress].time-time>time_delay&&chart[progress-1].end<time) MusicStream->hitting(instrument);
+                    if (streak>0) MusicStream->hitting(instrument);
 
                     for (i=0, fretaux=0;i<5;i++) fretaux+=newfretstate[i]<<i;
                     for (i=0, picked=false;pick[i];i++) if ((newpickstate[i]^pickstate[i])&newpickstate[i]) picked=true;
@@ -612,12 +793,13 @@ long long int highway::refresh (Uint8* keyboard) {
                             if (!chart[j].hit) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||
                                         (!(chart[j].chord-1) &&(fretaux^(chart[j].type))<chart[j].type)) {
-                                           rockmeter+=21-rockmeter/50;
+                                           rockmeter+=(21-rockmeter/50)*(starpower%2*3+1);
+                                           starpower+=(multiplier()>1)*2*(((starpower+1)%2)*(2+rockmeter*rockmeter/2500)*(timing_window-abs(chart[j].time-time))*chart[j].chord/timing_window);
                                            chart[j].hit=true;
                                            MusicStream->hitting(instrument);
-                                           basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                           basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
-                                           score+=500000*chart[j].chord*multiplier();
+                                           score+=(starpower%2+1)*(timing_window-abs(chart[j].time-time))*1100000*chart[j].chord*multiplier()/timing_window;
                                            picked=chart[j].hopo=false;
                                            }
                                     }
@@ -626,7 +808,7 @@ long long int highway::refresh (Uint8* keyboard) {
                     for (int j=progress;j<size&&chart[j].time-time<timing_window;j++) {             //sustain
                         if (chart[j].hit&&chart[j].hold) {
                                         if (streak>0&&(((fretaux^(chart[j].type))&(chart[j].type))==0)&&chart[j].time<chart[j].end) {
-                                                    score+=((time-chart[j].time))*chart[j].chord*multiplier()*bpm;
+                                                    score+=(starpower%2+1)*((time-chart[j].time))*chart[j].chord*multiplier()*bpm;
                                                     chart[j].time=time;
                                                     fretaux^=chart[j].type;
                                                 }
@@ -649,7 +831,7 @@ long long int highway::refresh (Uint8* keyboard) {
                         if (chart[j].hit&&chart[j].hopo) picked=chart[j].hopo=false;
                         }
                     if (picked) {
-                        rockmeter-=20;
+                        rockmeter-=20/(starpower%2+1);
                         streak=0;
                         MusicStream->error();
                         }
@@ -663,12 +845,13 @@ long long int highway::refresh (Uint8* keyboard) {
                         if (chart[j-1].hit&&!chart[j].hit&&chart[j].hopo) {
                                     if (((chart[j].chord-1)&&((fretaux^(chart[j].type))==0))||
                                         (!(chart[j].chord-1) &&(fretaux^(chart[j].type))<chart[j].type)) {
-                                        rockmeter+=21-rockmeter/50;
+                                        rockmeter+=(21-rockmeter/50)*(starpower%2*3+1);
+                                        starpower+=(multiplier()>1)*2*(((starpower+1)%2)*(2+rockmeter*rockmeter/2500)*(timing_window-abs(chart[j].time-time))*chart[j].chord/timing_window);
                                         chart[j].hit=true;
                                         MusicStream->hitting(instrument);
-                                        basescore+=(500000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
+                                        basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
-                                        score+=500000*chart[j].chord*multiplier();
+                                        score+=(starpower%2+1)*(timing_window-abs(chart[j].time-time))*1100000*chart[j].chord*multiplier()/timing_window;
                                         picked=false;
                                         }
                                     }
@@ -678,8 +861,19 @@ long long int highway::refresh (Uint8* keyboard) {
 
                     for (i=0;i<5;i++) fretstate[i]=newfretstate[i];
                     for (i=0;pick[i];i++) pickstate[i]=newpickstate[i];
-
+                    
+                    if (starpower%2) {
+                        starpower-=(time-lasttime)*bpm/60*2;
+                        MusicStream->starpower();
+                        }
+                    if (starpower<0) {
+                        starpower=0;
+                        MusicStream->starpower(false);
+                        }
+                    if (starpower>100000) starpower=100000;
+                    
                     draw(time);
+                    lasttime=time;
                     return score/10000;
 }
 

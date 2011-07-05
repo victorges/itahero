@@ -13,7 +13,7 @@ enum en_difficulty {EASY, MEDIUM, HARD, EXPERT};
 
 enum en_extras {HYPERSPEED, PRECISION, GODMODE, ALLHOPO, PRACTICE=9};
 
-enum en_notes {GREEN, RED, YELLOW, BLUE, ORANGE};
+enum en_notes {GREEN, RED, YELLOW, BLUE, ORANGE, STARPOWER};
 
 #define NERROR 5
 #define NART 1
@@ -135,9 +135,6 @@ void PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) 
                     }
                 bmenu=false;
                 }
-        sprintf (string, "%d", 1000/(clock()*1000/CLOCKS_PER_SEC-timams));
-        screen->bar(0, 0, screen->textwidth(string), screen->textheight(string), screen->color(0, 0, 1));
-        screen->textxy(string, 0, 0);
         }
     delete pause;
 }
@@ -159,7 +156,7 @@ int main (int argc, char *argv[]) {
     size_t size;
     char string[200];
     int nSongs;
-   
+
     drawer *screen;
     #ifndef FULLSCREEN
     screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE );
@@ -190,10 +187,16 @@ int main (int argc, char *argv[]) {
     fclose (reader);
 //end of loading of song list
 
-    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}, {SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5}};
-    char playerspick[4][3]={{SDLK_1, SDLK_2, 0}, "", "", ""};
+    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}};
+    char playerssp[4]={SDLK_SPACE, SDLK_RETURN, SDLK_TAB};
+    char playerspick[4][3]={"", "", "", ""};
     int playersextras[4][10]={{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
 
+    drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".jpg"));
+
+    screen->load_background(wallpaper);
+    screen->clear();
+    screen->setcolor(0, 0, 0);
     menu *startmenu=new menu(screen, " - Main Menu");
     startmenu->addOpt("Singleplayer");
     startmenu->addOpt("Multiplayer");
@@ -203,7 +206,7 @@ int main (int argc, char *argv[]) {
     bool done=0;
     while (!done) {
         while (startmenu->navigate());
-        screen->clear();
+        wallpaper->apply_surface(0, 0, screen);
         switch (startmenu->opts()[0]) {
             case 'S':
                 {
@@ -255,8 +258,10 @@ int main (int argc, char *argv[]) {
                                         }
                                     ChosenSong->preview(false);
                                     ChosenSong->load();
-                                    highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0], SIZEX/2, 700);
+                                    screen->load_background(NULL);
+                                    highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0], playerssp[0], SIZEX/2, 7*SIZEX/20);
                                     PlaySong (screen, ChosenSong, &player);
+                                    screen->load_background(wallpaper);
                                     ChosenSong->unload();
                                     ChosenSong=NULL;
                                     delete player;
@@ -278,7 +283,6 @@ int main (int argc, char *argv[]) {
                     menu *ordmenu=new menu (screen, " - How many people are going to play?");
                     ordmenu->addOpt("2");
                     ordmenu->addOpt("3");
-                    ordmenu->addOpt("4");
                     while(ordmenu->navigate());
                     screen->clear();
                     nPlayers=ordmenu->opt()+1;
@@ -346,8 +350,10 @@ int main (int argc, char *argv[]) {
                                         ChosenSong->preview(false);
                                         ChosenSong->load();
                                         highway *players[nPlayers];
-                                        for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
+                                        screen->load_background(NULL);
+                                        for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers));
                                         PlaySong (screen, ChosenSong, players, nPlayers);
+                                        screen->load_background(wallpaper);
                                         ChosenSong->unload();
                                         for (int j=0;j<nPlayers;j++) delete players[j];
                                         stay=0;
@@ -450,8 +456,10 @@ int main (int argc, char *argv[]) {
                                                     case 4: ChosenSong->load(1.0, from, to+1); break;
                                                     }
                                                 playersextras[0][PRACTICE]=1;
+                                                screen->load_background(NULL);
                                                 highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0]);
                                                 PlaySong (screen, ChosenSong, &player);
+                                                screen->load_background(wallpaper);
                                                 ChosenSong->unload();
                                                 delete player;
                                                 playersextras[0][PRACTICE]=0;
@@ -499,6 +507,7 @@ int main (int argc, char *argv[]) {
         }
     delete startmenu;
 
+    highway::unload();
     engine->drop();
     SDL_Quit ();
     TTF_Quit ();

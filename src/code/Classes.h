@@ -14,6 +14,7 @@ class drawer {
         Uint32 maincolor;
         Uint32 keycolor;
         SDL_Surface *surface;
+        drawer *background;
         TTF_Font *font;
         SDL_Color textcolor;
         int textsize;
@@ -26,6 +27,8 @@ class drawer {
         drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask); //cria surface qualquer
         drawer (char filename[]);
         ~drawer ();
+        
+        void load_background(drawer *background);
         
         void settextstyle (char font[]="lazy", SDL_Color *textcolor=NULL, int textsize=15);
         int textheight(char string[]);
@@ -95,6 +98,7 @@ class music {
         
         void settime(int time);
         void settimerel(int dt);
+        float speed();
 
         void lose();
         void error();
@@ -105,7 +109,7 @@ class music {
 class highway {
       private:
         int location, width, height;
-        char *fret, *pick, instrument;
+        char *fret, *pick, spkey, instrument;
         short int *fretstate, *pickstate;
         int *color;
         note *chart;
@@ -114,15 +118,18 @@ class highway {
         int time_delay, timing_window;
         bool allhopo, godmode, practice;
         long long int basescore, score;
-        int streak, rockmeter;
+        int streak, rockmeter, starpower;
         drawer *visual, *hway;
-        static drawer ***notes, ***hopos, **presser, **presserp;
         int note_w, note_h;
         int note_width(int dt=0, bool check=1);
         int position3d (int dt, bool check=1);
         int notex (int note, int dt=0, bool check=1);
+        static drawer ***notes, ***hopos, **presser, **presserp;
+        drawer *rockmart, *spbar, *spbarfilled;
       public:
-        highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, int location, int width, int height);
+        static bool load();
+        static void unload();
+        highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, char spkey, int location, int width, int height);
         ~highway ();
         void reset();
         void draw (int time);
@@ -131,83 +138,9 @@ class highway {
         long long int refresh(Uint8* keyboard);
         bool alive();
     };
-drawer*** highway::notes=NULL;
-drawer*** highway::hopos=NULL;
-drawer** highway::presser=NULL;
-drawer** highway::presserp=NULL;
 
-class background; //to-do
+//class background; //to-do
 
-void menu::print () {
-    option *aux=start;
-    visual->bar(locx-sizex/2-10, locy-sizey/2-10, locx+sizex/2+10, locy+sizey/2+10, 0);
-    visual->textxy(header, locx-sizex/2, locy-sizey/2);
-    
-    int y=visual->textheight(header);
-    for (int curr=0;aux;curr++) {
-        char string[100]="";
-        if (selected==curr) {
-            strcat(string, " ");
-            }
-        strcat (string, aux->content);
-        visual->textxy(string, locx-sizex/2, locy-sizey/2+y);
-        y+=visual->textheight(aux->content);
-        aux=aux->next;
-        }
-}
-
-void highway::draw (int time=0) {
-            if (!time) time=MusicStream->time();
-            
-            int i, j;
-
-            visual->line(notex(GREEN, -1000)-5, position3d(-1000), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
-            visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
-
-            for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
-                visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(40, 40, 40, 255));
-                if ((j/(60*1000/bpm))%4==0) {
-                    visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(127, 127, 127, 255));
-                    visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1, visual->color(127, 127, 127, 255));
-                    }
-                }
-                
-            for (j=0;j<5;j++) {
-                if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0), visual);
-                else presser[j]->apply_surface(notex(j), position3d(0), visual);
-                }
-            for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
-
-            while (position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
-                if (chart[j].hit==false||chart[j].end>chart[j].time) {
-                    for (int i=0;i<5;i++) {
-                        if ((chart[j].type>>i)%2) {
-                            if (chart[j].end>chart[j].time) {
-                                visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, color[i]);
-                                }
-                            if (position3d(chart[j].time-time)<visual->get_height()) {
-                                if (!chart[j].hit&&!chart[j].hopo) notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
-                                else if (!chart[j].hit) hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
-                                }
-                            }
-                        }
-                    }
-                j++;
-                }
-            char string[50];
-            if (!practice) {
-                int posx=notex(GREEN)-125, posy=SIZEY-140;
-                visual->settextstyle("lazy", NULL, 20);
-                sprintf (string, "%lld,%lld  %lld", score/basescore%10, (10*score/basescore%10), score/10000);
-                visual->textxy (string, posx-5, posy);
-                posy+=visual->textheight(string);
-                sprintf (string, "%d  x%d", streak, multiplier());
-                visual->textxy (string, posx, posy);
-                posy+=visual->textheight(string);
-                sprintf (string, "%d", rockmeter);
-                visual->textxy (string, posx, posy);
-                }
-}
 /*backup
 void menu::print () { //temporaria
     option *aux=start;

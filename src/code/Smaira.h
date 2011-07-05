@@ -19,7 +19,7 @@ drawer::~drawer (){
     TTF_CloseFont(font);
 }
 
-drawer::drawer (char filename[]){
+drawer::drawer (char filename[]): background(NULL) {
     SDL_Surface *loaded = NULL;
     
     loaded = IMG_Load ( filename );
@@ -103,7 +103,7 @@ void drawer::apply_surface ( int x, int y, drawer *destination, int top, SDL_Rec
 
 void drawer::textxy ( char message[], int x, int y ){
     if (font==NULL) Error ("Font not found");
-    drawer *text = new drawer (TTF_RenderText_Solid ( font, message, textcolor ));
+    drawer *text = new drawer (TTF_RenderText_Blended ( font, message, textcolor ));
     text->apply_surface ( x, y, this);
     delete text;
 }
