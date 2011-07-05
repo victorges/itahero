@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
 		//fscanf(in, " %s", buffer);
         if(i==9) sprintf(buffer, "quit");
         else sprintf(buffer, "%d ", i);
-        
+        SDL_Delay(100);
 
 		len = strlen(buffer) + 1;
 		if(SDLNet_TCP_Send(newsock, (void *)buffer, len) < len){
