@@ -235,11 +235,11 @@ int main (int argc, char *argv[]) {
             screen->Flip();
             while (songs[menumusic]->time()-sttime<5000*i/SIZEY) highway::load();
             }
-        for (int i=0, sttime=songs[menumusic]->time();i<SIZEX-logo->get_width();i+=10) {
+        for (int i=-logo->get_width(), sttime=songs[menumusic]->time();i<SIZEX-logo->get_width();i+=10) {
             screen->clear();
             logo->apply_surface(i, (screen->get_height()-logo->get_height())/2, screen);
             screen->Flip();
-            while (songs[menumusic]->time()-sttime<1000*i/(SIZEX-logo->get_width())) highway::load();
+            while (songs[menumusic]->time()-sttime<1000*(i+logo->get_width())/SIZEX) highway::load();
             }
         while (SDL_PollEvent(&event));
         menu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
