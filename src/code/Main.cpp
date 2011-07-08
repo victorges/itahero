@@ -417,7 +417,7 @@ int main (int argc, char *argv[]) {
     startmenu->addOpt("Options");
     startmenu->addOpt("Exit");
     songs[menumusic]->pause();
-    songs[menumusic]->play(0.5);
+    songs[menumusic]->play(0.55);
     bool done=0;
     while (!done) {
         while (startmenu->navigate()) {
@@ -425,7 +425,7 @@ int main (int argc, char *argv[]) {
                 songs[menumusic]->unload();
                 menumusic=rand()%nSongs;
                 songs[menumusic]->load(1.0, 3);
-                songs[menumusic]->play(0.5);
+                songs[menumusic]->play(0.55);
                 }
             }
         screen->clear();

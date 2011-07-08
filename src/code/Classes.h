@@ -199,7 +199,7 @@ CSprite::CSprite (CDrawer* screen, CHighway *link): screen(screen), linked(link)
 
     aux=lightning=new CFrame(FilePath("Images/Sprites/", "lightning1", ".png"));
     for (int i=2;i<=2;i++) {
-        sprintf(string, "lightninge%d", i);
+        sprintf(string, "lightning%d", i);
         aux=aux->create_next(FilePath("Images/Sprites/", string, ".png"));
         }
 
