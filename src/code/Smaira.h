@@ -23,12 +23,12 @@ void strcpy(char olds[], char news[]){
     olds[i] = 0;
 }
 
-drawer::~drawer (){
+CDrawer::~CDrawer (){
     SDL_FreeSurface ( surface );
     TTF_CloseFont(font);
 }
 
-drawer::drawer (char filename[]): background(NULL) {
+CDrawer::CDrawer (char filename[]): background(NULL) {
     SDL_Surface *loaded = NULL;
     
     loaded = IMG_Load ( filename );
@@ -42,18 +42,18 @@ drawer::drawer (char filename[]): background(NULL) {
     SDL_FreeSurface ( loaded );
 }
 
-Uint32 &drawer::get_pixel ( int x, int y ){
+Uint32 &CDrawer::get_pixel ( int x, int y ){
     Uint32 *pixels = ( Uint32 * ) surface->pixels;
     
     return pixels [ ( y * surface->w ) + x ];
 }
 
-void drawer::put_pixel ( int x, int y, Uint32 pixel ){
+void CDrawer::put_pixel ( int x, int y, Uint32 pixel ){
     if(x>=0 && x<surface->w && y>=0 && y<surface->h)
         get_pixel ( x, y ) = pixel;
 }
 
-void drawer::apply_surface ( int x, int y, drawer *destination, int top, SDL_Rect *clip ){
+void CDrawer::apply_surface ( int x, int y, CDrawer *destination, int top, SDL_Rect *clip ){
     SDL_Rect clip2;
     SDL_Rect offset;
     offset.x=x;
@@ -110,14 +110,14 @@ void drawer::apply_surface ( int x, int y, drawer *destination, int top, SDL_Rec
         SDL_BlitSurface ( surface, &clip2, destination->surface, &offset );
 }
 
-void drawer::textxy ( char message[], int x, int y ){
+void CDrawer::textxy ( char message[], int x, int y ){
     if (font==NULL) Error ("Font not found");
-    drawer *text = new drawer (TTF_RenderText_Blended ( font, message, textcolor ));
+    CDrawer *text = new CDrawer (TTF_RenderText_Blended ( font, message, textcolor ));
     text->apply_surface ( x, y, this);
     delete text;
 }
 
-void drawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0 ){
+void CDrawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0 ){
     if(color == 0) color = this->maincolor;
     if ( end_x != ini_x ){
         if ( end_x < ini_x ){
@@ -143,13 +143,13 @@ void drawer::line ( int ini_x, int ini_y, int end_x, int end_y, Uint32 color = 0
     }
 }
 
-void drawer::parallelogram (int x1, int y1, int x2, int y2, int w, Uint32 color){
+void CDrawer::parallelogram (int x1, int y1, int x2, int y2, int w, Uint32 color){
     if(color == 0) color = this->maincolor;
     for( int i = 0; i<w; i++)
         line(x1+i, y1, x2+i, y2, color);
 }
 
-void drawer::rectangle ( int left, int top, int right, int bottom, Uint32 color = 0 ){
+void CDrawer::rectangle ( int left, int top, int right, int bottom, Uint32 color = 0 ){
     if(color == 0) color = this->maincolor;
     line ( left, top, right, top, color );
     line ( right, top, right, bottom, color );
@@ -157,7 +157,7 @@ void drawer::rectangle ( int left, int top, int right, int bottom, Uint32 color 
     line ( left, bottom, left, top, color );
 }
 
-void drawer::bar ( int left, int top, int right, int bottom, Uint32 color = 0 ){
+void CDrawer::bar ( int left, int top, int right, int bottom, Uint32 color = 0 ){
     if(color == 0) color = maincolor;
     /*for ( int i = left; i <= right; i++ )
         line ( i, top, i, bottom, color );*/
@@ -169,7 +169,7 @@ void drawer::bar ( int left, int top, int right, int bottom, Uint32 color = 0 ){
     SDL_FillRect(surface, &rect, color);
 }
 
-Uint8 drawer::get_pixel_color ( int x, int y, char c ){
+Uint8 CDrawer::get_pixel_color ( int x, int y, char c ){
     SDL_PixelFormat *fmt;
     Uint32 temp, pixel;
     Uint8 color;
@@ -209,7 +209,7 @@ Uint8 drawer::get_pixel_color ( int x, int y, char c ){
     return color;
 }
 
-int highway::position3d (int dt, bool check) {
+int CHighway::position3d (int dt, bool check) {
     if (check&&dt>time_delay) dt=time_delay;
     int y = visual->get_height()-(dt*(height-100)/time_delay+140*SIZEY/1080);
     double a = (3*height*(height-y)-(height-y)*(height-y))/(3.0*height);
@@ -220,17 +220,17 @@ int highway::position3d (int dt, bool check) {
         }
 }
 
-void drawer::check_unlock (){
+void CDrawer::check_unlock (){
     if ( SDL_MUSTLOCK ( surface ) )
         SDL_UnlockSurface ( surface );
 }
 
-void drawer::check_lock (){
+void CDrawer::check_lock (){
     if ( SDL_MUSTLOCK ( surface ) )
         SDL_LockSurface ( surface );
 }
 
-char* drawer::draw_name(int x, int y){
+char* CDrawer::draw_name(int x, int y){
     SDL_Event event;
     int cnt = 0;
     char *name, aux[2];
@@ -283,7 +283,7 @@ char* drawer::draw_name(int x, int y){
     return name;
 }
 
-void music::check_record_file(int nplayers){
+void CMusic::check_record_file(int nplayers){
     FILE *record = NULL;
     char aux[2], musicname[20];
     strcpy(musicname, filename);
@@ -305,7 +305,7 @@ void music::check_record_file(int nplayers){
     fclose(record);
 }
 
-void music::include_record(char *name, long long int score, int nplayers){
+void CMusic::include_record(char *name, long long int score, int nplayers){
     char nome[10][4], aux[2], musicname[20];
     strcpy(musicname, filename);
     long long int pto[10];
@@ -339,7 +339,7 @@ void music::include_record(char *name, long long int score, int nplayers){
     fclose(record);
 }
 
-void drawer::draw_highscore(int x, int y, char *filename, int nplayers){
+void CDrawer::draw_highscore(int x, int y, char *filename, int nplayers){
     char nome[10][4], string[20], aux[2], musicname[20];
     strcpy(musicname, filename);
     long long int pto[10];
@@ -381,7 +381,7 @@ double Lanczos(double x, int Radius){
   return Radius * sin(tp) * sin(tp / Radius) / (tp * tp);
 }
 
-void drawer::resize(int new_w, int new_h)
+void CDrawer::resize(int new_w, int new_h)
 {
     SDL_Surface * destination;
     

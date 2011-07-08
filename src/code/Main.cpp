@@ -1,4 +1,3 @@
-#include <time.h>
 #include <irrKlang/irrKlang.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
@@ -16,7 +15,6 @@ enum en_extras {HYPERSPEED, PRECISION, GODMODE, ALLHOPO, PRACTICE=9};
 enum en_notes {GREEN, RED, YELLOW, BLUE, ORANGE, STARPOWER};
 
 #define NERROR 5
-#define NART 1
 #define PI 3.14159265359
 
 class {
@@ -54,13 +52,13 @@ bool CheckEsc() {
     return false;
 }
 
-void PreSong (bool &menu, drawer *screen, music *song, highway *players[], int nPlayers) {
+void PreSong (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], int nPlayers) {
     SDL_Event event;
     song->effect("start");
-    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<1357;) {
+    for (int i=SDL_GetTicks();SDL_GetTicks()-i<1357;) {
         screen->Flip();
         screen->clear();
-        for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((clock()*1000/CLOCKS_PER_SEC-i-1357)*song->speed()), NULL, SIZEY+1+(1357-(clock()*1000/CLOCKS_PER_SEC-i))*players[j]->get_height()/1357);
+        for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((int)(SDL_GetTicks()-i-3000)*song->speed()), NULL, SIZEY+1+(1357-(SDL_GetTicks()-i))*players[j]->get_height()/1357);
         if (CheckEsc()) {
             screen->clear();
             for (int j=0;j<nPlayers;j++) players[j]->draw(song->time(), SDL_GetKeyState(NULL));
@@ -70,10 +68,12 @@ void PreSong (bool &menu, drawer *screen, music *song, highway *players[], int n
             }
         }
     song->effect("ticks");
-    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
+    for (int i=SDL_GetTicks();SDL_GetTicks()-i<3000;) {
         screen->Flip();
         screen->clear();
-        for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time()+(int)((clock()*1000/CLOCKS_PER_SEC-i-3000)*song->speed()), SDL_GetKeyState(NULL));
+        char string[50];
+        screen->textxy(string, 0, 0);
+        for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time()+(int)((int)(SDL_GetTicks()-i-3000)*song->speed()), SDL_GetKeyState(NULL));
         if (CheckEsc()) {
             screen->clear();
             for (int j=0;j<nPlayers;j++) players[j]->draw(song->time(), SDL_GetKeyState(NULL));
@@ -84,7 +84,7 @@ void PreSong (bool &menu, drawer *screen, music *song, highway *players[], int n
         }
 }
 
-void Rewind (bool &menu, drawer *screen, music *song, highway *players[], int nPlayers=1) {
+void Rewind (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], int nPlayers=1) {
     int backup=song->time(), i;
     SDL_Event event;
     song->play();
@@ -116,10 +116,10 @@ void Rewind (bool &menu, drawer *screen, music *song, highway *players[], int nP
                 return;
                 }
             }
-        for (i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<dt;) {
+        for (i=SDL_GetTicks();SDL_GetTicks()-i<dt;) {
             screen->Flip();
             screen->clear();
-            for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((clock()*1000/CLOCKS_PER_SEC-i-dt)*song->speed()), SDL_GetKeyState(NULL));
+            for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((SDL_GetTicks()-i-dt)*song->speed()), SDL_GetKeyState(NULL));
             if (CheckEsc()) {
                 screen->clear();
                 for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time(), SDL_GetKeyState(NULL));
@@ -144,12 +144,12 @@ void Rewind (bool &menu, drawer *screen, music *song, highway *players[], int nP
         }
 }
 
-long long int PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) {
+long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int nPlayers=1) {
     SDL_Event event;
     Uint8* keyboard=SDL_GetKeyState(NULL);
     long long int actualscore = 0;
     bool done=false, bmenu=false;
-    menu *pause=new menu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
+   CMenu *pause=new CMenu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
     pause->addOpt("Resume");
     pause->addOpt("Restart");
     pause->addOpt("Exit");
@@ -157,8 +157,6 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
     PreSong(bmenu, screen, song, players, nPlayers);
     song->play();
     while (!done) {
-        int timams=clock()*1000/CLOCKS_PER_SEC;
-        char string[10];
         screen->Flip();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -178,7 +176,7 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
             done=true;
             if (!players[0]->practice) {
                 song->effect("winning");
-                menu rock(screen, "You Rock!", SIZEX/2, SIZEY/2);
+               CMenu rock(screen, "You Rock!", SIZEX/2, SIZEY/2);
                 rock.print();
                 SDL_Delay(3500);
                 screen->clear();
@@ -187,7 +185,7 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
                 char string[100];
                 song->pause();
                 sprintf (string, "Section Ended. Percentage hit: %.1f", players[0]->percentage());
-                menu pract(screen, string, SIZEX/2, SIZEY/2);
+               CMenu pract(screen, string, SIZEX/2, SIZEY/2);
                 pract.addOpt("Retry");
                 pract.addOpt("Exit");
                 while (pract.navigate()||pract.cancel());
@@ -233,7 +231,7 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
                 }
             if (done) {
                 song->pause();
-                menu lost(screen, "You Lost!", SIZEX/2, SIZEY/2);
+               CMenu lost(screen, "You Lost!", SIZEX/2, SIZEY/2);
                 lost.addOpt("Retry");
                 lost.addOpt("Exit");
                 while (lost.navigate()||lost.cancel());
@@ -277,11 +275,11 @@ int main (int argc, char *argv[]) {
     char string[200];
     int nSongs;
 
-    drawer *screen;
+    CDrawer *screen;
     #ifndef FULLSCREEN
-    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE );
+    screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE );
     #else
-    screen = new drawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
+    screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
     #endif
     screen->setcolor(0, 0, 0);
     SDL_ShowCursor(SDL_DISABLE);
@@ -295,14 +293,14 @@ int main (int argc, char *argv[]) {
     fscanf (reader, "%d", &nSongs);
     sfscanf (reader, "]\n");
 
-    music* songs[nSongs];
+    CMusic* songs[nSongs];
 
     for (int i=0;i<nSongs-1;i++) {
-        songs[i]=new music (reader, engine);
+        songs[i]=new CMusic (reader, engine);
         char c;
         sfscanf (reader, "~\n");
         }
-    songs[nSongs-1]=new music (reader, engine);
+    songs[nSongs-1]=new CMusic (reader, engine);
     sfscanf (reader, "[/SONGS]");
     if (fscanf (reader, "%s", string)!=EOF) Error ("Songlist file corrupted");
     fclose (reader);
@@ -322,12 +320,12 @@ int main (int argc, char *argv[]) {
         }
 //end of loading data
 
-    drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
+    CDrawer *wallpaper=new CDrawer(FilePath("Image/", "wallpaper", ".png"));
     screen->load_background(wallpaper);
-    drawer *logo=new drawer(FilePath("Image/", "Ita Hero", ".png"));
-    menu::loadfx(engine);
+    CDrawer *logo=new CDrawer(FilePath("Image/", "Ita Hero", ".png"));
+    CMenu::loadfx(engine);
 
-    srand(clock());
+    srand(SDL_GetTicks());
     int menumusic=2;
     songs[menumusic]->load(1.0, 2);
     songs[menumusic]->play(0.6);
@@ -337,7 +335,7 @@ int main (int argc, char *argv[]) {
         for (int i=0, sttime=songs[menumusic]->time();!skip&&i<SIZEY;i++) {
             wallpaper->apply_surface(0, 0, screen, SIZEY-i);
             screen->Flip();
-            while (songs[menumusic]->time()-sttime<5000*i/SIZEY) highway::load();
+            while (songs[menumusic]->time()-sttime<5000*i/SIZEY) CHighway::load();
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_KEYDOWN:
@@ -361,7 +359,7 @@ int main (int argc, char *argv[]) {
             screen->clear();
             logo->apply_surface(i, (screen->get_height()-logo->get_height())/2, screen);
             screen->Flip();
-            while (songs[menumusic]->time()-sttime<1000*(i+logo->get_width())/SIZEX) highway::load();
+            while (songs[menumusic]->time()-sttime<1000*(i+logo->get_width())/SIZEX) CHighway::load();
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_KEYDOWN:
@@ -384,8 +382,8 @@ int main (int argc, char *argv[]) {
         wallpaper->apply_surface(0, 0, screen);
         logo->apply_surface(SIZEX-logo->get_width(), (screen->get_height()-logo->get_height())/2, screen);
         while (SDL_PollEvent(&event));
-        menu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
-        int sttime=clock()*1000/CLOCKS_PER_SEC;
+       CMenu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
+        int sttime=SDL_GetTicks();
         event.type=SDL_KEYUP;
         while (event.type!=SDL_KEYDOWN) {
             anykey.print();
@@ -398,14 +396,14 @@ int main (int argc, char *argv[]) {
                     SDL_ShowCursor(SDL_DISABLE);
                     }
             } // nao funciona por algum motivo*/
-            if ((clock()*1000/CLOCKS_PER_SEC-sttime)/500%2) screen->setcolor(0, 0, 0);
+            if ((SDL_GetTicks()-sttime)/500%2) screen->setcolor(0, 0, 0);
             else screen->setcolor(223, 159, 26);
-            highway::load();
+            CHighway::load();
             }
     }
     screen->setcolor(0, 0, 0);
     delete wallpaper;
-    wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
+    wallpaper=new CDrawer(FilePath("Image/", "wallpaper", ".png"));
     logo->apply_surface(wallpaper->get_width()-logo->get_width(), (wallpaper->get_height()-logo->get_height())/2, wallpaper);
     screen->load_background(wallpaper);
     {
@@ -414,7 +412,7 @@ int main (int argc, char *argv[]) {
     }
 
     screen->clear();
-    menu *startmenu=new menu(screen, " - Main Menu");
+   CMenu *startmenu=new CMenu(screen, " - Main Menu");
     startmenu->addOpt("Singleplayer");
     startmenu->addOpt("Multiplayer");
     startmenu->addOpt("Practice");
@@ -437,7 +435,7 @@ int main (int argc, char *argv[]) {
             case 'S':
                 {
                     long long int fscore;
-                    menu *diffic=new menu(screen, " - Choose difficulty");
+                   CMenu *diffic=new CMenu(screen, " - Choose difficulty");
                     diffic->addOpt("Easy");
                     diffic->addOpt("Medium");
                     diffic->addOpt("Hard");
@@ -460,14 +458,14 @@ int main (int argc, char *argv[]) {
                             case 3: difficulty=HARD; break;
                             case 4: difficulty=EXPERT; break;
                             }
-                        menu *songmenu=new menu(screen, " - Choose song to play");
+                       CMenu *songmenu=new CMenu(screen, " - Choose song to play");
                         for (int i=0;i<nSongs;i++) {
                             sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                             songmenu->addOpt(string);
                             }
 
                         bool stay=1;
-                        music *ChosenSong=NULL;
+                        CMusic *ChosenSong=NULL;
                         while (stay) {
                             while (songmenu->navigate()) {
                                 if (ChosenSong!=songs[songmenu->opt()-1]) {
@@ -478,7 +476,7 @@ int main (int argc, char *argv[]) {
                                 }
                             screen->clear();
                             if (!songmenu->cancel()) {
-                                menu *instrm=new menu(screen, " - Choose instrument");
+                               CMenu *instrm=new CMenu(screen, " - Choose instrument");
                                 if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                                 if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                 if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
@@ -494,7 +492,7 @@ int main (int argc, char *argv[]) {
                                     ChosenSong->preview(false);
                                     ChosenSong->load();
                                     screen->load_background(NULL);
-                                    highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0], playerssp[0], SIZEX/2, 7*SIZEX/20);
+                                    CHighway *player=new CHighway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0], playerssp[0], SIZEX/2, 7*SIZEX/20);
                                     fscore = PlaySong (screen, ChosenSong, &player);
                                     ChosenSong->check_record_file(1);
                                     if(fscore!=-1 && !playersextras[0][GODMODE]){
@@ -527,7 +525,7 @@ int main (int argc, char *argv[]) {
                 {
                     int nPlayers;
                     long long int fscore;
-                    menu *ordmenu=new menu (screen, " - How many people are going to play?");
+                   CMenu *ordmenu=new CMenu (screen, " - How many people are going to play?");
                     ordmenu->addOpt("2 players");
                     ordmenu->addOpt("3 players");
                     ordmenu->addOpt("4 players");
@@ -547,7 +545,7 @@ int main (int argc, char *argv[]) {
                         for (i=0;i>=0&&i<nPlayers;i++) {
                             delete ordmenu;
                             sprintf (string, " - Choose difficulty for Player %d", i+1);
-                            ordmenu=new menu(screen, string);
+                            ordmenu=new CMenu(screen, string);
                             ordmenu->addOpt("Easy");
                             ordmenu->addOpt("Medium");
                             ordmenu->addOpt("Hard");
@@ -573,13 +571,13 @@ int main (int argc, char *argv[]) {
                         if (i==nPlayers) {
                             songs[menumusic]->unload();
                             delete ordmenu;
-                            ordmenu=new menu(screen, " - Choose song to play");
+                            ordmenu=new CMenu(screen, " - Choose song to play");
                             for (i=0;i<nSongs;i++) {
                                 sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                                 ordmenu->addOpt(string);
                                 }
                             bool stay=1;
-                            music *ChosenSong=NULL;
+                            CMusic *ChosenSong=NULL;
                             while (stay) {
                                 while (ordmenu->navigate()) {
                                     if (ChosenSong!=songs[ordmenu->opt()-1]) {
@@ -590,11 +588,11 @@ int main (int argc, char *argv[]) {
                                     }
                                 screen->clear();
                                 if (!ordmenu->cancel()) {
-                                    menu *instrm;
+                                   CMenu *instrm;
                                     en_instrument instrument[nPlayers];
                                     for (i=0;i>=0&&i<nPlayers;i++) {
                                         sprintf (string, " - Choose instrument for Player %d", i+1);
-                                        instrm=new menu(screen, string);
+                                        instrm=new CMenu(screen, string);
                                         if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                                         if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                                         if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
@@ -612,9 +610,9 @@ int main (int argc, char *argv[]) {
                                     if (i==nPlayers) {
                                         ChosenSong->preview(false);
                                         ChosenSong->load();
-                                        highway *players[nPlayers];
+                                        CHighway *players[nPlayers];
                                         screen->load_background(NULL);
-                                        for (int j=0;j<nPlayers;j++) players[j]=new highway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers), ((SIZEX-20*i)/i>7*SIZEX/20)?(7*SIZEX/20):((SIZEX-20*i)/i));
+                                        for (int j=0;j<nPlayers;j++) players[j]=new CHighway (screen, ChosenSong, instrument[j], difficulty[j], playersextras[j], playersfret[j], playerspick[j], playerssp[j], 50+(1+2*j)*SIZEX/(2*nPlayers), ((SIZEX-20*i)/i>7*SIZEX/20)?(7*SIZEX/20):((SIZEX-20*i)/i));
                                         fscore = PlaySong (screen, ChosenSong, players, nPlayers);
                                         
                                         bool testgm = true;
@@ -646,14 +644,14 @@ int main (int argc, char *argv[]) {
             case 'P':
                 {
                     songs[menumusic]->unload();
-                    menu *songmenu=new menu(screen, " - Choose song to practice");
+                   CMenu *songmenu=new CMenu(screen, " - Choose song to practice");
                     for (int i=0;i<nSongs;i++) {
                         sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                         songmenu->addOpt(string);
                         }
 
                     bool stay=1;
-                    music *ChosenSong=NULL;
+                    CMusic *ChosenSong=NULL;
                     while (stay) {
                         while (songmenu->navigate()) {
                             if (ChosenSong!=songs[songmenu->opt()-1]) {
@@ -664,7 +662,7 @@ int main (int argc, char *argv[]) {
                             }
                         screen->clear();
                         if (!songmenu->cancel()) {
-                            menu *instrm=new menu(screen, " - Choose instrument");
+                           CMenu *instrm=new CMenu(screen, " - Choose instrument");
                             if (ChosenSong->isInstrumentAvaliable(GUITAR)) instrm->addOpt("Guitar");
                             if (ChosenSong->isInstrumentAvaliable(BASS)) instrm->addOpt("Bass");
                             if (ChosenSong->isInstrumentAvaliable(DRUMS)) instrm->addOpt("Drums");
@@ -677,7 +675,7 @@ int main (int argc, char *argv[]) {
                                     case 'B': instrument=BASS; break;
                                     case 'D': instrument=DRUMS; break;
                                     }
-                                menu *diffic=new menu(screen, " - Choose difficulty");
+                               CMenu *diffic=new CMenu(screen, " - Choose difficulty");
                                 diffic->addOpt("Easy");
                                 diffic->addOpt("Medium");
                                 diffic->addOpt("Hard");
@@ -692,7 +690,7 @@ int main (int argc, char *argv[]) {
                                         case 3: difficulty=HARD; break;
                                         case 4: difficulty=EXPERT; break;
                                         }
-                                    menu *speed=new menu(screen, " - Choose speed");
+                                   CMenu *speed=new CMenu(screen, " - Choose speed");
                                     speed->addOpt("Slowest");
                                     speed->addOpt("Slower");
                                     speed->addOpt("Slow");
@@ -700,7 +698,7 @@ int main (int argc, char *argv[]) {
                                     while (speed->navigate()) ChosenSong->preview(true);
                                     screen->clear();
                                     if (!speed->cancel()) {
-                                        menu *section=new menu (screen, " - Choose section (starting point)");
+                                       CMenu *section=new CMenu (screen, " - Choose section (starting point)");
                                         int from, to;
                                         for (int i=1;i<=16;i++) {
                                             sprintf (string, "Section %d", i);
@@ -714,7 +712,7 @@ int main (int argc, char *argv[]) {
                                         screen->clear();
                                         if (!section->cancel()) {
                                             delete section;
-                                            section=new menu (screen, " - Choose section (ending point)");
+                                            section=new CMenu (screen, " - Choose section (ending point)");
                                             for (int i=from+1;i<=16;i++) {
                                                 sprintf (string, "Section %d", i);
                                                 section->addOpt(string);
@@ -734,7 +732,7 @@ int main (int argc, char *argv[]) {
                                                     }
                                                 playersextras[0][PRACTICE]=1;
                                                 screen->load_background(NULL);
-                                                highway *player=new highway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0]);
+                                                CHighway *player=new CHighway (screen, ChosenSong, instrument, difficulty, playersextras[0], playersfret[0], playerspick[0]);
                                                 PlaySong (screen, ChosenSong, &player);
                                                 screen->load_background(wallpaper);
                                                 ChosenSong->unload();
@@ -759,7 +757,7 @@ int main (int argc, char *argv[]) {
                 break;
             case 'O':
                 {
-                    menu *options=new menu(screen, " - Options");
+                   CMenu *options=new CMenu(screen, " - Options");
                     options->addOpt("Controls");
                     options->addOpt("Extras");
                     options->addOpt("Back");
@@ -770,11 +768,11 @@ int main (int argc, char *argv[]) {
                         switch (options->opts()[0]) {
                             case 'C':
                                 {
-                                    menu *ordmenu;
+                                   CMenu *ordmenu;
                                     bool donecontrol=0;
                                     while (!donecontrol) {
                                         screen->clear();
-                                        ordmenu = new menu (screen, " - Choose player to edit");
+                                        ordmenu = new CMenu (screen, " - Choose player to edit");
                                         ordmenu->addOpt("Player 1");
                                         ordmenu->addOpt("Player 2");
                                         ordmenu->addOpt("Player 3");
@@ -794,7 +792,7 @@ int main (int argc, char *argv[]) {
                                             int selected=0;
                                             while (!doneconfig) {
                                                 screen->clear();
-                                                ordmenu=new menu (screen, " - Configure keyboard");
+                                                ordmenu=new CMenu (screen, " - Configure keyboard");
                                                 sprintf (string, "Green fret: %s", SDL_GetKeyName((SDLKey)playersfret[Chosen][GREEN]));
                                                 ordmenu->addOpt(string);
                                                 sprintf (string, "Red fret: %s", SDL_GetKeyName((SDLKey)playersfret[Chosen][RED]));
@@ -841,7 +839,7 @@ int main (int argc, char *argv[]) {
                                                         case 8: dest=&playerspick[Chosen][0]; break;
                                                         }
                                                     if (dest!=NULL) {
-                                                        menu aux(screen, "Press key to map", SIZEX/2, SIZEY/2);
+                                                       CMenu aux(screen, "Press key to map", SIZEX/2, SIZEY/2);
                                                         aux.navigate();
                                                         SDL_Event event;
                                                         SDL_WaitEvent(&event);
@@ -860,11 +858,11 @@ int main (int argc, char *argv[]) {
                                 break;
                             case 'E':
                                 {
-                                    menu *ordmenu;
+                                   CMenu *ordmenu;
                                     bool donextras=0;
                                     while (!donextras) {
                                         screen->clear();
-                                        ordmenu = new menu (screen, " - Choose player to edit");
+                                        ordmenu = new CMenu (screen, " - Choose player to edit");
                                         ordmenu->addOpt("Player 1");
                                         ordmenu->addOpt("Player 2");
                                         ordmenu->addOpt("Player 3");
@@ -884,7 +882,7 @@ int main (int argc, char *argv[]) {
                                             int selected=0;
                                             while (!doneconfig) {
                                                 screen->clear();
-                                                ordmenu= new menu (screen, " - Extras");
+                                                ordmenu= new CMenu (screen, " - Extras");
                                                 sprintf (string, "Hyperspeed: %d", playersextras[Chosen][HYPERSPEED]);
                                                 ordmenu->addOpt(string);
                                                 sprintf (string, "Precision Level: %d", playersextras[Chosen][PRECISION]);
@@ -945,8 +943,8 @@ int main (int argc, char *argv[]) {
         fclose(writer);
         }
 
-    menu::unloadfx();
-    highway::unload();
+    CMenu::unloadfx();
+    CHighway::unload();
     engine->drop();
     SDL_Quit ();
     TTF_Quit ();

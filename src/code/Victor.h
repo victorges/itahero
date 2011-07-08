@@ -1,22 +1,22 @@
-drawer::drawer (SDL_Surface *surf): surface(surf), background(NULL) {
+CDrawer::CDrawer (SDL_Surface *surf): surface(surf), background(NULL) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
     settextstyle();
 }
 
-drawer::drawer (int width, int height, int bpp, Uint32 flags): surface(SDL_SetVideoMode(width, height, bpp, flags)), background(NULL) {
+CDrawer::CDrawer (int width, int height, int bpp, Uint32 flags): surface(SDL_SetVideoMode(width, height, bpp, flags)), background(NULL) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
     settextstyle();
 }
 
-drawer::drawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask): surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)), background(NULL) {
+CDrawer::CDrawer (Uint32 flags, int width, int height, int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask): surface(SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask)), background(NULL) {
     keycolor=SDL_MapRGBA ( surface->format, 0, 255, 255, 255 );
     font=NULL;
     settextstyle();
 }
 
-void drawer::load_background(drawer *background=NULL) {
+void CDrawer::load_background(CDrawer *background=NULL) {
     if (background==NULL) {
         this->background=NULL;
         return;
@@ -25,7 +25,7 @@ void drawer::load_background(drawer *background=NULL) {
     this->background->resize(surface->w,surface->h);
 }
 
-void drawer::settextstyle (char fnt[], SDL_Color *tcolor, int tsize) {
+void CDrawer::settextstyle (char fnt[], SDL_Color *tcolor, int tsize) {
     TTF_CloseFont (font);
     if (tcolor==NULL) textcolor.r=textcolor.g=textcolor.b=255;
     else textcolor=*tcolor;
@@ -37,44 +37,44 @@ void drawer::settextstyle (char fnt[], SDL_Color *tcolor, int tsize) {
         }
 }
 
-int drawer::textheight(char string[]) {
+int CDrawer::textheight(char string[]) {
     int h;
     TTF_SizeText(font, string, NULL, &h);
     return h;
 }
 
-int drawer::textwidth(char string[]) {
+int CDrawer::textwidth(char string[]) {
     int w;
     TTF_SizeText(font, string, &w, NULL);
     return w;
 }
 
-int drawer::get_height() {
+int CDrawer::get_height() {
     return surface->h;
 }
 
-int drawer::get_width() {
+int CDrawer::get_width() {
     return surface->w;
 }
 
-void drawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+void CDrawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     maincolor=SDL_MapRGBA(surface->format, R, G, B, A);
 }
 
-Uint32 drawer::color (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
+Uint32 CDrawer::color (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     return SDL_MapRGBA(surface->format, R, G, B, A);
 }
 
-void drawer::Flip () {
+void CDrawer::Flip () {
     SDL_Flip(surface);
     }
 
-void drawer::clear () {
+void CDrawer::clear () {
     if (background==NULL) SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
     else background->apply_surface(0, 0, this);
 }
 
-void note::operator()(FILE *chartfile) {
+void CNote::operator()(FILE *chartfile) {
     fread (&type, sizeof (char), 1, chartfile);
     fread (&time, sizeof (int), 1, chartfile);
     fread (&end, sizeof (int), 1, chartfile);
@@ -84,9 +84,9 @@ void note::operator()(FILE *chartfile) {
     for (int j=0;j<5;j++) if ((type>>j)%2) chord++;
 }
 
-irrklang::ISoundEngine* menu::engine;
+irrklang::ISoundEngine* CMenu::engine;
 
-void menu::loadfx (irrklang::ISoundEngine* eng) {
+void CMenu::loadfx (irrklang::ISoundEngine* eng) {
     engine=eng;
     void *soundfile;
     size_t size;
@@ -108,17 +108,17 @@ void menu::loadfx (irrklang::ISoundEngine* eng) {
     free (soundfile);
 }
 
-void menu::unloadfx () {
+void CMenu::unloadfx () {
     engine->removeSoundSource("menumove");
     engine->removeSoundSource("menuenter");
     engine->removeSoundSource("menuback");
 }
 
-void menu::effect (char name[]) {
+void CMenu::effect (char name[]) {
     engine->play2D(name);
 }
 
-menu::menu (drawer *vsl, char head[]="", int x=3*SIZEX/8, int y=3*SIZEY/4): visual(vsl), locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
+CMenu::CMenu (CDrawer *vsl, char head[]="", int x=3*SIZEX/8, int y=3*SIZEY/4): visual(vsl), locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
     int size;
     visual->settextstyle("lazy", NULL, 35);
     for (size=0;head[size];size++);
@@ -128,7 +128,7 @@ menu::menu (drawer *vsl, char head[]="", int x=3*SIZEX/8, int y=3*SIZEY/4): visu
     sizey=visual->textheight(header);
     }
 
-menu::~menu () {
+CMenu::~CMenu () {
     option *aux;
     while (start) {
         aux=start->next;
@@ -137,7 +137,7 @@ menu::~menu () {
         }
 }
 
-void menu::print () {
+void CMenu::print () {
     option *aux=start;
 
     visual->settextstyle("lazy", NULL, 35);
@@ -156,7 +156,7 @@ void menu::print () {
     visual->Flip();
 }
 
-void menu::addOpt (char content[]) {
+void CMenu::addOpt (char content[]) {
     int size;
     if (end==NULL) {
         start=end=new option;
@@ -181,19 +181,19 @@ void menu::addOpt (char content[]) {
     nOpt++;
 }
 
-bool menu::cancel() {
+bool CMenu::cancel() {
     return (nOpt&&selected==nOpt);
 }
 
-int menu::opt() {
+int CMenu::opt() {
     return selected+1;
 }
 
-void menu::setopt(int sel) {
+void CMenu::setopt(int sel) {
     if (sel>0&&(--sel)<nOpt) selected=sel;
 }
 
-char* menu::opts() {
+char* CMenu::opts() {
     option *aux=start;
     int n=selected;
     while (n--) aux=aux->next;
@@ -201,8 +201,8 @@ char* menu::opts() {
     return "";
 }
 
-bool menu::navigate () {  //SDL
-    highway::load();
+bool CMenu::navigate () {  //SDL
+    CHighway::load();
     SDL_Event event;
     if (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -227,7 +227,7 @@ bool menu::navigate () {  //SDL
 }
 
 
-music::music (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source(0), start(0), limit(16), engine(eng) {
+CMusic::CMusic (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source(0), start(0), limit(16), engine(eng) {
           char string[1000];
           int i;
 
@@ -253,13 +253,13 @@ music::music (FILE *songs, irrklang::ISoundEngine *eng): sound(0), FX(0), source
           for (i=0;!i||string[i-1];i++) artist[i]=string[i];
 }
 
-music::~music () {
+CMusic::~CMusic () {
                 delete[] filename;
                 delete[] title;
                 delete[] artist;
                 }
 
-void music::load (float speed=1.0, int starts=0, int ends=16) {
+void CMusic::load (float speed=1.0, int starts=0, int ends=16) {
      void *soundfile;
      size_t size;
      soundfile=AllocateFile(FilePath("Sound/", filename, ".ogg"), size);
@@ -284,15 +284,15 @@ void music::load (float speed=1.0, int starts=0, int ends=16) {
             errorsource[i]->setStreamMode(irrklang::ESM_AUTO_DETECT);
             }
     sound->setPlaybackSpeed (speed);
-    start=clock()*1000/CLOCKS_PER_SEC;
+    start=SDL_GetTicks();
 }
 
-void music::reload () {
+void CMusic::reload () {
     sound->setIsPaused(true);
     sound->setPlayPosition(section*sound->getPlayLength()/16);
 }
 
-void music::unload () {
+void CMusic::unload () {
      if (sound) {
                 if (!sound->isFinished() && !sound->getIsPaused()) sound->stop();
                 sound->drop();
@@ -304,7 +304,7 @@ void music::unload () {
      for (int i=0;i<NERROR;i++) engine->removeSoundSource (errorsource[i]);
 }
 
-bool music::isInstrumentAvaliable (en_instrument instrument) {
+bool CMusic::isInstrumentAvaliable (en_instrument instrument) {
     char extension[20]="";
     strcat (extension, "_");
     switch (instrument) {
@@ -318,12 +318,12 @@ bool music::isInstrumentAvaliable (en_instrument instrument) {
     return file!=NULL;
 }
 
-bool music::isFinished () {
+bool CMusic::isFinished () {
      if (sound==NULL) return 1;
      return sound->isFinished()||sound->getPlayPosition()>limit*sound->getPlayLength()/16;
 }
 
-void music::preview (bool active, int sixteenth=8) {
+void CMusic::preview (bool active, int sixteenth=8) {
     static int current=sixteenth;
     if (active) {
         if (sound==NULL) {
@@ -346,57 +346,57 @@ void music::preview (bool active, int sixteenth=8) {
     else if (sound!=NULL) unload();
 }
 
-bool music::play (float volume) {
+bool CMusic::play (float volume) {
      if (!sound||!sound->getIsPaused()) return false;
      sound->setVolume(volume);
      sound->setIsPaused(false);
-     for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(clock()*1000/CLOCKS_PER_SEC-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
+     for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(SDL_GetTicks()-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
      return true;
 }
 
-bool music::pause () {
+bool CMusic::pause () {
      if (!sound||sound->getIsPaused()) return false;
      sound->setIsPaused(true);
      start=0;
      return true;
 }
 
-void music::settime(int atime) {
+void CMusic::settime(int atime) {
     int dt=atime-time();
     if (atime>0&&atime<sound->getPlayLength()) sound->setPlayPosition(atime);
     else if (atime<0) sound->setPlayPosition(0);
     else if (atime>sound->getPlayLength()) sound->setPlayPosition(sound->getPlayLength());
-    if (sound->getIsPaused()==false) start-=dt*CLOCKS_PER_SEC/1000;
+    if (sound->getIsPaused()==false) start-=dt;
 }
 
-void music::settimerel(int dt) {
+void CMusic::settimerel(int dt) {
     if (time()+dt>0&&time()+dt<sound->getPlayLength()) sound->setPlayPosition(time()+dt);
     else if (time()+dt<0) sound->setPlayPosition(0);
     else if (time()+dt<sound->getPlayLength()) sound->setPlayPosition(sound->getPlayLength());
-    if (sound->getIsPaused()==false) start-=dt*CLOCKS_PER_SEC/1000;
+    if (sound->getIsPaused()==false) start-=dt;
 }
 
-float music::speed() {
+float CMusic::speed() {
     return sound->getPlaybackSpeed();
 }
 
-void music::error () {
+void CMusic::error () {
     int sel=rand()%NERROR;
     engine->play2D(errorsource[sel], false, false, false, true)->setVolume(0.8);
 }
 
-void music::effect(char string[]) {
+void CMusic::effect(char string[]) {
     engine->play2D(FilePath("FX/", string, ".ogg"));
 }
 
-void music::starpower(bool active=true) {
+void CMusic::starpower(bool active=true) {
     if (active) {
         if (!FX->isFlangerSoundEffectEnabled()) FX->enableFlangerSoundEffect();
         }
     else if (FX->isFlangerSoundEffectEnabled()) FX->disableFlangerSoundEffect();
 }
 
-void music::hitting(char instrument, bool active=true) {
+void CMusic::hitting(char instrument, bool active=true) {
     if (active)
         switch (instrument) {
             case GUITAR: if (FX->isParamEqSoundEffectEnabled()) FX->disableParamEqSoundEffect(); break;
@@ -411,69 +411,69 @@ void music::hitting(char instrument, bool active=true) {
             }
 }
 
-int music::time () {
+int CMusic::time () {
          if (sound==NULL) Error ("Asked for status with no song playing");
          if (sound->getIsPaused()) return sound->getPlayPosition();
          if (sound->isFinished()) return sound->getPlayLength();
-         if ((int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed())<sound->getPlayPosition()    ||   (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed())>sound->getPlayPosition()+100) {
-                for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(clock()*1000/CLOCKS_PER_SEC-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
+         if ((int)((SDL_GetTicks()-start)*sound->getPlaybackSpeed())<sound->getPlayPosition()    ||   (int)((SDL_GetTicks()-start)*sound->getPlaybackSpeed())>sound->getPlayPosition()+100) {
+                for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(SDL_GetTicks()-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
                 }
-         return (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed());
+         return (int)((SDL_GetTicks()-start)*sound->getPlaybackSpeed());
 }
 
-void music::stop () {
+void CMusic::stop () {
     engine->setAllSoundsPaused();
 }
 
-drawer*** highway::notes=NULL;
-drawer*** highway::hopos=NULL;
-drawer** highway::presser=NULL;
-drawer** highway::presserp=NULL;
+CDrawer*** CHighway::notes=NULL;
+CDrawer*** CHighway::hopos=NULL;
+CDrawer** CHighway::presser=NULL;
+CDrawer** CHighway::presserp=NULL;
 
-bool highway::load() {
+bool CHighway::load() {
     static int i=30;
     if (i<150||(notes==NULL&&hopos==NULL)) {
         if (notes==NULL&&hopos==NULL) {
             i=30;
-            notes=new drawer**[300];
+            notes=new CDrawer**[300];
             for (int i=0;i<300;i++) notes[i]=NULL;
-            hopos=new drawer**[300];
+            hopos=new CDrawer**[300];
             for (int i=0;i<300;i++) hopos[i]=NULL;
             }
 
-        notes[i]=new drawer*[6];
-        notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
+        notes[i]=new CDrawer*[6];
+        notes[i][GREEN]=new CDrawer(FilePath("Image/", "green", ".png"));
         notes[i][GREEN]->resize(i);
-        notes[i][RED]=new drawer(FilePath("Image/", "red", ".png"));
+        notes[i][RED]=new CDrawer(FilePath("Image/", "red", ".png"));
         notes[i][RED]->resize(i);
-        notes[i][YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
+        notes[i][YELLOW]=new CDrawer(FilePath("Image/", "yellow", ".png"));
         notes[i][YELLOW]->resize(i);
-        notes[i][BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
+        notes[i][BLUE]=new CDrawer(FilePath("Image/", "blue", ".png"));
         notes[i][BLUE]->resize(i);
-        notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
+        notes[i][ORANGE]=new CDrawer(FilePath("Image/", "orange", ".png"));
         notes[i][ORANGE]->resize(i);
-        notes[i][STARPOWER]=new drawer(FilePath("Image/", "spower", ".png"));
+        notes[i][STARPOWER]=new CDrawer(FilePath("Image/", "spower", ".png"));
         notes[i][STARPOWER]->resize(i);
         
-        hopos[i]=new drawer*[6];
-        hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
+        hopos[i]=new CDrawer*[6];
+        hopos[i][GREEN]=new CDrawer(FilePath("Image/", "greenhopo", ".png"));
         hopos[i][GREEN]->resize(i);
-        hopos[i][RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
+        hopos[i][RED]=new CDrawer(FilePath("Image/", "redhopo", ".png"));
         hopos[i][RED]->resize(i);
-        hopos[i][YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
+        hopos[i][YELLOW]=new CDrawer(FilePath("Image/", "yellowhopo", ".png"));
         hopos[i][YELLOW]->resize(i);
-        hopos[i][BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
+        hopos[i][BLUE]=new CDrawer(FilePath("Image/", "bluehopo", ".png"));
         hopos[i][BLUE]->resize(i);
-        hopos[i][ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
+        hopos[i][ORANGE]=new CDrawer(FilePath("Image/", "orangehopo", ".png"));
         hopos[i][ORANGE]->resize(i);
-        hopos[i][STARPOWER]=new drawer(FilePath("Image/", "spowerhopo", ".png"));
+        hopos[i][STARPOWER]=new CDrawer(FilePath("Image/", "spowerhopo", ".png"));
         hopos[i][STARPOWER]->resize(i);
 
         i++;
         }
 }
 
-void highway::unload() {
+void CHighway::unload() {
     if (notes!=NULL||hopos!=NULL) {
         if (notes) {
             for (int i=0;i<300;i++) {
@@ -506,40 +506,40 @@ void highway::unload() {
         }
 }
 
-highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty diff, int *extras, char frt[]="ZXCVB", char pck[]="", char spk=SDLK_SPACE, int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
+CHighway::CHighway (CDrawer *vsl, CMusic* stream, en_instrument instr, en_difficulty diff, int *extras, char frt[]="ZXCVB", char pck[]="", char spk=SDLK_SPACE, int loc=SIZEX/2, int w=SIZEX/3, int h=2*SIZEY/3):
                   visual(vsl), MusicStream(stream), instrument(instr), difficulty(diff), time_delay(1000/(difficulty+1)+1200/(extras[HYPERSPEED]+1)), timing_window(150/(extras[PRECISION]+1)), godmode(extras[GODMODE]), allhopo(extras[ALLHOPO]), practice(extras[PRACTICE]), location(loc), width(w), height(h), basescore(1), starpower(0), progress(0), score(0), streak(0), rockmeter(500)
         {
         if (presser==NULL&&presserp==NULL) {
-            presser=new drawer*[5];
-            presserp=new drawer*[5];
+            presser=new CDrawer*[5];
+            presserp=new CDrawer*[5];
 
-            presser[GREEN]=new drawer(FilePath("Image/", "greenpresser", ".png"));
+            presser[GREEN]=new CDrawer(FilePath("Image/", "greenpresser", ".png"));
             presser[GREEN]->resize(width/5-28);
-            presser[RED]=new drawer(FilePath("Image/", "redpresser", ".png"));
+            presser[RED]=new CDrawer(FilePath("Image/", "redpresser", ".png"));
             presser[RED]->resize(width/5-28);
-            presser[YELLOW]=new drawer(FilePath("Image/", "yellowpresser", ".png"));
+            presser[YELLOW]=new CDrawer(FilePath("Image/", "yellowpresser", ".png"));
             presser[YELLOW]->resize(width/5-28);
-            presser[BLUE]=new drawer(FilePath("Image/", "bluepresser", ".png"));
+            presser[BLUE]=new CDrawer(FilePath("Image/", "bluepresser", ".png"));
             presser[BLUE]->resize(width/5-28);
-            presser[ORANGE]=new drawer(FilePath("Image/", "orangepresser", ".png"));
+            presser[ORANGE]=new CDrawer(FilePath("Image/", "orangepresser", ".png"));
             presser[ORANGE]->resize(width/5-28);
-            
-            presserp[GREEN]=new drawer(FilePath("Image/", "greenpresserpressed", ".png"));
+
+            presserp[GREEN]=new CDrawer(FilePath("Image/", "greenpresserpressed", ".png"));
             presserp[GREEN]->resize(width/5-28);
-            presserp[RED]=new drawer(FilePath("Image/", "redpresserpressed", ".png"));
+            presserp[RED]=new CDrawer(FilePath("Image/", "redpresserpressed", ".png"));
             presserp[RED]->resize(width/5-28);
-            presserp[YELLOW]=new drawer(FilePath("Image/", "yellowpresserpressed", ".png"));
+            presserp[YELLOW]=new CDrawer(FilePath("Image/", "yellowpresserpressed", ".png"));
             presserp[YELLOW]->resize(width/5-28);
-            presserp[BLUE]=new drawer(FilePath("Image/", "bluepresserpressed", ".png"));
+            presserp[BLUE]=new CDrawer(FilePath("Image/", "bluepresserpressed", ".png"));
             presserp[BLUE]->resize(width/5-28);
-            presserp[ORANGE]=new drawer(FilePath("Image/", "orangepresserpressed", ".png"));
+            presserp[ORANGE]=new CDrawer(FilePath("Image/", "orangepresserpressed", ".png"));
             presserp[ORANGE]->resize(width/5-28);
             }
 
         {
             char string[100];
-            if (notes==NULL) notes=new drawer**[300];
-            if (hopos==NULL) hopos=new drawer**[300];
+            if (notes==NULL) notes=new CDrawer**[300];
+            if (hopos==NULL) hopos=new CDrawer**[300];
             for (int i=(width/5-8)/3-10;i<width/5+30;i++) {
                 visual->clear();
                 sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+30)-((width/5-8)/3-10)));
@@ -547,43 +547,45 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
                 visual->Flip();
 
                 if (notes[i]==NULL) {
-                    notes[i]=new drawer*[6];
-                    notes[i][GREEN]=new drawer(FilePath("Image/", "green", ".png"));
+                    notes[i]=new CDrawer*[6];
+                    notes[i][GREEN]=new CDrawer(FilePath("Image/", "green", ".png"));
                     notes[i][GREEN]->resize(i);
-                    notes[i][RED]=new drawer(FilePath("Image/", "red", ".png"));
+                    notes[i][RED]=new CDrawer(FilePath("Image/", "red", ".png"));
                     notes[i][RED]->resize(i);
-                    notes[i][YELLOW]=new drawer(FilePath("Image/", "yellow", ".png"));
+                    notes[i][YELLOW]=new CDrawer(FilePath("Image/", "yellow", ".png"));
                     notes[i][YELLOW]->resize(i);
-                    notes[i][BLUE]=new drawer(FilePath("Image/", "blue", ".png"));
+                    notes[i][BLUE]=new CDrawer(FilePath("Image/", "blue", ".png"));
                     notes[i][BLUE]->resize(i);
-                    notes[i][ORANGE]=new drawer(FilePath("Image/", "orange", ".png"));
+                    notes[i][ORANGE]=new CDrawer(FilePath("Image/", "orange", ".png"));
                     notes[i][ORANGE]->resize(i);
-                    notes[i][STARPOWER]=new drawer(FilePath("Image/", "spower", ".png"));
+                    notes[i][STARPOWER]=new CDrawer(FilePath("Image/", "spower", ".png"));
                     notes[i][STARPOWER]->resize(i);
                     }
                 if (hopos[i]==NULL) {
-                    hopos[i]=new drawer*[6];
-                    hopos[i][GREEN]=new drawer(FilePath("Image/", "greenhopo", ".png"));
+                    hopos[i]=new CDrawer*[6];
+                    hopos[i][GREEN]=new CDrawer(FilePath("Image/", "greenhopo", ".png"));
                     hopos[i][GREEN]->resize(i);
-                    hopos[i][RED]=new drawer(FilePath("Image/", "redhopo", ".png"));
+                    hopos[i][RED]=new CDrawer(FilePath("Image/", "redhopo", ".png"));
                     hopos[i][RED]->resize(i);
-                    hopos[i][YELLOW]=new drawer(FilePath("Image/", "yellowhopo", ".png"));
+                    hopos[i][YELLOW]=new CDrawer(FilePath("Image/", "yellowhopo", ".png"));
                     hopos[i][YELLOW]->resize(i);
-                    hopos[i][BLUE]=new drawer(FilePath("Image/", "bluehopo", ".png"));
+                    hopos[i][BLUE]=new CDrawer(FilePath("Image/", "bluehopo", ".png"));
                     hopos[i][BLUE]->resize(i);
-                    hopos[i][ORANGE]=new drawer(FilePath("Image/", "orangehopo", ".png"));
+                    hopos[i][ORANGE]=new CDrawer(FilePath("Image/", "orangehopo", ".png"));
                     hopos[i][ORANGE]->resize(i);
-                    hopos[i][STARPOWER]=new drawer(FilePath("Image/", "spowerhopo", ".png"));
+                    hopos[i][STARPOWER]=new CDrawer(FilePath("Image/", "spowerhopo", ".png"));
                     hopos[i][STARPOWER]->resize(i);
                     }
                 }
         }
-        rockmart=new drawer(FilePath("Image/", "rockmeter", ".png"));
+        rockmart=new CDrawer(FilePath("Image/", "rockmeter", ".png"));
         rockmart->resize(rockmart->get_width(), height-150);
+        
+        animation=new CSprite(visual, this);
 
-        spbar=new drawer(FilePath("Image/", "starpower", ".png"));
+        spbar=new CDrawer(FilePath("Image/", "starpower", ".png"));
         spbar->resize(spbar->get_width(), (height-150)/3);
-        spbarfilled=new drawer(FilePath("Image/", "starpowerfilled", ".png"));
+        spbarfilled=new CDrawer(FilePath("Image/", "starpowerfilled", ".png"));
         spbarfilled->resize(spbarfilled->get_width(), (height-150)/3);
 
         note_w=(width/5-8);
@@ -630,7 +632,7 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
 
         fread (&bpm, sizeof(int), 1, chartfile);
         fread (&size, sizeof(int), 1, chartfile);
-        chart=new note[(size>50000)?(size=0):(size)];
+        chart=new CNote[(size>50000)?(size=0):(size)];
         for (i=0;i<size;i++) {
             bool cond;
             do {
@@ -680,7 +682,7 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
         CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 }
 
-highway::~highway () {
+CHighway::~CHighway () {
         delete[] fretstate;
         delete[] fret;
         delete[] pickstate;
@@ -702,7 +704,7 @@ highway::~highway () {
         delete spbarfilled;
 }
 
-void highway::reset () {
+void CHighway::reset () {
         delete[] chart;
         
         basescore=1;
@@ -732,7 +734,7 @@ void highway::reset () {
 
         fread (&bpm, sizeof(int), 1, chartfile);
         fread (&size, sizeof(int), 1, chartfile);
-        chart=new note[(size>50000)?(size=0):(size)];
+        chart=new CNote[(size>50000)?(size=0):(size)];
         for (int i=0;i<size;i++) {
             bool cond;
             do {
@@ -781,14 +783,14 @@ void highway::reset () {
         CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 }
 
-void highway::draw (int time=0, Uint8* keyboard=NULL, int bottom=SIZEY) {
+void CHighway::draw (int time=-1, Uint8* keyboard=NULL, int bottom=SIZEY) {
         bottom=SIZEY-bottom;
         int i, j;
 
         char fretstate[5];
         for (i=0;i<5;i++) fretstate[i]=this->fretstate[i];
 
-        if (!time) time=MusicStream->time();
+        if (time==-1) time=MusicStream->time();
         if (keyboard!=NULL) {
             for (i=0;i<5;i++) fretstate[i]=keyboard[fret[i]]!=0;
             if (chart[progress].time-time>timing_window) for (i=0;i<5;i++) this->fretstate[i]=fretstate[i];
@@ -853,12 +855,12 @@ void highway::draw (int time=0, Uint8* keyboard=NULL, int bottom=SIZEY) {
             }
 }
 
-int highway::multiplier () {
+int CHighway::multiplier () {
     if (streak>30) return 4;
     return (streak/10)+1;
 }
 
-long long int highway::refresh (Uint8* keyboard) {
+long long int CHighway::refresh (Uint8* keyboard) {
                     int time=MusicStream->time();
                     int i;
                     char fretaux, newfretstate[5], newpickstate[5];
@@ -896,6 +898,7 @@ long long int highway::refresh (Uint8* keyboard) {
                                            rockmeter+=(21-rockmeter/50)*(starpower%2*3+1);
                                            starpower+=(multiplier()>1)*2*(((starpower+1)%2)*(2+rockmeter*rockmeter/2500)*(timing_window-abs(chart[j].time-time))*chart[j].chord/timing_window);
                                            chart[j].hit=true;
+                                           animation->hit(1);
                                            MusicStream->hitting(instrument);
                                            basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
@@ -973,26 +976,27 @@ long long int highway::refresh (Uint8* keyboard) {
                     if (starpower>100000) starpower=100000;
                     
                     draw(time);
+                    
                     lasttime=time;
                     return score/10000;
 }
 
-float highway::percentage() {
+float CHighway::percentage() {
     int n=0;
     for (int i=start;i<progress;i++) if (chart[i].hit) n++;
     return (float)100*n/(progress-start);
 }
 
-int highway::note_width(int dt, bool check) {
+int CHighway::note_width(int dt, bool check) {
     return (note_w-2*(visual->get_height()-position3d(dt, check))*(note_w)/(3*height));
 }
 
-int highway::notex (int note, int dt, bool check) {
+int CHighway::notex (int note, int dt, bool check) {
     if (note<GREEN||note>ORANGE) return 0;
     return location-(5*note_width(dt, check)/2)+(note_width(dt, check)*note);
 }
 
-bool highway::alive() {
+bool CHighway::alive() {
     if (!godmode&&!practice&&rockmeter==0) MusicStream->effect("losing");
     return godmode||practice||rockmeter>0;
 }
