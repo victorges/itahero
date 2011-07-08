@@ -205,14 +205,22 @@ bool menu::navigate () {  //SDL
     highway::load();
     SDL_Event event;
     if (SDL_PollEvent(&event)) {
-        if (event.type==SDL_KEYDOWN)
-            switch (event.key.keysym.sym) {
-                case SDLK_UP: effect("menumove"); selected=(selected+nOpt-1)%nOpt; return 1;
-                case SDLK_DOWN: effect("menumove"); selected=(selected+nOpt+1)%nOpt; return 1;
-                case SDLK_ESCAPE: case SDLK_BACKSPACE: effect("menuback"); selected=nOpt; return 0;
-                case SDLK_RETURN: effect("menuenter"); return 0;
-                }
-        else if (event.type==SDL_QUIT) exit(0);
+        switch (event.type) {
+            case SDL_KEYDOWN:
+                switch (event.key.keysym.sym) {
+                    case SDLK_UP: effect("menumove"); selected=(selected+nOpt-1)%nOpt; return 1;
+                    case SDLK_DOWN: effect("menumove"); selected=(selected+nOpt+1)%nOpt; return 1;
+                    case SDLK_ESCAPE: case SDLK_BACKSPACE: effect("menuback"); selected=nOpt; return 0;
+                    case SDLK_RETURN: effect("menuenter"); return 0;
+                    }
+                break;
+            case SDL_ACTIVEEVENT:
+                SDL_ShowCursor(SDL_ENABLE);
+                while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
+                SDL_ShowCursor(SDL_DISABLE);
+                break;
+            case SDL_QUIT: exit(0); break;
+            }
         }
     print();
     return 1;

@@ -42,6 +42,12 @@ bool CheckEsc() {
                 case SDL_KEYDOWN:
                     if (event.key.keysym.sym==SDLK_ESCAPE) return true;
                     break;
+                case SDL_ACTIVEEVENT:
+                    SDL_ShowCursor(SDL_ENABLE);
+                    while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
+                    SDL_ShowCursor(SDL_DISABLE);
+                    return true;
+                    break;
                 case SDL_QUIT: exit(0); break;
                 }
             }
@@ -159,6 +165,10 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
                 case SDL_KEYDOWN: case SDL_KEYUP:
                     if (event.type==SDL_KEYDOWN&&event.key.keysym.sym==SDLK_ESCAPE) bmenu=true;
                     keyboard=SDL_GetKeyState(NULL);
+                    break;
+                case SDL_ACTIVEEVENT:
+                    SDL_ShowCursor(SDL_ENABLE);
+                    bmenu=true;
                     break;
                 case SDL_QUIT: exit(0); break;
                 }
@@ -336,6 +346,13 @@ int main (int argc, char *argv[]) {
                             SDL_Delay(500);
                             }
                         break;
+                    case SDL_ACTIVEEVENT:
+                        SDL_ShowCursor(SDL_ENABLE);
+                        songs[menumusic]->pause();
+                        while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
+                        SDL_ShowCursor(SDL_DISABLE);
+                        songs[menumusic]->play();
+                        break;
                     case SDL_QUIT: exit(0); break;
                     }
                 }
@@ -353,6 +370,13 @@ int main (int argc, char *argv[]) {
                             SDL_Delay(500);
                             }
                         break;
+                    case SDL_ACTIVEEVENT:
+                        SDL_ShowCursor(SDL_ENABLE);
+                        songs[menumusic]->pause();
+                        while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
+                        SDL_ShowCursor(SDL_DISABLE);
+                        songs[menumusic]->play();
+                        break;
                     case SDL_QUIT: exit(0); break;
                     }
                 }
@@ -367,6 +391,13 @@ int main (int argc, char *argv[]) {
             anykey.print();
             screen->Flip();
             SDL_PollEvent(&event);
+           /* if (event.type==SDL_ACTIVEEVENT) {
+                    return 0;
+                    SDL_ShowCursor(SDL_ENABLE);
+                    while (event.type!=SDL_ACTIVEEVENT||event.active.gain) SDL_PollEvent(&event);
+                    SDL_ShowCursor(SDL_DISABLE);
+                    }
+            } // nao funciona por algum motivo*/
             if ((clock()*1000/CLOCKS_PER_SEC-sttime)/500%2) screen->setcolor(0, 0, 0);
             else screen->setcolor(223, 159, 26);
             highway::load();
@@ -389,7 +420,8 @@ int main (int argc, char *argv[]) {
     startmenu->addOpt("Practice");
     startmenu->addOpt("Options");
     startmenu->addOpt("Exit");
-
+    songs[menumusic]->pause();
+    songs[menumusic]->play(0.5);
     bool done=0;
     while (!done) {
         while (startmenu->navigate()) {
