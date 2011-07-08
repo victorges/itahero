@@ -35,6 +35,109 @@ class {
 #include "Victor.h"
 #include "Smaira.h"
 
+bool CheckEsc() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym==SDLK_ESCAPE) return true;
+                    break;
+                case SDL_QUIT: exit(0); break;
+                }
+            }
+    return false;
+}
+
+void PreSong (bool &menu, drawer *screen, music *song, highway *players[], int nPlayers) {
+    SDL_Event event;
+    song->effect("start");
+    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<1357;) {
+        screen->Flip();
+        screen->clear();
+        for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((clock()*1000/CLOCKS_PER_SEC-i-1357)*song->speed()), NULL, SIZEY+1+(1357-(clock()*1000/CLOCKS_PER_SEC-i))*players[j]->get_height()/1357);
+        if (CheckEsc()) {
+            screen->clear();
+            for (int j=0;j<nPlayers;j++) players[j]->draw(song->time(), SDL_GetKeyState(NULL));
+            song->stop();
+            menu=true;
+            return;
+            }
+        }
+    song->effect("ticks");
+    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
+        screen->Flip();
+        screen->clear();
+        for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time()+(int)((clock()*1000/CLOCKS_PER_SEC-i-3000)*song->speed()), SDL_GetKeyState(NULL));
+        if (CheckEsc()) {
+            screen->clear();
+            for (int j=0;j<nPlayers;j++) players[j]->draw(song->time(), SDL_GetKeyState(NULL));
+            song->stop();
+            menu=true;
+            return;
+            }
+        }
+}
+
+void Rewind (bool &menu, drawer *screen, music *song, highway *players[], int nPlayers=1) {
+    int backup=song->time(), i;
+    SDL_Event event;
+    song->play();
+    for (i=0;song->time()>20&&i<70;i++) {
+        screen->Flip();
+        screen->clear();
+        song->settime(backup-(int)(15*(i+1)*song->speed()));
+        for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
+        if (CheckEsc()) {
+            screen->clear();
+            for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time(), SDL_GetKeyState(NULL));
+            menu=true;
+            song->settime(backup);
+            return;
+            }
+        }
+    if (i<70) {
+        song->pause();
+        int dt=(70-i)*15;
+        while (i++<70) {
+            screen->Flip();
+            screen->clear();
+            for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(backup-(int)(15*(i+1)*song->speed()));
+            if (CheckEsc()) {
+                screen->clear();
+                for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time(), SDL_GetKeyState(NULL));
+                menu=true;
+                song->settime(backup);
+                return;
+                }
+            }
+        for (i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<dt;) {
+            screen->Flip();
+            screen->clear();
+            for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((clock()*1000/CLOCKS_PER_SEC-i-dt)*song->speed()), SDL_GetKeyState(NULL));
+            if (CheckEsc()) {
+                screen->clear();
+                for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time(), SDL_GetKeyState(NULL));
+                menu=true;
+                song->settime(backup);
+                return;
+                }
+            }
+        song->play();
+        }
+    while (song->time()<backup) {
+        screen->Flip();
+        screen->clear();
+        for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw(song->time(), SDL_GetKeyState(NULL));
+        if (CheckEsc()) {
+            screen->clear();
+            for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time(), SDL_GetKeyState(NULL));
+            menu=true;
+            song->settime(backup);
+            return;
+            }
+        }
+}
+
 long long int PlaySong (drawer *screen, music *song, highway *players[], int nPlayers=1) {
     SDL_Event event;
     Uint8* keyboard=SDL_GetKeyState(NULL);
@@ -44,17 +147,13 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
     pause->addOpt("Resume");
     pause->addOpt("Restart");
     pause->addOpt("Exit");
-    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
-        screen->Flip();
-        screen->clear();
-        for (int j=0;j<nPlayers;j++) players[j]->draw(clock()*1000/CLOCKS_PER_SEC-i-3000);
-        }
+    while (SDL_PollEvent(&event));
+    PreSong(bmenu, screen, song, players, nPlayers);
     song->play();
     while (!done) {
         int timams=clock()*1000/CLOCKS_PER_SEC;
         char string[10];
         screen->Flip();
-        screen->clear();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYDOWN: case SDL_KEYUP:
@@ -64,95 +163,89 @@ long long int PlaySong (drawer *screen, music *song, highway *players[], int nPl
                 case SDL_QUIT: exit(0); break;
                 }
             }
-        for (int i=0;i<nPlayers;i++) {
-            players[nPlayers-i-1]->refresh(keyboard);
-            if (!players[nPlayers-i-1]->alive()) done=true;
-            }
-        if (done) {
-            song->pause();
-            menu lost(screen, "You Lost!", SIZEX/2, SIZEY/2);
-            lost.addOpt("Retry");
-            lost.addOpt("Exit");
-            while (lost.navigate()||lost.cancel());
-            switch (lost.opt()) {
-                case 1:
-                    song->reload();
-                    for (int i=0;i<nPlayers;i++) players[i]->reset();
-                    for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
-                        screen->Flip();
-                        screen->clear();
-                        for (int j=0;j<nPlayers;j++) players[j]->draw(clock()*1000/CLOCKS_PER_SEC-i-3000);
-                        }
-                    song->play();
-                    done=0;
-                    break;
+
+        if (song->isFinished()) {
+            done=true;
+            if (!players[0]->practice) {
+                song->effect("winning");
+                menu rock(screen, "You Rock!", SIZEX/2, SIZEY/2);
+                rock.print();
+                SDL_Delay(3500);
+                screen->clear();
+                }
+            else {
+                char string[100];
+                song->pause();
+                sprintf (string, "Section Ended. Percentage hit: %.1f", players[0]->percentage());
+                menu pract(screen, string, SIZEX/2, SIZEY/2);
+                pract.addOpt("Retry");
+                pract.addOpt("Exit");
+                while (pract.navigate()||pract.cancel());
+                switch (pract.opt()) {
+                    case 1:
+                        song->reload();
+                        for (int i=0;i<nPlayers;i++) players[i]->reset();
+                        PreSong(bmenu, screen, song, players, nPlayers);
+                        song->play();
+                        done=0;
+                        break;
+                    }
                 }
             }
 
-        if (song->isFinished()) done=true;
-        if (bmenu) {
+        if (bmenu&&!done) {
+                bmenu=false;
                 song->pause();
+                pause->effect("menuenter");
                 while (pause->navigate());
                 switch (pause->opt()) {
                     case 1:
-                        {
-                            int backup=song->time();
-                            song->play();
-                            for (int i=0;song->time()>10&&i<70;i++) {
-                                screen->Flip();
-                                screen->clear();
-                                song->settime(backup-15*(i+1));
-                                for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
-                                }
-                            while (song->time()<backup) {
-                                screen->Flip();
-                                screen->clear();
-                                for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
-                                }
-                            }
+                        Rewind(bmenu, screen, song, players, nPlayers);
                         break;
                     case 2:
                         song->reload();
                         for (int i=0;i<nPlayers;i++) players[i]->reset();
-                        for (int i=clock()*1000/CLOCKS_PER_SEC;clock()*1000/CLOCKS_PER_SEC-i<3000;) {
-                            screen->Flip();
-                            screen->clear();
-                            for (int j=0;j<nPlayers;j++) players[j]->draw(clock()*1000/CLOCKS_PER_SEC-i-3000);
-                            }
+                        PreSong(bmenu, screen, song, players, nPlayers);
                         song->play();
                         break;
                     case 3:
-                        done=1;
                         return -1;
                         break;
                     }
-                if (pause->cancel()) {
-                    int backup=song->time();
-                    song->play();
-                    for (int i=0;song->time()>10&&i<70;i++) {
-                        screen->Flip();
-                        screen->clear();
-                        song->settime(backup-15*(i+1));
-                        for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
-                        }
-                    while (song->time()<backup) {
-                        screen->Flip();
-                        screen->clear();
-                        for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
-                        }
-                    }
-                bmenu=false;
+                if (pause->cancel()) Rewind(bmenu, screen, song, players, nPlayers);
+                pause->setopt(1);
                 }
+        else if (!done) {
+            screen->clear();
+            for (int i=0;i<nPlayers;i++) {
+                players[nPlayers-i-1]->refresh(keyboard);
+                if (!players[nPlayers-i-1]->alive()) done=true;
+                }
+            if (done) {
+                song->pause();
+                menu lost(screen, "You Lost!", SIZEX/2, SIZEY/2);
+                lost.addOpt("Retry");
+                lost.addOpt("Exit");
+                while (lost.navigate()||lost.cancel());
+                if (lost.opt()==1) {
+                    song->reload();
+                    for (int i=0;i<nPlayers;i++) players[i]->reset();
+                    PreSong(bmenu, screen, song, players, nPlayers);
+                    song->play();
+                    done=0;
+                    }
+                }
+            }
         }
     
     delete pause;
 
     if(song->isFinished())
-        for(int i=0; i<nPlayers; i++)
-            actualscore+=players[i]->score/10000;
+        for(int i=0; i<nPlayers; i++) actualscore+=players[i]->score/10000;
     else
         actualscore = -1;
-    
+    screen->textxy("6", 0, 0);
+    screen->Flip();
     return actualscore;
 }
 
@@ -222,7 +315,7 @@ int main (int argc, char *argv[]) {
     drawer *wallpaper=new drawer(FilePath("Image/", "wallpaper", ".png"));
     screen->load_background(wallpaper);
     drawer *logo=new drawer(FilePath("Image/", "Ita Hero", ".png"));
-
+    menu::loadfx(engine);
 
     srand(clock());
     int menumusic=2;
@@ -230,26 +323,53 @@ int main (int argc, char *argv[]) {
     songs[menumusic]->play(0.6);
     {
         SDL_Event event;
-        for (int i=0, sttime=songs[menumusic]->time();i<SIZEY;i++) {
+        bool skip=false;
+        for (int i=0, sttime=songs[menumusic]->time();!skip&&i<SIZEY;i++) {
             wallpaper->apply_surface(0, 0, screen, SIZEY-i);
             screen->Flip();
             while (songs[menumusic]->time()-sttime<5000*i/SIZEY) highway::load();
+            while (SDL_PollEvent(&event)) {
+                switch (event.type) {
+                    case SDL_KEYDOWN:
+                        if (event.key.keysym.sym==SDLK_ESCAPE||event.key.keysym.sym==SDLK_RETURN) {
+                            skip=true;
+                            SDL_Delay(500);
+                            }
+                        break;
+                    case SDL_QUIT: exit(0); break;
+                    }
+                }
             }
-        for (int i=-logo->get_width(), sttime=songs[menumusic]->time();i<SIZEX-logo->get_width();i+=10) {
+        for (int i=-logo->get_width(), sttime=songs[menumusic]->time();!skip && i<SIZEX-logo->get_width();i+=10) {
             screen->clear();
             logo->apply_surface(i, (screen->get_height()-logo->get_height())/2, screen);
             screen->Flip();
             while (songs[menumusic]->time()-sttime<1000*(i+logo->get_width())/SIZEX) highway::load();
+            while (SDL_PollEvent(&event)) {
+                switch (event.type) {
+                    case SDL_KEYDOWN:
+                        if (event.key.keysym.sym==SDLK_ESCAPE||event.key.keysym.sym==SDLK_RETURN) {
+                            skip=true;
+                            SDL_Delay(500);
+                            }
+                        break;
+                    case SDL_QUIT: exit(0); break;
+                    }
+                }
             }
+        wallpaper->apply_surface(0, 0, screen);
+        logo->apply_surface(SIZEX-logo->get_width(), (screen->get_height()-logo->get_height())/2, screen);
         while (SDL_PollEvent(&event));
         menu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
         int sttime=clock()*1000/CLOCKS_PER_SEC;
+        event.type=SDL_KEYUP;
         while (event.type!=SDL_KEYDOWN) {
             anykey.print();
             screen->Flip();
             SDL_PollEvent(&event);
             if ((clock()*1000/CLOCKS_PER_SEC-sttime)/500%2) screen->setcolor(0, 0, 0);
             else screen->setcolor(223, 159, 26);
+            highway::load();
             }
     }
     screen->setcolor(0, 0, 0);
@@ -530,7 +650,7 @@ int main (int argc, char *argv[]) {
                                 diffic->addOpt("Medium");
                                 diffic->addOpt("Hard");
                                 diffic->addOpt("Expert");
-                                while (diffic->navigate());
+                                while (diffic->navigate()) ChosenSong->preview(true);
                                 screen->clear();
                                 if (!diffic->cancel()) {
                                     en_difficulty difficulty;
@@ -793,6 +913,7 @@ int main (int argc, char *argv[]) {
         fclose(writer);
         }
 
+    menu::unloadfx();
     highway::unload();
     engine->drop();
     SDL_Quit ();

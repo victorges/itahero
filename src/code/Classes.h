@@ -61,7 +61,6 @@ class drawer {
 class menu {
     private:
       char *header;
-      static irrklang::ISoundSource *FXsource[5];
       static irrklang::ISoundEngine *engine;
       struct option {
             char *content;
@@ -70,6 +69,9 @@ class menu {
       int selected, nOpt, locx, locy, sizex, sizey;
       drawer *visual;
     public:
+      static void loadfx (irrklang::ISoundEngine *engine);
+      static void unloadfx ();
+      static void effect (char name[]);
       menu (drawer *vsl, char head[], int x, int y);
       ~menu ();
       void addOpt (char content[]);
@@ -102,13 +104,16 @@ class music {
         void include_record(char *name, long long int score, int nplayers);
         bool pause ();
         int time ();
+        void stop();
         
         void settime(int time);
         void settimerel(int dt);
         float speed();
 
-        void lose();
+        void effect(char string[]);
         void error();
+        
+        
         void starpower(bool active);
         void hitting(char instrument, bool active);
         void check_record_file(int nplayes);
@@ -123,10 +128,10 @@ class highway {
         note *chart;
         music *MusicStream;
         en_difficulty difficulty;
-        int progress, bpm, size;
+        int start, progress, bpm, size;
         int time_delay, timing_window;
         long long int basescore;
-        bool allhopo, godmode, practice;
+        bool allhopo, godmode;
         int streak, rockmeter, starpower;
         drawer *visual, *hway;
         int note_w, note_h;
@@ -137,79 +142,18 @@ class highway {
         drawer *rockmart, *spbar, *spbarfilled;
         int lasttime;
       public:
+        bool practice;
         int location;
+        int get_height() {return height;}
         long long int score;
         static bool load();
         static void unload();
         highway (drawer *vsl, music *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, char spkey, int location, int width, int height);
         ~highway ();
         void reset();
-        void draw (int time);
+        void draw (int time, Uint8* keyboard, int bottom);
         int multiplier ();
         long long int refresh(Uint8* keyboard);
+        float percentage();
         bool alive();
     };
-
-//class background; //to-do
-
-/*backup
-void menu::print () { //temporaria
-    option *aux=start;
-    moveto(locx,locy);
-    outtext(header);
-    int y=textheight(header);
-    for (int curr=0;aux;curr++) {
-        moveto (locx, locy+y);
-        if (selected==curr) outtext(" ");
-        outtext (aux->content);
-        y+=textheight(aux->content);
-        aux=aux->next;
-        }
-}
-
-void highway::draw (int time) { //temporaria, copiada do prototipo (pode editar a vontade, mas mantém o backup)
-            int j=progress;
-
-            setcolor (WHITE);
-            line (location-180, SIZEY-0, location-180, SIZEY-SIZEY);
-            line (location+170, SIZEY-0, location+170, SIZEY-SIZEY);
-            setcolor (DARKGRAY);
-            for (j=(time/(60*1000)/bpm)*(60*1000)/bpm;j<time+time_delay;j+=(60*1000)/bpm) line (location-180, SIZEY-((j-time)*(SIZEY-100)/time_delay+100), location+170, SIZEY-((j-time)*(SIZEY-100)/time_delay+100));
-
-            for (j=0;fret[j];j++) {
-                setcolor(color[j]);
-                rectangle (location+70*j-175, SIZEY-100, location+70*j-115, SIZEY-140);
-                if (fretstate[j]) {
-                    setfillstyle(SOLID_FILL, COLOR (GetRValue(color[j])<40?0:(GetRValue(color[j])-40), GetGValue(color[j])<40?0:(GetGValue(color[j])-40), GetBValue(color[j])<40?0:(GetBValue(color[j])-40)));
-                    bar (location+70*j-173, SIZEY-101, location+70*j-116, SIZEY-138);
-                    }
-                }
-            for (j=progress;j>0&&time-chart[j].end<time_delay*100/SIZEY;j--);
-            for (;chart[j].time-time<time_delay;j++) {
-                if (chart[j].hit==0||chart[j].end>chart[j].time)
-                    for (int i=0;fret[i];i++)
-                        if ((chart[j].type>>i)%2) {
-                            if (chart[j].end>chart[j].time) {
-                                if (!chart[j].hold) setfillstyle (SOLID_FILL, LIGHTGRAY);
-                                else setfillstyle(SOLID_FILL, color[i]);
-                                bar (location+70*i-175+25, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+20), location+70*i-175+35, SIZEY-((chart[j].end-time)*(SIZEY-100)/time_delay+100+20));
-                                }
-                            setfillstyle(SOLID_FILL, color[i]);
-                            if (!chart[j].hit&&!chart[j].hopo) bar(location+70*i-175, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-175+60, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
-                            if (!chart[j].hit&&chart[j].hopo) bar(location+70*i-165, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100), location+70*i-165+50, SIZEY-((chart[j].time-time)*(SIZEY-100)/time_delay+100+40));
-                            }
-                }
-            char string[50];
-            setcolor (WHITE);
-            sprintf (string, "%.1f  %d", (float)score/basescore, score/10000);
-            moveto (location-300, SIZEY-140);
-            outtext(string);
-            moverel(-textwidth(string), textheight(string));
-            sprintf (string, "%d  x%d", streak, multiplier());
-            outtext(string);
-            moverel(-textwidth(string), textheight(string));
-            if (!practice) {
-                sprintf (string, "%d", rockmeter);
-                outtext(string);
-                }
-}*/

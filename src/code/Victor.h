@@ -84,8 +84,39 @@ void note::operator()(FILE *chartfile) {
     for (int j=0;j<5;j++) if ((type>>j)%2) chord++;
 }
 
-irrklang::ISoundSource* menu::FXsource[5];
 irrklang::ISoundEngine* menu::engine;
+
+void menu::loadfx (irrklang::ISoundEngine* eng) {
+    engine=eng;
+    void *soundfile;
+    size_t size;
+    char string[100];
+
+    soundfile=AllocateFile(FilePath("FX/", "menumove", ".ogg"), size);
+    if (soundfile==NULL) Error ("Menu FX File not found");
+    if (engine->addSoundSourceFromMemory(soundfile, size, "menumove")==NULL) Error ("Error loading Menu FX File");
+    free (soundfile);
+
+    soundfile=AllocateFile(FilePath("FX/", "menuenter", ".ogg"), size);
+    if (soundfile==NULL) Error ("Menu FX File not found");
+    if (engine->addSoundSourceFromMemory(soundfile, size, "menuenter")==NULL) Error ("Error loading Menu FX File");
+    free (soundfile);
+
+    soundfile=AllocateFile(FilePath("FX/", "menuback", ".ogg"), size);
+    if (soundfile==NULL) Error ("Menu FX File not found");
+    if (engine->addSoundSourceFromMemory(soundfile, size, "menuback")==NULL) Error ("Error loading Menu FX File");
+    free (soundfile);
+}
+
+void menu::unloadfx () {
+    engine->removeSoundSource("menumove");
+    engine->removeSoundSource("menuenter");
+    engine->removeSoundSource("menuback");
+}
+
+void menu::effect (char name[]) {
+    engine->play2D(name);
+}
 
 menu::menu (drawer *vsl, char head[]="", int x=3*SIZEX/8, int y=3*SIZEY/4): visual(vsl), locx(x), locy(y), selected(0), start(NULL), end(NULL), nOpt(0) {
     int size;
@@ -108,6 +139,9 @@ menu::~menu () {
 
 void menu::print () {
     option *aux=start;
+
+    visual->settextstyle("lazy", NULL, 35);
+    
     visual->bar(locx-sizex/2-10, locy-sizey/2-10, locx+sizex/2+10, locy+sizey/2+10, 0);
     visual->rectangle(locx-sizex/2-11, locy-sizey/2-11, locx+sizex/2+11, locy+sizey/2+11, visual->color(100, 100, 100));
     visual->textxy(header, locx-sizex/2, locy-sizey/2);
@@ -119,6 +153,7 @@ void menu::print () {
         y+=visual->textheight(aux->content);
         aux=aux->next;
         }
+    visual->Flip();
 }
 
 void menu::addOpt (char content[]) {
@@ -168,20 +203,18 @@ char* menu::opts() {
 
 bool menu::navigate () {  //SDL
     highway::load();
-    visual->settextstyle("lazy", NULL, 35);
-    print();
-    visual->Flip();
     SDL_Event event;
     if (SDL_PollEvent(&event)) {
         if (event.type==SDL_KEYDOWN)
             switch (event.key.keysym.sym) {
-                case SDLK_UP: selected=(selected+nOpt-1)%nOpt; return 1;
-                case SDLK_DOWN: selected=(selected+nOpt+1)%nOpt; return 1;
-                case SDLK_ESCAPE: case SDLK_BACKSPACE: selected=nOpt; return 0;
-                case SDLK_RETURN: return 0;
+                case SDLK_UP: effect("menumove"); selected=(selected+nOpt-1)%nOpt; return 1;
+                case SDLK_DOWN: effect("menumove"); selected=(selected+nOpt+1)%nOpt; return 1;
+                case SDLK_ESCAPE: case SDLK_BACKSPACE: effect("menuback"); selected=nOpt; return 0;
+                case SDLK_RETURN: effect("menuenter"); return 0;
                 }
         else if (event.type==SDL_QUIT) exit(0);
         }
+    print();
     return 1;
 }
 
@@ -239,7 +272,7 @@ void music::load (float speed=1.0, int starts=0, int ends=16) {
             if (soundfile==NULL) Error ("Error Sound File not found");
             errorsource[i]=engine->addSoundSourceFromMemory(soundfile, size, string);
             free (soundfile);
-            if (source==NULL) Error ("Error loading Error Sound File");
+            if (errorsource[i]==NULL) Error ("Error loading Error Sound File");
             errorsource[i]->setStreamMode(irrklang::ESM_AUTO_DETECT);
             }
     sound->setPlaybackSpeed (speed);
@@ -313,6 +346,13 @@ bool music::play (float volume) {
      return true;
 }
 
+bool music::pause () {
+     if (!sound||sound->getIsPaused()) return false;
+     sound->setIsPaused(true);
+     start=0;
+     return true;
+}
+
 void music::settime(int atime) {
     int dt=atime-time();
     if (atime>0&&atime<sound->getPlayLength()) sound->setPlayPosition(atime);
@@ -337,8 +377,8 @@ void music::error () {
     engine->play2D(errorsource[sel], false, false, false, true)->setVolume(0.8);
 }
 
-void music::lose() {
-    engine->play2D(FilePath("FX/", "losing", ".ogg"));
+void music::effect(char string[]) {
+    engine->play2D(FilePath("FX/", string, ".ogg"));
 }
 
 void music::starpower(bool active=true) {
@@ -363,17 +403,18 @@ void music::hitting(char instrument, bool active=true) {
             }
 }
 
-bool music::pause () {
-     if (!sound||sound->getIsPaused()) return false;
-     sound->setIsPaused(true);
-     start=0;
-     return true;
-}
-
 int music::time () {
          if (sound==NULL) Error ("Asked for status with no song playing");
          if (sound->getIsPaused()) return sound->getPlayPosition();
+         if (sound->isFinished()) return sound->getPlayLength();
+         if ((int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed())<sound->getPlayPosition()    ||   (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed())>sound->getPlayPosition()+100) {
+                for (unsigned int last=sound->getPlayPosition() ; last==sound->getPlayPosition() ; start=(clock()*1000/CLOCKS_PER_SEC-(unsigned int)((float)sound->getPlayPosition()/sound->getPlaybackSpeed())));
+                }
          return (int)((clock()*1000/CLOCKS_PER_SEC-start)*sound->getPlaybackSpeed());
+}
+
+void music::stop () {
+    engine->setAllSoundsPaused();
 }
 
 drawer*** highway::notes=NULL;
@@ -627,6 +668,7 @@ highway::highway (drawer *vsl, music* stream, en_instrument instr, en_difficulty
             chart[i].hopo=(allhopo||(instrument!=DRUMS&&i>1&&(chart[i].time-chart[i-1].end)<30000/bpm&&chart[i].type!=chart[i-1].type));
             }
         for (int time=MusicStream->time() ; progress<size&&time-chart[progress].time>timing_window ; progress++);
+        start=progress;
         CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 }
 
@@ -731,68 +773,76 @@ void highway::reset () {
         CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 }
 
-void highway::draw (int time=0) {
-            if (!time) time=MusicStream->time();
+void highway::draw (int time=0, Uint8* keyboard=NULL, int bottom=SIZEY) {
+        bottom=SIZEY-bottom;
+        int i, j;
 
-            int i, j;
+        char fretstate[5];
+        for (i=0;i<5;i++) fretstate[i]=this->fretstate[i];
 
-            visual->line(notex(GREEN, -1000)-5, position3d(-1000), notex(GREEN, time_delay)-5, position3d(time_delay), visual->color(255, 255, 255, 255));
-            visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000), notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay), visual->color(255, 255, 255, 255));
+        if (!time) time=MusicStream->time();
+        if (keyboard!=NULL) {
+            for (i=0;i<5;i++) fretstate[i]=keyboard[fret[i]]!=0;
+            if (chart[progress].time-time>timing_window) for (i=0;i<5;i++) this->fretstate[i]=fretstate[i];
+            }
 
-            for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
-                visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(40, 40, 40, 255));
-                if ((j/(60*1000/bpm))%4==0) {
-                    visual->line(notex(GREEN, j-time)-5, position3d(j-time), notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time), visual->color(127, 127, 127, 255));
-                    visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1, visual->color(127, 127, 127, 255));
-                    }
+        visual->line(notex(GREEN, -1000)-5, position3d(-1000)-bottom, notex(GREEN, time_delay)-5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
+        visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000)-bottom, notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
+        for (int i=0;i<5;i++) visual->line(notex(i)+note_width()/2, position3d(0)-bottom, notex(i, time_delay)+note_width(time_delay)/2, position3d(time_delay)-bottom, visual->color(20, 20, 20));
+        for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
+            visual->line(notex(GREEN, j-time)-5, position3d(j-time)-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)-bottom, visual->color(40, 40, 40, 255));
+            if ((j/(60*1000/bpm))%4==0) {
+                visual->line(notex(GREEN, j-time)-5, position3d(j-time)-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)-bottom, visual->color(127, 127, 127, 255));
+                visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1-bottom, visual->color(127, 127, 127, 255));
                 }
+            }
+        if (bottom) return;
+        for (j=0;j<5;j++) {
+            if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0)-bottom, visual);
+            else presser[j]->apply_surface(notex(j), position3d(0)-bottom, visual);
+            }
+        for (j=progress;j>start&&position3d(chart[j].end-time)<visual->get_height();j--);
 
-            for (j=0;j<5;j++) {
-                if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0), visual);
-                else presser[j]->apply_surface(notex(j), position3d(0), visual);
-                }
-            for (j=progress;j>0&&position3d(chart[j].end-time)<visual->get_height();j--);
-
-            while (j<size&&position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
-                if (chart[j].hit==false||chart[j].end>chart[j].time)
-                    for (int i=0;i<5;i++)
-                        if ((chart[j].type>>i)%2) {
-                            if (chart[j].end>chart[j].time) {
-                                if (chart[j].hold) {
-                                    if (starpower%2) visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, visual->color(0, 255, 255));
-                                    else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, color[i]);
-                                    }
-                                else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time), notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time), 6, visual->color(127, 127, 127));
+        while (j<size&&position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
+            if (chart[j].hit==false||chart[j].end>chart[j].time)
+                for (int i=0;i<5;i++)
+                    if ((chart[j].type>>i)%2) {
+                        if (chart[j].end>chart[j].time) {
+                            if (chart[j].hold) {
+                                if (starpower%2) visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, visual->color(0, 255, 255));
+                                else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, color[i]);
                                 }
-                            if (position3d(chart[j].time-time)<visual->get_height()) {
-                                if (!chart[j].hit&&!chart[j].hopo) {
-                                    if (starpower%2) notes[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
-                                    else notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
-                                    }
-                                else if (!chart[j].hit) {
-                                    if (starpower%2) hopos[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
-                                    else hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0), visual, position3d(time_delay));
-                                    }
+                            else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, visual->color(127, 127, 127));
+                            }
+                        if (position3d(chart[j].time-time)<visual->get_height()) {
+                            if (!chart[j].hit&&!chart[j].hopo) {
+                                if (starpower%2) notes[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
+                                else notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
+                                }
+                            else if (!chart[j].hit) {
+                                if (starpower%2) hopos[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
+                                else hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
                                 }
                             }
-                j++;
-                }
-            char string[50];
-            if (!practice) {
-                visual->settextstyle("lazy", NULL, 25);
-                int posx=notex(GREEN)-visual->textwidth("9999999"), posy=SIZEY-140;
-                sprintf (string, "%lld", score/10000);
-                visual->textxy (string, posx-5, posy);
-                posy+=visual->textheight(string);
-                sprintf (string, "%d", streak);
-                visual->textxy (string, posx, posy);
-                posy+=visual->textheight(string);
-                sprintf (string, "x%d", multiplier()*(starpower%2+1));
-                visual->textxy(string, posx, posy);
-                rockmart->apply_surface(notex(GREEN)-20, SIZEY-150-rockmart->get_height(), visual, SIZEY-150-rockmart->get_height()*rockmeter/1000);
-                spbarfilled->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbarfilled->get_height(), visual, SIZEY-150-spbarfilled->get_height()*starpower/100000);
-                spbar->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbar->get_height(), visual);
-                }
+                        }
+            j++;
+            }
+        char string[50];
+        if (!practice) {
+            visual->settextstyle("lazy", NULL, 25);
+            int posx=notex(GREEN)-visual->textwidth("9999999"), posy=SIZEY-140;
+            sprintf (string, "%lld", score/10000);
+            visual->textxy (string, posx-5, posy);
+            posy+=visual->textheight(string);
+            sprintf (string, "%d", streak);
+            visual->textxy (string, posx, posy);
+            posy+=visual->textheight(string);
+            sprintf (string, "x%d", multiplier()*(starpower%2+1));
+            visual->textxy(string, posx, posy);
+            rockmart->apply_surface(notex(GREEN)-20, SIZEY-150-rockmart->get_height(), visual, SIZEY-150-rockmart->get_height()*rockmeter/1000);
+            spbarfilled->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbarfilled->get_height(), visual, SIZEY-150-spbarfilled->get_height()*starpower/100000);
+            spbar->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbar->get_height(), visual);
+            }
 }
 
 int highway::multiplier () {
@@ -825,7 +875,6 @@ long long int highway::refresh (Uint8* keyboard) {
                             }
                         progress++;
                         }
-                    if (chart[progress].time-time>time_delay&&chart[progress-1].end<time) MusicStream->hitting(instrument);
                     if (streak>0) MusicStream->hitting(instrument);
 
                     for (i=0, fretaux=0;i<5;i++) fretaux+=newfretstate[i]<<i;
@@ -920,6 +969,12 @@ long long int highway::refresh (Uint8* keyboard) {
                     return score/10000;
 }
 
+float highway::percentage() {
+    int n=0;
+    for (int i=start;i<progress;i++) if (chart[i].hit) n++;
+    return (float)100*n/(progress-start);
+}
+
 int highway::note_width(int dt, bool check) {
     return (note_w-2*(visual->get_height()-position3d(dt, check))*(note_w)/(3*height));
 }
@@ -930,7 +985,7 @@ int highway::notex (int note, int dt, bool check) {
 }
 
 bool highway::alive() {
-    if (!godmode&&!practice&&rockmeter==0) MusicStream->lose();
+    if (!godmode&&!practice&&rockmeter==0) MusicStream->effect("losing");
     return godmode||practice||rockmeter>0;
 }
 

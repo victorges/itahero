@@ -11,7 +11,7 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{33DE3FC6-D4B3-4EEC-9B00-A612266E043C}
+AppId={{B936F7E9-6182-4530-9E8A-6A30AA5C044B}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -52,7 +52,7 @@ Name: "{app}\src"; Components: source
 Source: "..\..\ITA Hero.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: program
 Source: "..\..\Chart\*"; DestDir: "{app}\Chart"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "Chart Maker,.svn"
 Source: "..\..\Font\*"; DestDir: "{app}\Font"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: ".svn"
-Source: "..\..\FX\*"; DestDir: "{app}\FX"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "menu*,.svn"
+Source: "..\..\FX\*"; DestDir: "{app}\FX"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: ".svn"
 Source: "..\..\Image\*"; DestDir: "{app}\Image"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "originals,.svn"   
 Source: "..\..\Sound\*"; DestDir: "{app}\Sound"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: ".svn"
 Source: "..\..\src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "*.o,ITA_Hero_private*,ITAHero.iss,Release,*.win,*.layout,Libraries dev packs,object,.svn"
