@@ -341,7 +341,7 @@ void CMusic::preview (bool active, int sixteenth=8) {
             if (sound->getVolume()>0.0) sound->setVolume(sound->getVolume()-0.0005);
             else sound->setPlayPosition(sound->getPlayLength()/2);
             }
-        else if (sound->getVolume()<0.4) sound->setVolume(sound->getVolume()+0.001);
+        else if (sound->getVolume()<0.4) sound->setVolume(sound->getVolume()+0.002);
         }
     else if (sound!=NULL) unload();
 }
@@ -580,8 +580,6 @@ CHighway::CHighway (CDrawer *vsl, CMusic* stream, en_instrument instr, en_diffic
         }
         rockmart=new CDrawer(FilePath("Image/", "rockmeter", ".png"));
         rockmart->resize(rockmart->get_width(), height-150);
-        
-        animation=new CSprite(visual, this);
 
         spbar=new CDrawer(FilePath("Image/", "starpower", ".png"));
         spbar->resize(spbar->get_width(), (height-150)/3);

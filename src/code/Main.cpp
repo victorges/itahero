@@ -58,7 +58,7 @@ void PreSong (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], in
     for (int i=SDL_GetTicks();SDL_GetTicks()-i<1357;) {
         screen->Flip();
         screen->clear();
-        for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((int)(SDL_GetTicks()-i-3000)*song->speed()), NULL, SIZEY+1+(1357-(SDL_GetTicks()-i))*players[j]->get_height()/1357);
+        for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((int)(SDL_GetTicks()-i-4357)*song->speed()), NULL, SIZEY+1+(1357-(SDL_GetTicks()-i))*players[j]->get_height()/1357);
         if (CheckEsc()) {
             screen->clear();
             for (int j=0;j<nPlayers;j++) players[j]->draw(song->time(), SDL_GetKeyState(NULL));
@@ -71,8 +71,6 @@ void PreSong (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], in
     for (int i=SDL_GetTicks();SDL_GetTicks()-i<3000;) {
         screen->Flip();
         screen->clear();
-        char string[50];
-        screen->textxy(string, 0, 0);
         for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time()+(int)((int)(SDL_GetTicks()-i-3000)*song->speed()), SDL_GetKeyState(NULL));
         if (CheckEsc()) {
             screen->clear();
@@ -119,7 +117,7 @@ void Rewind (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], int
         for (i=SDL_GetTicks();SDL_GetTicks()-i<dt;) {
             screen->Flip();
             screen->clear();
-            for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((SDL_GetTicks()-i-dt)*song->speed()), SDL_GetKeyState(NULL));
+            for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((int)((SDL_GetTicks()-i-dt))*song->speed()), SDL_GetKeyState(NULL));
             if (CheckEsc()) {
                 screen->clear();
                 for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time(), SDL_GetKeyState(NULL));
