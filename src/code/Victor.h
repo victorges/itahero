@@ -77,16 +77,6 @@ void CDrawer::Flip () {
     SDL_Flip(surface);
 }
 
-void CDrawer::Update(int x1, int y1, int x2, int y2) {
-    if (x1>x2) x1^=x2^=x1^=x2;
-    if (y1>y2) y1^=y2^=y1^=y2;
-    if (x1<0) x1=0;
-    if (y1<0) y1=0;
-    if (x2>surface->w) x2=surface->w-1;
-    if (y2>surface->h) y2=surface->h-1;
-    SDL_UpdateRect(surface, x1, y1, x2-x1, y2-y1);
-}
-
 void CDrawer::clear () {
     if (background==NULL) SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
     else background->apply_surface(0, 0, this);
@@ -940,10 +930,6 @@ void CHighway::draw (int time, Uint8* keyboard, int bottom) {
             if (chart[progress].time-time>timing_window) for (i=0;i<5;i++) this->fretstate[i]=fretstate[i];
             }
 
-        visual->settextstyle("lazy", NULL, 25);
-        visual->Update(notex(GREEN)-visual->textwidth("9999999")-10, SIZEY-height, notex(ORANGE, -timing_window)+note_width(-timing_window), SIZEY);
-        visual->bar(notex(GREEN)-visual->textwidth("9999999")-10, SIZEY-height, notex(ORANGE, -timing_window)+note_width(-timing_window), SIZEY, visual->color(0, 0, 1, 0));
-
         visual->line(notex(GREEN, -1000)-5, position3d(-1000)-bottom, notex(GREEN, time_delay)-5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
         visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000)-bottom, notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
         for (int i=0;i<5;i++) visual->line(notex(i)+note_width()/2, position3d(0)-bottom, notex(i, time_delay)+note_width(time_delay)/2, position3d(time_delay)-bottom, visual->color(20, 20, 20));
@@ -954,7 +940,6 @@ void CHighway::draw (int time, Uint8* keyboard, int bottom) {
                 visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1-bottom, visual->color(127, 127, 127, 255));
                 }
             }
-
         if (bottom) return;
         for (j=0;j<5;j++) {
             if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0)-bottom, visual);
@@ -990,6 +975,7 @@ void CHighway::draw (int time, Uint8* keyboard, int bottom) {
         
         if (!practice) {
             char string[50];
+            visual->settextstyle("lazy", NULL, 25);
             int posx=notex(GREEN)-visual->textwidth("9999999"), posy=SIZEY-140;
             sprintf (string, "%lld", score/10000);
             visual->textxy (string, posx-5, posy);

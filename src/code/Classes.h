@@ -56,7 +56,6 @@ class CDrawer {
       void setkey(Uint32 color);
       void setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A=255);
       void Flip();
-      void Update(int x, int y, int w, int h);
       void clear();
 };
 
@@ -295,11 +294,7 @@ void CSprite::animate() {
         if (sustain[i]->current) sustain[i]->current->frame->apply_surface(linked->notex(i)+sustain[i]->current->frame->get_width()/5, linked->position3d(0)+linked->presser[i]->get_height()*3/4-sustain[i]->current->frame->get_height(), screen);
         if (notes[i]->current) notes[i]->current->frame->apply_surface(linked->notex(i)+notes[i]->current->frame->get_width()/5, linked->position3d(0)+linked->presser[i]->get_height()*3/4-notes[i]->current->frame->get_height(), screen);
         }
-    if (spower->current) {
-        spower->current->frame->apply_surface((linked->notex(2)+linked->notex(3))/2-spower->current->frame->get_width()/2, linked->position3d(0)+linked->note_h-spower->current->frame->get_height(), screen);
-        linked->visual->Update(linked->notex(GREEN)-linked->visual->textwidth("9999999")-10, 0, linked->notex(ORANGE, -linked->timing_window)+linked->note_width(-linked->timing_window), SIZEY-linked->height);
-        }
-    else linked->visual->bar(linked->notex(GREEN)-linked->visual->textwidth("9999999")-10, 0, linked->notex(ORANGE, -linked->timing_window)+linked->note_width(-linked->timing_window), SIZEY-linked->height, linked->visual->color(0, 0, 1, 255));
+    if (spower->current) spower->current->frame->apply_surface((linked->notex(2)+linked->notex(3))/2-spower->current->frame->get_width()/2, linked->position3d(0)+linked->note_h-spower->current->frame->get_height(), screen);
 }
 
 void CSprite::hit(int fret) {
