@@ -53,7 +53,7 @@ Source: "..\..\ITA Hero.exe"; DestDir: "{app}"; Flags: ignoreversion; Components
 Source: "..\..\Chart\*"; DestDir: "{app}\Chart"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "Chart Maker,.svn"
 Source: "..\..\Font\*"; DestDir: "{app}\Font"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: ".svn"
 Source: "..\..\FX\*"; DestDir: "{app}\FX"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: ".svn"
-Source: "..\..\Image\*"; DestDir: "{app}\Image"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "originals,.svn"   
+Source: "..\..\Image\*"; DestDir: "{app}\Image"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "originals,\Sprite\*.rar,.svn"   
 Source: "..\..\Sound\*"; DestDir: "{app}\Sound"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: ".svn"
 Source: "..\..\src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "*.o,ITA_Hero_private*,ITAHero.iss,Release,*.win,*.layout,Libraries dev packs,object,.svn"
 Source: "..\..\irrKlang.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program 
