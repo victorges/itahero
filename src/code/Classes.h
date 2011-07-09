@@ -52,8 +52,11 @@ class CDrawer {
       void parallelogram (int x1, int y1, int x2, int y2, int w, Uint32 color);
         
       Uint32 color (Uint8 R, Uint8 G, Uint8 B, Uint8 A=255);
+      void setalpha(Uint8 A);
+      void setkey(Uint32 color);
       void setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A=255);
       void Flip();
+      void Update(int x, int y, int w, int h);
       void clear();
 };
 
@@ -117,7 +120,9 @@ class CMusic {
       void hitting(char instrument, bool active);
       void check_record_file(int nplayes);
       };
+      
 class CSprite;
+
 class CHighway {
     private:
       int width, height;
@@ -151,7 +156,7 @@ class CHighway {
       CHighway (CDrawer *vsl, CMusic *MusicStream, en_instrument instrument, en_difficulty difficulty, int *extras, char *fret, char *pick, char spkey, int location, int width, int height);
       ~CHighway ();
       void reset();
-      void draw (int time, Uint8* keyboard, int bottom);
+      void draw (int time=-1, Uint8* keyboard=NULL, int bottom=SIZEY);
       int multiplier ();
       long long int refresh(Uint8* keyboard);
       float percentage();
@@ -159,31 +164,32 @@ class CHighway {
     friend class CSprite;
     };
 
-class CFrame {
-          private:
+struct CFrame {
             CDrawer* frame;
             CFrame* next;
-          public:
-            CFrame (char filename[]);
-            CFrame* create_next(char filename[]);
-            CFrame* get_next();
-            void draw(int posx, int posy);
-          };
+            };
 
 class CSprite {
     private:
       CFrame* fire;
       CFrame* lightning;
+      CFrame* blow;
 
-      CFrame** notes;
-      CFrame* spower;
+      struct node {
+            CFrame* current;
+            int time, delay;
+            } **notes;
+      node *spower;
+      node **sustain;
       CDrawer* screen;
       CHighway* linked;
     public:
       CSprite(CDrawer* screen, CHighway *link);
       ~CSprite();
-      void refresh();
+      void animate();
       void hit(int note);
+      void sustainon(int fret);
+      void letgo(int fret);
       void starpower();
     };
 
@@ -191,22 +197,57 @@ CSprite::CSprite (CDrawer* screen, CHighway *link): screen(screen), linked(link)
     char string[100];
     CFrame* aux;
 
-    aux=fire=new CFrame(FilePath("Images/Sprites/", "fire1", ".png"));
+    aux=fire=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "fire1", ".png"));
+    aux->frame->resize(linked->presser[0]->get_width()*3/4);
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
     for (int i=2;i<=5;i++) {
         sprintf(string, "fire%d", i);
-        aux=aux->create_next(FilePath("Images/Sprites/", string, ".png"));
+        aux->next=new CFrame;
+        aux=aux->next;
+        aux->next=NULL;
+        aux->frame=new CDrawer (FilePath("Image/Sprite/", string, ".png"));
+        aux->frame->resize(linked->presser[0]->get_width()*3/4);
+        aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
         }
 
-    aux=lightning=new CFrame(FilePath("Images/Sprites/", "lightning1", ".png"));
+    aux=lightning=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "lightning1", ".png"));
+    aux->frame->resize(3*linked->note_width());
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
     for (int i=2;i<=2;i++) {
         sprintf(string, "lightning%d", i);
-        aux=aux->create_next(FilePath("Images/Sprites/", string, ".png"));
+        aux->next=new CFrame;
+        aux=aux->next;
+        aux->next=NULL;
+        aux->frame=new CDrawer (FilePath("Image/Sprite/", string, ".png"));
+        aux->frame->resize(3*linked->note_width());
+        aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
         }
-
-    notes=new CFrame*[5];
-    for (int i=0;i<5;i++) notes[i]=NULL;
-
-    spower=NULL;
+        
+    aux=blow=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "sustain1", ".png"));
+    aux->frame->resize(linked->presser[0]->get_width()*3/4);
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+    aux=blow->next=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "sustain2", ".png"));
+    aux->frame->resize(linked->presser[0]->get_width()*3/4);
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+    aux->next=blow;
+    
+    notes=new node*[5];
+    for (int i=0;i<5;i++) {
+        notes[i]=new node;
+        notes[i]->current=NULL;
+        }
+    spower=new node;
+    spower->current=NULL;
+    
+    sustain=new node*[5];
+    for (int i=0;i<5;i++) {
+        sustain[i]=new node;
+        sustain[i]->current=NULL;
+        }
 }
 
 CSprite::~CSprite() {
@@ -214,38 +255,78 @@ CSprite::~CSprite() {
 
     aux=fire;
     while (fire!=NULL) {
-        aux=fire->get_next();
+        aux=fire->next;
         delete fire;
         fire=aux;
         }
 
     aux=lightning;
     while (lightning!=NULL) {
-        aux=lightning->get_next();
+        aux=lightning->next;
         delete lightning;
         lightning=aux;
         }
 
     delete[] notes;
+    delete[] sustain;
+}
+
+void CSprite::animate() {
+    for (int i=0;i<5;i++) {
+        if (notes[i]->current && SDL_GetTicks() > notes[i]->time+notes[i]->delay) {
+            notes[i]->current=notes[i]->current->next;
+            notes[i]->time=SDL_GetTicks();
+            notes[i]->delay-=5;
+            }
+        if (sustain[i]->current && SDL_GetTicks() > sustain[i]->time+sustain[i]->delay) {
+            sustain[i]->current=sustain[i]->current->next;
+            sustain[i]->time=SDL_GetTicks();
+            sustain[i]->delay=30;
+            }
+        }
+
+    if (spower->current && SDL_GetTicks() > spower->time+spower->delay) {
+        spower->current=spower->current->next;
+        spower->time=SDL_GetTicks();
+        spower->delay=50;
+        }
+
+    for (int i=0;i<5;i++) {
+        if (sustain[i]->current) sustain[i]->current->frame->apply_surface(linked->notex(i)+sustain[i]->current->frame->get_width()/5, linked->position3d(0)+linked->presser[i]->get_height()*3/4-sustain[i]->current->frame->get_height(), screen);
+        if (notes[i]->current) notes[i]->current->frame->apply_surface(linked->notex(i)+notes[i]->current->frame->get_width()/5, linked->position3d(0)+linked->presser[i]->get_height()*3/4-notes[i]->current->frame->get_height(), screen);
+        }
+    if (spower->current) {
+        spower->current->frame->apply_surface((linked->notex(2)+linked->notex(3))/2-spower->current->frame->get_width()/2, linked->position3d(0)+linked->note_h-spower->current->frame->get_height(), screen);
+        linked->visual->Update(linked->notex(GREEN)-linked->visual->textwidth("9999999")-10, 0, linked->notex(ORANGE, -linked->timing_window)+linked->note_width(-linked->timing_window), SIZEY-linked->height);
+        }
+    else linked->visual->bar(linked->notex(GREEN)-linked->visual->textwidth("9999999")-10, 0, linked->notex(ORANGE, -linked->timing_window)+linked->note_width(-linked->timing_window), SIZEY-linked->height, linked->visual->color(0, 0, 1, 255));
 }
 
 void CSprite::hit(int fret) {
-    notes[fret]=fire;
+    for (int i=0;i<5;i++)
+        if ((fret>>i)%2) {
+            notes[i]->current=fire;
+            notes[i]->time=SDL_GetTicks();
+            notes[i]->delay=35;
+            }
+}
+
+void CSprite::sustainon(int fret) {
+    for (int i=0;i<5;i++)
+        if ((fret>>i)%2) {
+            sustain[i]->current=blow;
+            sustain[i]->time=SDL_GetTicks();
+            sustain[i]->delay=20;
+            }
+}
+
+void CSprite::letgo(int fret) {
+    for (int i=0;i<5;i++)
+        if ((fret>>i)%2) sustain[i]->current=NULL;
 }
 
 void CSprite::starpower() {
-    spower=lightning;
-}
-
-CFrame::CFrame (char filename[]) {
-    frame=new CDrawer (filename);
-    next=NULL;
-}
-
-CFrame* CFrame::create_next(char filename[]) {
-    return next=new CFrame(filename);
-}
-
-CFrame* CFrame::get_next() {
-    return next;
+    spower->current=lightning;
+    spower->time=SDL_GetTicks();
+    spower->delay=50;
 }

@@ -56,8 +56,6 @@ void PreSong (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], in
     SDL_Event event;
     song->effect("start");
     for (int i=SDL_GetTicks();SDL_GetTicks()-i<1357;) {
-        screen->Flip();
-        screen->clear();
         for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((int)(SDL_GetTicks()-i-4357)*song->speed()), NULL, SIZEY+1+(1357-(SDL_GetTicks()-i))*players[j]->get_height()/1357);
         if (CheckEsc()) {
             screen->clear();
@@ -69,8 +67,6 @@ void PreSong (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], in
         }
     song->effect("ticks");
     for (int i=SDL_GetTicks();SDL_GetTicks()-i<3000;) {
-        screen->Flip();
-        screen->clear();
         for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(song->time()+(int)((int)(SDL_GetTicks()-i-3000)*song->speed()), SDL_GetKeyState(NULL));
         if (CheckEsc()) {
             screen->clear();
@@ -87,8 +83,6 @@ void Rewind (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], int
     SDL_Event event;
     song->play();
     for (i=0;song->time()>20&&i<70;i++) {
-        screen->Flip();
-        screen->clear();
         song->settime(backup-(int)(15*(i+1)*song->speed()));
         for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw();
         if (CheckEsc()) {
@@ -103,8 +97,6 @@ void Rewind (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], int
         song->pause();
         int dt=(70-i)*15;
         while (i++<70) {
-            screen->Flip();
-            screen->clear();
             for (int j=0;j<nPlayers;j++) players[nPlayers-j-1]->draw(backup-(int)(15*(i+1)*song->speed()));
             if (CheckEsc()) {
                 screen->clear();
@@ -115,8 +107,6 @@ void Rewind (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], int
                 }
             }
         for (i=SDL_GetTicks();SDL_GetTicks()-i<dt;) {
-            screen->Flip();
-            screen->clear();
             for (int j=0;j<nPlayers;j++) players[j]->draw(song->time()+(int)((int)((SDL_GetTicks()-i-dt))*song->speed()), SDL_GetKeyState(NULL));
             if (CheckEsc()) {
                 screen->clear();
@@ -129,8 +119,6 @@ void Rewind (bool &menu, CDrawer *screen, CMusic *song, CHighway *players[], int
         song->play();
         }
     while (song->time()<backup) {
-        screen->Flip();
-        screen->clear();
         for (int i=0;i<nPlayers;i++) players[nPlayers-i-1]->draw(song->time(), SDL_GetKeyState(NULL));
         if (CheckEsc()) {
             screen->clear();
@@ -147,7 +135,7 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
     Uint8* keyboard=SDL_GetKeyState(NULL);
     long long int actualscore = 0;
     bool done=false, bmenu=false;
-   CMenu *pause=new CMenu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
+    CMenu *pause=new CMenu (screen, "Pause Menu", SIZEX/2, SIZEY/2);
     pause->addOpt("Resume");
     pause->addOpt("Restart");
     pause->addOpt("Exit");
@@ -155,7 +143,6 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
     PreSong(bmenu, screen, song, players, nPlayers);
     song->play();
     while (!done) {
-        screen->Flip();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYDOWN: case SDL_KEYUP:
@@ -174,9 +161,20 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
             done=true;
             if (!players[0]->practice) {
                 song->effect("winning");
-               CMenu rock(screen, "You Rock!", SIZEX/2, SIZEY/2);
-                rock.print();
-                SDL_Delay(3500);
+                CMenu rock(screen, "You Rock!", SIZEX/2, SIZEY/2);
+                CSprite** rockeff=new CSprite*[nPlayers];
+                for (int i=0;i<nPlayers;i++) rockeff[i]=new CSprite(screen, players[i]);
+                for (int i=SDL_GetTicks();SDL_GetTicks()<i+3500;) {
+                    screen->clear();
+                    for (int j=0;j<nPlayers;j++) {
+                        if (((SDL_GetTicks()/100)+j)%2) rockeff[j]->starpower();
+                        rockeff[j]->animate();
+                        }
+                    rock.print();
+                    screen->Flip();
+                    }
+                for (int i=0;i<nPlayers;i++) delete rockeff[i];
+                delete[] rockeff;
                 screen->clear();
                 }
             else {
@@ -196,6 +194,7 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
                         done=0;
                         break;
                     }
+                screen->clear();
                 }
             }
 
@@ -222,7 +221,6 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
                 pause->setopt(1);
                 }
         else if (!done) {
-            screen->clear();
             for (int i=0;i<nPlayers;i++) {
                 players[nPlayers-i-1]->refresh(keyboard);
                 if (!players[nPlayers-i-1]->alive()) done=true;
@@ -240,6 +238,7 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
                     song->play();
                     done=0;
                     }
+                screen->clear();
                 }
             }
         }
@@ -250,8 +249,7 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
         for(int i=0; i<nPlayers; i++) actualscore+=players[i]->score/10000;
     else
         actualscore = -1;
-    screen->textxy("6", 0, 0);
-    screen->Flip();
+
     return actualscore;
 }
 

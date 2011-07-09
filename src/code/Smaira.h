@@ -32,6 +32,7 @@ CDrawer::CDrawer (char filename[]): background(NULL) {
     SDL_Surface *loaded = NULL;
     
     loaded = IMG_Load ( filename );
+    if (loaded==NULL) Error ("Can't load image file for game");
     if ( loaded != NULL ){
         surface = SDL_DisplayFormat ( loaded );
         if ( surface != NULL )

@@ -57,6 +57,14 @@ int CDrawer::get_width() {
     return surface->w;
 }
 
+void CDrawer::setalpha (Uint8 A) {
+    SDL_SetAlpha(surface, SDL_SRCALPHA, A);
+}
+
+void CDrawer::setkey (Uint32 color) {
+    SDL_SetColorKey (surface, SDL_SRCCOLORKEY, keycolor = color);
+}
+
 void CDrawer::setcolor (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
     maincolor=SDL_MapRGBA(surface->format, R, G, B, A);
 }
@@ -67,7 +75,17 @@ Uint32 CDrawer::color (Uint8 R, Uint8 G, Uint8 B, Uint8 A) {
 
 void CDrawer::Flip () {
     SDL_Flip(surface);
-    }
+}
+
+void CDrawer::Update(int x1, int y1, int x2, int y2) {
+    if (x1>x2) x1^=x2^=x1^=x2;
+    if (y1>y2) y1^=y2^=y1^=y2;
+    if (x1<0) x1=0;
+    if (y1<0) y1=0;
+    if (x2>surface->w) x2=surface->w-1;
+    if (y2>surface->h) y2=surface->h-1;
+    SDL_UpdateRect(surface, x1, y1, x2-x1, y2-y1);
+}
 
 void CDrawer::clear () {
     if (background==NULL) SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
@@ -540,7 +558,7 @@ CHighway::CHighway (CDrawer *vsl, CMusic* stream, en_instrument instr, en_diffic
             char string[100];
             if (notes==NULL) notes=new CDrawer**[300];
             if (hopos==NULL) hopos=new CDrawer**[300];
-            for (int i=(width/5-8)/3-10;i<width/5+30;i++) {
+            for (int i=(width/5-8)/3-10;i<width/5+20;i++) {
                 visual->clear();
                 sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+30)-((width/5-8)/3-10)));
                 visual->textxy(string, SIZEX/2-visual->textwidth(string)/2, 3*SIZEY/4);
@@ -587,7 +605,9 @@ CHighway::CHighway (CDrawer *vsl, CMusic* stream, en_instrument instr, en_diffic
         spbarfilled->resize(spbarfilled->get_width(), (height-150)/3);
 
         note_w=(width/5-8);
-        note_h=(width/5-8);
+        note_h=notes[note_w][GREEN]->get_height();
+
+        animation=new CSprite(visual, this);
 
         FILE *chartfile=NULL;
         int i;
@@ -781,99 +801,23 @@ void CHighway::reset () {
         CheckChartIntegrity(chartfile, "End''off/chartnw|enofile|checsotrirnugpted$$33&8!@/ 1@1$ 144847");
 }
 
-void CHighway::draw (int time=-1, Uint8* keyboard=NULL, int bottom=SIZEY) {
-        bottom=SIZEY-bottom;
-        int i, j;
-
-        char fretstate[5];
-        for (i=0;i<5;i++) fretstate[i]=this->fretstate[i];
-
-        if (time==-1) time=MusicStream->time();
-        if (keyboard!=NULL) {
-            for (i=0;i<5;i++) fretstate[i]=keyboard[fret[i]]!=0;
-            if (chart[progress].time-time>timing_window) for (i=0;i<5;i++) this->fretstate[i]=fretstate[i];
-            }
-
-        visual->line(notex(GREEN, -1000)-5, position3d(-1000)-bottom, notex(GREEN, time_delay)-5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
-        visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000)-bottom, notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
-        for (int i=0;i<5;i++) visual->line(notex(i)+note_width()/2, position3d(0)-bottom, notex(i, time_delay)+note_width(time_delay)/2, position3d(time_delay)-bottom, visual->color(20, 20, 20));
-        for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
-            visual->line(notex(GREEN, j-time)-5, position3d(j-time)-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)-bottom, visual->color(40, 40, 40, 255));
-            if ((j/(60*1000/bpm))%4==0) {
-                visual->line(notex(GREEN, j-time)-5, position3d(j-time)-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)-bottom, visual->color(127, 127, 127, 255));
-                visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1-bottom, visual->color(127, 127, 127, 255));
-                }
-            }
-        if (bottom) return;
-        for (j=0;j<5;j++) {
-            if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0)-bottom, visual);
-            else presser[j]->apply_surface(notex(j), position3d(0)-bottom, visual);
-            }
-        for (j=progress;j>start&&position3d(chart[j].end-time)<visual->get_height();j--);
-
-        while (j<size&&position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
-            if (chart[j].hit==false||chart[j].end>chart[j].time)
-                for (int i=0;i<5;i++)
-                    if ((chart[j].type>>i)%2) {
-                        if (chart[j].end>chart[j].time) {
-                            if (chart[j].hold) {
-                                if (starpower%2) visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, visual->color(0, 255, 255));
-                                else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, color[i]);
-                                }
-                            else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, visual->color(127, 127, 127));
-                            }
-                        if (position3d(chart[j].time-time)<visual->get_height()) {
-                            if (!chart[j].hit&&!chart[j].hopo) {
-                                if (starpower%2) notes[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
-                                else notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
-                                }
-                            else if (!chart[j].hit) {
-                                if (starpower%2) hopos[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
-                                else hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
-                                }
-                            }
-                        }
-            j++;
-            }
-        char string[50];
-        if (!practice) {
-            visual->settextstyle("lazy", NULL, 25);
-            int posx=notex(GREEN)-visual->textwidth("9999999"), posy=SIZEY-140;
-            sprintf (string, "%lld", score/10000);
-            visual->textxy (string, posx-5, posy);
-            posy+=visual->textheight(string);
-            sprintf (string, "%d", streak);
-            visual->textxy (string, posx, posy);
-            posy+=visual->textheight(string);
-            sprintf (string, "x%d", multiplier()*(starpower%2+1));
-            visual->textxy(string, posx, posy);
-            rockmart->apply_surface(notex(GREEN)-20, SIZEY-150-rockmart->get_height(), visual, SIZEY-150-rockmart->get_height()*rockmeter/1000);
-            spbarfilled->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbarfilled->get_height(), visual, SIZEY-150-spbarfilled->get_height()*starpower/100000);
-            spbar->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbar->get_height(), visual);
-            }
-}
-
-int CHighway::multiplier () {
-    if (streak>30) return 4;
-    return (streak/10)+1;
-}
-
 long long int CHighway::refresh (Uint8* keyboard) {
                     int time=MusicStream->time();
                     int i;
                     char fretaux, newfretstate[5], newpickstate[5];
                     bool picked;
-                    
+
                     if (time==~0) return score/10000;
 
                     for (i=0;i<5;i++) newfretstate[i]=keyboard[fret[i]]!=0;
                     for (i=0;pick[i];i++) newpickstate[i]=keyboard[pick[i]]!=0;
-                    
+
                     if (keyboard[spkey]!=0&&!(starpower%2)&&starpower>50000) {
                         starpower++;
                         MusicStream->starpower();
+                        animation->starpower();
                         }
-                        
+
                     while (progress<size&&time-chart[progress].time>timing_window) {
                         if (chart[progress].hit==false) {
                             rockmeter-=20/(starpower%2+1);
@@ -896,7 +840,8 @@ long long int CHighway::refresh (Uint8* keyboard) {
                                            rockmeter+=(21-rockmeter/50)*(starpower%2*3+1);
                                            starpower+=(multiplier()>1)*2*(((starpower+1)%2)*(2+rockmeter*rockmeter/2500)*(timing_window-abs(chart[j].time-time))*chart[j].chord/timing_window);
                                            chart[j].hit=true;
-                                           animation->hit(1);
+                                           animation->hit(chart[j].type);
+                                           if (chart[j].end > chart[j].time) animation->sustainon(chart[j].type);
                                            MusicStream->hitting(instrument);
                                            basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                            streak++;
@@ -915,6 +860,7 @@ long long int CHighway::refresh (Uint8* keyboard) {
                                                 }
                                         else {
                                             chart[j].hold=false;
+                                            animation->letgo(chart[j].type);
                                             if (chart[j].time<chart[j].end) MusicStream->hitting(instrument, false);
                                             }
                                         }
@@ -949,6 +895,8 @@ long long int CHighway::refresh (Uint8* keyboard) {
                                         rockmeter+=(21-rockmeter/50)*(starpower%2*3+1);
                                         starpower+=(multiplier()>1)*2*(((starpower+1)%2)*(2+rockmeter*rockmeter/2500)*(timing_window-abs(chart[j].time-time))*chart[j].chord/timing_window);
                                         chart[j].hit=true;
+                                        animation->hit(chart[j].type);
+                                        if (chart[j].end > chart[j].time) animation->sustainon(chart[j].type);
                                         MusicStream->hitting(instrument);
                                         basescore+=(1000000+(chart[j].end-chart[j].time)*bpm)*chart[j].chord;
                                         streak++;
@@ -962,7 +910,7 @@ long long int CHighway::refresh (Uint8* keyboard) {
 
                     for (i=0;i<5;i++) fretstate[i]=newfretstate[i];
                     for (i=0;pick[i];i++) pickstate[i]=newpickstate[i];
-                    
+
                     if (starpower%2) {
                         starpower-=(time-lasttime)*bpm/60*2;
                         MusicStream->starpower();
@@ -972,11 +920,95 @@ long long int CHighway::refresh (Uint8* keyboard) {
                         MusicStream->starpower(false);
                         }
                     if (starpower>100000) starpower=100000;
-                    
+
                     draw(time);
-                    
+
                     lasttime=time;
                     return score/10000;
+}
+
+void CHighway::draw (int time, Uint8* keyboard, int bottom) {
+        bottom=SIZEY-bottom;
+        int i, j;
+
+        char fretstate[5];
+        for (i=0;i<5;i++) fretstate[i]=this->fretstate[i];
+
+        if (time==-1) time=MusicStream->time();
+        if (keyboard!=NULL) {
+            for (i=0;i<5;i++) fretstate[i]=keyboard[fret[i]]!=0;
+            if (chart[progress].time-time>timing_window) for (i=0;i<5;i++) this->fretstate[i]=fretstate[i];
+            }
+
+        visual->settextstyle("lazy", NULL, 25);
+        visual->Update(notex(GREEN)-visual->textwidth("9999999")-10, SIZEY-height, notex(ORANGE, -timing_window)+note_width(-timing_window), SIZEY);
+        visual->bar(notex(GREEN)-visual->textwidth("9999999")-10, SIZEY-height, notex(ORANGE, -timing_window)+note_width(-timing_window), SIZEY, visual->color(0, 0, 1, 0));
+
+        visual->line(notex(GREEN, -1000)-5, position3d(-1000)-bottom, notex(GREEN, time_delay)-5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
+        visual->line(notex(ORANGE, -1000)+note_width(-1000)+5, position3d(-1000)-bottom, notex(ORANGE, time_delay)+note_width(time_delay)+5, position3d(time_delay)-bottom, visual->color(255, 255, 255, 255));
+        for (int i=0;i<5;i++) visual->line(notex(i)+note_width()/2, position3d(0)-bottom, notex(i, time_delay)+note_width(time_delay)/2, position3d(time_delay)-bottom, visual->color(20, 20, 20));
+        for (j=time-time%(60*1000/bpm), i=0;j<time+time_delay;j+=(60*1000)/bpm, i++) {
+            visual->line(notex(GREEN, j-time)-5, position3d(j-time)-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)-bottom, visual->color(40, 40, 40, 255));
+            if ((j/(60*1000/bpm))%4==0) {
+                visual->line(notex(GREEN, j-time)-5, position3d(j-time)-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)-bottom, visual->color(127, 127, 127, 255));
+                visual->line(notex(GREEN, j-time)-5, position3d(j-time)+1-bottom, notex(ORANGE, j-time)+note_width(j-time)+5, position3d(j-time)+1-bottom, visual->color(127, 127, 127, 255));
+                }
+            }
+
+        if (bottom) return;
+        for (j=0;j<5;j++) {
+            if (fretstate[j]) presserp[j]->apply_surface(notex(j), position3d(0)-bottom, visual);
+            else presser[j]->apply_surface(notex(j), position3d(0)-bottom, visual);
+            }
+        for (j=progress;j>start&&position3d(chart[j].end-time)<visual->get_height();j--);
+
+        while (j<size&&position3d(chart[j].time-time, 0)>position3d(time_delay)-note_h*note_width(time_delay)/note_width(0)) {
+            if (chart[j].hit==false||chart[j].end>chart[j].time)
+                for (int i=0;i<5;i++)
+                    if ((chart[j].type>>i)%2) {
+                        if (chart[j].end>chart[j].time) {
+                            if (chart[j].hold) {
+                                if (starpower%2) visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, visual->color(0, 255, 255));
+                                else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, color[i]);
+                                }
+                            else visual->parallelogram (notex(i, chart[j].time-time)+note_width(chart[j].time-time)/2-3, position3d(chart[j].time-time)-bottom, notex(i, chart[j].end-time)+note_width(chart[j].end-time)/2-3, position3d(chart[j].end-time)-bottom, 6, visual->color(127, 127, 127));
+                            }
+                        if (position3d(chart[j].time-time)<visual->get_height()) {
+                            if (!chart[j].hit&&!chart[j].hopo) {
+                                if (starpower%2) notes[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
+                                else notes[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
+                                }
+                            else if (!chart[j].hit) {
+                                if (starpower%2) hopos[note_width(chart[j].time-time, 0)][STARPOWER]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
+                                else hopos[note_width(chart[j].time-time, 0)][i]->apply_surface(notex(i, chart[j].time-time, 0), position3d(chart[j].time-time, 0)-bottom, visual, position3d(time_delay)-bottom);
+                                }
+                            }
+                        }
+            j++;
+            }
+        animation->animate();
+        
+        if (!practice) {
+            char string[50];
+            int posx=notex(GREEN)-visual->textwidth("9999999"), posy=SIZEY-140;
+            sprintf (string, "%lld", score/10000);
+            visual->textxy (string, posx-5, posy);
+            posy+=visual->textheight(string);
+            sprintf (string, "%d", streak);
+            visual->textxy (string, posx, posy);
+            posy+=visual->textheight(string);
+            sprintf (string, "x%d", multiplier()*(starpower%2+1));
+            visual->textxy(string, posx, posy);
+            rockmart->apply_surface(notex(GREEN)-20, SIZEY-150-rockmart->get_height(), visual, SIZEY-150-rockmart->get_height()*rockmeter/1000);
+            spbarfilled->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbarfilled->get_height(), visual, SIZEY-150-spbarfilled->get_height()*starpower/100000);
+            spbar->apply_surface (notex(ORANGE)+note_width()+10, SIZEY-150-spbar->get_height(), visual);
+            }
+
+}
+
+int CHighway::multiplier () {
+    if (streak>30) return 4;
+    return (streak/10)+1;
 }
 
 float CHighway::percentage() {
@@ -1017,7 +1049,7 @@ void *AllocateFile (char file_name[], size_t &size) {
 void Error (char string[]) {
     SDL_Quit ();
     TTF_Quit ();
-    printf ("%s", string);
+    fprintf (stderr, "%s", string);
     exit(1);
 }
 
