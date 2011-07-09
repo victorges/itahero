@@ -548,9 +548,9 @@ CHighway::CHighway (CDrawer *vsl, CMusic* stream, en_instrument instr, en_diffic
             char string[100];
             if (notes==NULL) notes=new CDrawer**[300];
             if (hopos==NULL) hopos=new CDrawer**[300];
-            for (int i=(width/5-8)/3-10;i<width/5+20;i++) {
+            for (int i=(width/5-8)/3-10;i<width/5+10;i++) {
                 visual->clear();
-                sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+30)-((width/5-8)/3-10)));
+                sprintf (string, "Loading... %d per cent", 1+100*(i-((width/5-8)/3-10))/((width/5+10)-((width/5-8)/3-10)));
                 visual->textxy(string, SIZEX/2-visual->textwidth(string)/2, 3*SIZEY/4);
                 visual->Flip();
 
