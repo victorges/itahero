@@ -192,6 +192,23 @@ class CSprite {
       void starpower();
     };
 
+class CNet {
+    private:
+      IPaddress ip, *remoteip, clientip;
+      TCPsocket sock, newsock;
+      char buffer[512];
+      const char *hostname;
+      Uint16 port;
+    public:
+      CNet(Uint16 gate = 9999);
+      CNet(char *name, Uint16 gate = 9999);
+      ~CNet();
+      void waitconnection();
+      void closeconnection();
+      void writemessage(char *message);
+      bool readmessage();
+    };
+
 CSprite::CSprite (CDrawer* screen, CHighway *link): screen(screen), linked(link) {
     char string[100];
     CFrame* aux;

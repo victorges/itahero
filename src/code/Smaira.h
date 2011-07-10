@@ -23,6 +23,70 @@ void strcpy(char olds[], char news[]){
     olds[i] = 0;
 }
 
+CNet::~CNet(){
+    SDLNet_Quit();
+}
+
+CNet::CNet (Uint16 gate): port(gate){
+    SDLNet_Init();
+    if(SDLNet_ResolveHost(&ip, NULL, port)==-1) {
+        fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+        exit(1);
+    }
+    sock=SDLNet_TCP_Open(&ip);
+    if(!sock) {
+        fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+        exit(1);
+    }
+    hostname = SDLNet_ResolveIP(&ip);
+}
+
+CNet::CNet (char *name, Uint16 gate): port(gate), hostname(name){
+    if(SDLNet_ResolveHost(&clientip, hostname, port)==-1) {
+        fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+        exit(1);
+    }
+    newsock = SDLNet_TCP_Open(&clientip);
+    if(!newsock) {
+        fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
+        exit(1);
+    }
+}
+
+void CNet::waitconnection(){
+    bool quit = false;
+    while(!quit)
+        if(newsock = SDLNet_TCP_Accept(sock)){
+            remoteip = SDLNet_TCP_GetPeerAddress(newsock);
+            if(!remoteip) {
+                fprintf(stderr, "SDLNet_TCP_GetPeerAddress: %s\n", SDLNet_GetError());
+                fprintf(stderr, "This may be a server socket.\n");
+                exit(1);
+            }
+            quit = true;
+        }
+}
+
+void CNet::closeconnection(){
+    SDLNet_TCP_Close(newsock);
+}
+
+bool CNet::readmessage(){
+    if (SDLNet_TCP_Recv(newsock, buffer, 512)>0)
+        return true;
+    return false;
+}
+
+void CNet::writemessage(char *message){
+    int len;
+    sprintf (buffer, message);
+    len = strlen(buffer) + 1;
+		if(SDLNet_TCP_Send(newsock, (void *)buffer, len) < len){
+			fprintf(stderr, "SDLNet_TCP_Send: %s\n", SDLNet_GetError());
+			exit(1);
+		}
+}
+
 CDrawer::~CDrawer (){
     SDL_FreeSurface ( surface );
     TTF_CloseFont(font);
