@@ -223,9 +223,11 @@ bool CMenu::navigate () {  //SDL
                     }
                 break;
             case SDL_ACTIVEEVENT:
-                SDL_ShowCursor(SDL_ENABLE);
-                while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
-                SDL_ShowCursor(SDL_DISABLE);
+                if (event.active.state&SDL_APPINPUTFOCUS) {
+                    SDL_ShowCursor(SDL_ENABLE);
+                    while (event.type!=SDL_ACTIVEEVENT||!(event.active.state&SDL_APPINPUTFOCUS)||!event.active.gain) SDL_PollEvent(&event);
+                    SDL_ShowCursor(SDL_DISABLE);
+                    }
                 break;
             case SDL_QUIT: exit(0); break;
             }
@@ -812,8 +814,8 @@ long long int CHighway::refresh (Uint8* keyboard) {
                         if (chart[progress].hit==false) {
                             rockmeter-=20/(starpower%2+1);
                             basescore+=(1000000+(chart[progress].end-chart[progress].time)*bpm)*chart[progress].chord;
+                            if (streak||progress==0) MusicStream->hitting(instrument, false);
                             streak=0;
-                            MusicStream->hitting(instrument, false);
                             }
                         progress++;
                         }
@@ -1015,6 +1017,148 @@ int CHighway::notex (int note, int dt, bool check) {
 bool CHighway::alive() {
     if (!godmode&&!practice&&rockmeter==0) MusicStream->effect("losing");
     return godmode||practice||rockmeter>0;
+}
+
+bool CSprite::active;
+CSprite::CSprite (CDrawer* screen, CHighway *link): screen(screen), linked(link) {
+    if (!active) return;
+    char string[100];
+    CFrame* aux;
+
+    aux=fire=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "fire1", ".png"));
+    aux->frame->resize(linked->presser[0]->get_width()*3/4);
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+    for (int i=2;i<=5;i++) {
+        sprintf(string, "fire%d", i);
+        aux->next=new CFrame;
+        aux=aux->next;
+        aux->next=NULL;
+        aux->frame=new CDrawer (FilePath("Image/Sprite/", string, ".png"));
+        aux->frame->resize(linked->presser[0]->get_width()*3/4);
+        aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+        }
+
+    aux=lightning=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "lightning1", ".png"));
+    aux->frame->resize(3*linked->note_width());
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+    for (int i=2;i<=2;i++) {
+        sprintf(string, "lightning%d", i);
+        aux->next=new CFrame;
+        aux=aux->next;
+        aux->next=NULL;
+        aux->frame=new CDrawer (FilePath("Image/Sprite/", string, ".png"));
+        aux->frame->resize(3*linked->note_width());
+        aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+        }
+
+    aux=blow=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "sustain1", ".png"));
+    aux->frame->resize(linked->presser[0]->get_width()*3/4);
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+    aux=blow->next=new CFrame;
+    aux->frame=new CDrawer (FilePath("Image/Sprite/", "sustain2", ".png"));
+    aux->frame->resize(linked->presser[0]->get_width()*3/4);
+    aux->frame->setkey(aux->frame->color(0, 0, 0, 255));
+    aux->next=blow;
+
+    notes=new node*[5];
+    for (int i=0;i<5;i++) {
+        notes[i]=new node;
+        notes[i]->current=NULL;
+        }
+    spower=new node;
+    spower->current=NULL;
+
+    sustain=new node*[5];
+    for (int i=0;i<5;i++) {
+        sustain[i]=new node;
+        sustain[i]->current=NULL;
+        }
+}
+
+CSprite::~CSprite() {
+    if (!active) return;
+    CFrame* aux;
+
+    aux=fire;
+    while (fire!=NULL) {
+        aux=fire->next;
+        delete fire;
+        fire=aux;
+        }
+
+    aux=lightning;
+    while (lightning!=NULL) {
+        aux=lightning->next;
+        delete lightning;
+        lightning=aux;
+        }
+
+    delete[] notes;
+    delete[] sustain;
+}
+
+void CSprite::animate() {
+    if (!active) return;
+    for (int i=0;i<5;i++) {
+        if (notes[i]->current && SDL_GetTicks() > notes[i]->time+notes[i]->delay) {
+            notes[i]->current=notes[i]->current->next;
+            notes[i]->time=SDL_GetTicks();
+            notes[i]->delay-=5;
+            }
+        if (sustain[i]->current && SDL_GetTicks() > sustain[i]->time+sustain[i]->delay) {
+            sustain[i]->current=sustain[i]->current->next;
+            sustain[i]->time=SDL_GetTicks();
+            sustain[i]->delay=30;
+            }
+        }
+
+    if (spower->current && SDL_GetTicks() > spower->time+spower->delay) {
+        spower->current=spower->current->next;
+        spower->time=SDL_GetTicks();
+        spower->delay=50;
+        }
+
+    for (int i=0;i<5;i++) {
+        if (sustain[i]->current) sustain[i]->current->frame->apply_surface(linked->notex(i)+sustain[i]->current->frame->get_width()/5, linked->position3d(0)+linked->presser[i]->get_height()*3/4-sustain[i]->current->frame->get_height(), screen);
+        if (notes[i]->current) notes[i]->current->frame->apply_surface(linked->notex(i)+notes[i]->current->frame->get_width()/5, linked->position3d(0)+linked->presser[i]->get_height()*3/4-notes[i]->current->frame->get_height(), screen);
+        }
+    if (spower->current) spower->current->frame->apply_surface((linked->notex(2)+linked->notex(3))/2-spower->current->frame->get_width()/2, linked->position3d(0)+linked->note_h-spower->current->frame->get_height(), screen);
+}
+
+void CSprite::hit(int fret) {
+    if (!active) return;
+    for (int i=0;i<5;i++)
+        if ((fret>>i)%2) {
+            notes[i]->current=fire;
+            notes[i]->time=SDL_GetTicks();
+            notes[i]->delay=35;
+            }
+}
+
+void CSprite::sustainon(int fret) {
+    if (!active) return;
+    for (int i=0;i<5;i++)
+        if ((fret>>i)%2) {
+            sustain[i]->current=blow;
+            sustain[i]->time=SDL_GetTicks();
+            sustain[i]->delay=20;
+            }
+}
+
+void CSprite::letgo(int fret) {
+    if (!active) return;
+    for (int i=0;i<5;i++)
+        if ((fret>>i)%2) sustain[i]->current=NULL;
+}
+
+void CSprite::starpower() {
+    if (!active) return;
+    spower->current=lightning;
+    spower->time=SDL_GetTicks();
+    spower->delay=50;
 }
 
 void *AllocateFile (char file_name[], size_t &size) {

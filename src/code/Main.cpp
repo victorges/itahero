@@ -5,8 +5,6 @@
 #include <SDL/SDL_net.h>
 #include <math.h>
 
-#define FULLSCREEN
-
 enum en_instrument {GUITAR, BASS, DRUMS};
 
 enum en_difficulty {EASY, MEDIUM, HARD, EXPERT};
@@ -21,13 +19,15 @@ enum en_notes {GREEN, RED, YELLOW, BLUE, ORANGE, STARPOWER};
 class {
     int resolutionx;
     int resolutiony;
+    int sizex;
+    int sizey;
     public:
-        int resx() {return resolutionx;}
-        int resy() {return resolutiony;}
+        int sizx() {return sizex;}
+        int sizy() {return sizey;}
     friend int main (int argc, char *argv[]);
     } video;
-#define SIZEX (video.resx())
-#define SIZEY (video.resy())
+#define SIZEX (video.sizx())
+#define SIZEY (video.sizy())
 
 #include "Functions.h"
 #include "Classes.h"
@@ -42,10 +42,12 @@ bool CheckEsc() {
                     if (event.key.keysym.sym==SDLK_ESCAPE) return true;
                     break;
                 case SDL_ACTIVEEVENT:
-                    SDL_ShowCursor(SDL_ENABLE);
-                    while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
-                    SDL_ShowCursor(SDL_DISABLE);
-                    return true;
+                    if (event.active.state&SDL_APPINPUTFOCUS) {
+                        SDL_ShowCursor(SDL_ENABLE);
+                        while (event.type!=SDL_ACTIVEEVENT||!(event.active.state&SDL_APPINPUTFOCUS)||!event.active.gain) SDL_PollEvent(&event);
+                        SDL_ShowCursor(SDL_DISABLE);
+                        return true;
+                        }
                     break;
                 case SDL_QUIT: exit(0); break;
                 }
@@ -164,8 +166,10 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
                     keyboard=SDL_GetKeyState(NULL);
                     break;
                 case SDL_ACTIVEEVENT:
-                    SDL_ShowCursor(SDL_ENABLE);
-                    bmenu=true;
+                    if (event.active.state&SDL_APPINPUTFOCUS) {
+                        SDL_ShowCursor(SDL_ENABLE);
+                        bmenu=true;
+                        }
                     break;
                 case SDL_QUIT: exit(0); break;
                 }
@@ -268,67 +272,81 @@ long long int PlaySong (CDrawer *screen, CMusic *song, CHighway *players[], int 
 }
 
 int main (int argc, char *argv[]) {
-
     SDL_Init (SDL_INIT_EVERYTHING);
     TTF_Init ();
     irrklang::ISoundEngine* engine = irrklang::createIrrKlangDevice();
 
-    #ifndef FULLSCREEN
-    video.resolutionx=1600>SDL_GetVideoInfo()->current_w?SDL_GetVideoInfo()->current_w:1600;
-    video.resolutiony=850>SDL_GetVideoInfo()->current_h?SDL_GetVideoInfo()->current_h:850;
-    #else
-    video.resolutionx=SDL_GetVideoInfo()->current_w;
-    video.resolutiony=SDL_GetVideoInfo()->current_h;
-    #endif
-    
     size_t size;
     char string[200];
     int nSongs;
 
+    CMusic* songs[nSongs];
+    
+    char playersfret[4][5]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
+    char playerssp[4]={SDLK_SPACE, SDLK_RETURN, SDLK_TAB};
+    char playerspick[4][2]={"", "", "", ""};
+    int playersextras[4][10]={{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+    bool fullscreen=false;
+    CSprite::active=true;
+
+    {//load data
+        FILE *reader;
+        reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
+        if (reader==NULL) Error ("Soundlist file not found");
+        sfscanf (reader, "[SONGS=");
+        fscanf (reader, "%d", &nSongs);
+        sfscanf (reader, "]\n");
+
+        for (int i=0;i<nSongs-1;i++) {
+            songs[i]=new CMusic (reader, engine);
+            char c;
+            sfscanf (reader, "~\n");
+            }
+        songs[nSongs-1]=new CMusic (reader, engine);
+        sfscanf (reader, "[/SONGS]");
+        if (fscanf (reader, "%s", string)!=EOF) Error ("Songlist file corrupted");
+        fclose (reader);
+
+        reader=fopen(FilePath("SAVEDATA/", "data", ".dat"), "rb");
+        if (reader!=NULL) {
+            fread(playersfret, sizeof(char), 4*5, reader);
+            fread(playerssp, sizeof(char), 4, reader);
+            fread(playerspick, sizeof(char), 4*2, reader);
+            fread(playersextras, sizeof(char), 4*10, reader);
+            fread(&fullscreen, sizeof(bool), 1, reader);
+            fread(&CSprite::active, sizeof(bool), 1, reader);
+            fclose(reader);
+            for (int i=0;i<4;i++) {
+                for (int j=0;j<6;j++) {
+                    playersfret[i][j]^='c';
+                    }
+                }
+            for (int i=0;i<4;i++) playerssp[i]^='c';
+            for (int i=0;i<4;i++) {
+                for (int j=0;j<2;j++) {
+                    playerspick[i][j]^='c';
+                    }
+                }
+            }
+    } //end of loading data
+
     CDrawer *screen;
-    #ifndef FULLSCREEN
-    screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE );
-    #else
-    screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
-    #endif
+    video.resolutionx=SDL_GetVideoInfo()->current_w;
+    video.resolutiony=SDL_GetVideoInfo()->current_h;
+    if (fullscreen) {
+        video.sizex=video.resolutionx;
+        video.sizey=video.resolutiony;
+        screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
+        }
+    else {
+        video.sizex=1600>video.resolutionx?video.resolutionx:1600;
+        video.sizey=850>video.resolutiony?video.resolutiony:850;
+        screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE );
+        }
+
     screen->setcolor(0, 0, 0);
     SDL_ShowCursor(SDL_DISABLE);
     SDL_WM_SetCaption ( "ITA Hero", NULL );
-
-//load data
-    FILE *reader;
-    reader=fopen(FilePath("Sound/", "songs", ".dat"), "r");
-    if (reader==NULL) Error ("Soundlist file not found");
-    sfscanf (reader, "[SONGS=");
-    fscanf (reader, "%d", &nSongs);
-    sfscanf (reader, "]\n");
-
-    CMusic* songs[nSongs];
-
-    for (int i=0;i<nSongs-1;i++) {
-        songs[i]=new CMusic (reader, engine);
-        char c;
-        sfscanf (reader, "~\n");
-        }
-    songs[nSongs-1]=new CMusic (reader, engine);
-    sfscanf (reader, "[/SONGS]");
-    if (fscanf (reader, "%s", string)!=EOF) Error ("Songlist file corrupted");
-    fclose (reader);
-    
-    char playersfret[4][6]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
-    char playerssp[4]={SDLK_SPACE, SDLK_RETURN, SDLK_TAB};
-    char playerspick[4][3]={"", "", "", ""};
-    int playersextras[4][10]={{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
-    
-    reader=fopen(FilePath("SAVEDATA/", "data", ".dat"), "rb");
-    if (reader!=NULL) {
-        fread(playersfret, sizeof(char), 4*6, reader);
-        fread(playerssp, sizeof(char), 4, reader);
-        fread(playerspick, sizeof(char), 4*3, reader);
-        fread(playersextras, sizeof(char), 4*10, reader);
-        fclose(reader);
-        }
-//end of loading data
 
     CDrawer *wallpaper=new CDrawer(FilePath("Image/", "wallpaper", ".png"));
     screen->load_background(wallpaper);
@@ -355,11 +373,13 @@ int main (int argc, char *argv[]) {
                             }
                         break;
                     case SDL_ACTIVEEVENT:
-                        SDL_ShowCursor(SDL_ENABLE);
-                        songs[menumusic]->pause();
-                        while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
-                        SDL_ShowCursor(SDL_DISABLE);
-                        songs[menumusic]->play();
+                        if (event.active.state&SDL_APPINPUTFOCUS) {
+                            SDL_ShowCursor(SDL_ENABLE);
+                            songs[menumusic]->pause();
+                            while (event.type!=SDL_ACTIVEEVENT||!(event.active.state&SDL_APPINPUTFOCUS)||!event.active.gain) SDL_PollEvent(&event);
+                            SDL_ShowCursor(SDL_DISABLE);
+                            songs[menumusic]->play();
+                            }
                         break;
                     case SDL_QUIT: exit(0); break;
                     }
@@ -379,11 +399,13 @@ int main (int argc, char *argv[]) {
                             }
                         break;
                     case SDL_ACTIVEEVENT:
-                        SDL_ShowCursor(SDL_ENABLE);
-                        songs[menumusic]->pause();
-                        while (event.type!=SDL_ACTIVEEVENT||!event.active.gain) SDL_PollEvent(&event);
-                        SDL_ShowCursor(SDL_DISABLE);
-                        songs[menumusic]->play();
+                        if (event.active.state&SDL_APPINPUTFOCUS) {
+                            SDL_ShowCursor(SDL_ENABLE);
+                            songs[menumusic]->pause();
+                            while (event.type!=SDL_ACTIVEEVENT||!(event.active.state&SDL_APPINPUTFOCUS)||!event.active.gain) SDL_PollEvent(&event);
+                            SDL_ShowCursor(SDL_DISABLE);
+                            songs[menumusic]->play();
+                            }
                         break;
                     case SDL_QUIT: exit(0); break;
                     }
@@ -392,20 +414,20 @@ int main (int argc, char *argv[]) {
         wallpaper->apply_surface(0, 0, screen);
         logo->apply_surface(SIZEX-logo->get_width(), (screen->get_height()-logo->get_height())/2, screen);
         while (SDL_PollEvent(&event));
-       CMenu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
+        CMenu anykey(screen, "Press any key to start", SIZEX/2, 4*SIZEY/5);
         int sttime=SDL_GetTicks();
         event.type=SDL_KEYUP;
         while (event.type!=SDL_KEYDOWN) {
             anykey.print();
             screen->Flip();
             SDL_PollEvent(&event);
-           /* if (event.type==SDL_ACTIVEEVENT) {
+            if (event.type==SDL_ACTIVEEVENT&&event.active.state&SDL_APPINPUTFOCUS) {
                     return 0;
                     SDL_ShowCursor(SDL_ENABLE);
-                    while (event.type!=SDL_ACTIVEEVENT||event.active.gain) SDL_PollEvent(&event);
+                    while (event.type!=SDL_ACTIVEEVENT||!(event.active.state&SDL_APPINPUTFOCUS)||event.active.gain) SDL_PollEvent(&event);
                     SDL_ShowCursor(SDL_DISABLE);
                     }
-            } // nao funciona por algum motivo*/
+            if (event.type==SDL_QUIT) exit(0);
             if ((SDL_GetTicks()-sttime)/500%2) screen->setcolor(0, 0, 0);
             else screen->setcolor(223, 159, 26);
             CHighway::load();
@@ -422,7 +444,7 @@ int main (int argc, char *argv[]) {
     }
 
     screen->clear();
-   CMenu *startmenu=new CMenu(screen, " - Main Menu");
+    CMenu *startmenu=new CMenu(screen, " - Main Menu");
     startmenu->addOpt("Singleplayer");
     startmenu->addOpt("Multiplayer");
     startmenu->addOpt("Practice");
@@ -432,14 +454,13 @@ int main (int argc, char *argv[]) {
     songs[menumusic]->play(0.55);
     bool done=0;
     while (!done) {
-        while (startmenu->navigate()) {
+        while (startmenu->navigate())
             if (songs[menumusic]->isFinished()) {
                 songs[menumusic]->unload();
                 menumusic=rand()%nSongs;
                 songs[menumusic]->load(1.0, 3);
                 songs[menumusic]->play(0.55);
                 }
-            }
         screen->clear();
         switch (startmenu->opts()[0]) {
             case 'S':
@@ -450,7 +471,7 @@ int main (int argc, char *argv[]) {
                     diffic->addOpt("Medium");
                     diffic->addOpt("Hard");
                     diffic->addOpt("Expert");
-                    while (diffic->navigate()){
+                    while (diffic->navigate()) {
                         if (songs[menumusic]->isFinished()) {
                             songs[menumusic]->unload();
                             menumusic=rand()%nSongs;
@@ -468,7 +489,7 @@ int main (int argc, char *argv[]) {
                             case 3: difficulty=HARD; break;
                             case 4: difficulty=EXPERT; break;
                             }
-                       CMenu *songmenu=new CMenu(screen, " - Choose song to play");
+                        CMenu *songmenu=new CMenu(screen, " - Choose song to play");
                         for (int i=0;i<nSongs;i++) {
                             sprintf (string, "%s - %s", songs[i]->artist, songs[i]->title);
                             songmenu->addOpt(string);
@@ -770,6 +791,7 @@ int main (int argc, char *argv[]) {
                    CMenu *options=new CMenu(screen, " - Options");
                     options->addOpt("Controls");
                     options->addOpt("Extras");
+                    options->addOpt("Video");
                     options->addOpt("Back");
                     bool doneopt=0;
                     while (!doneopt) {
@@ -915,8 +937,8 @@ int main (int argc, char *argv[]) {
                                                     switch (ordmenu->opt()) {
                                                         case 1: playersextras[Chosen][HYPERSPEED]=(playersextras[Chosen][HYPERSPEED]+1)%6; break;
                                                         case 2: playersextras[Chosen][PRECISION]=(playersextras[Chosen][PRECISION]+1)%3; break;
-                                                        case 3: playersextras[Chosen][GODMODE]=(playersextras[Chosen][GODMODE]+1)%2; break;
-                                                        case 4: playersextras[Chosen][ALLHOPO]=(playersextras[Chosen][ALLHOPO]+1)%2; break;
+                                                        case 3: playersextras[Chosen][GODMODE]^=1; break;
+                                                        case 4: playersextras[Chosen][ALLHOPO]^=1; break;
                                                         }
                                                     }
                                                 else doneconfig=1;
@@ -926,6 +948,62 @@ int main (int argc, char *argv[]) {
                                         else donextras=1;
                                         }
                                     delete ordmenu;
+                                }
+                            case 'V':
+                                {
+                                    CMenu *videomenu;
+                                    bool donevideo=0;
+                                    int selected=0;
+                                    while (!donevideo) {
+                                        screen->clear();
+                                        videomenu= new CMenu (screen, " - Video");
+                                        sprintf (string, "Fullscreen: %s", fullscreen?"Yes":"No");
+                                        videomenu->addOpt(string);
+                                        sprintf (string, "Visual effects: %s", CSprite::active?"Yes":"No");
+                                        videomenu->addOpt(string);
+                                        videomenu->addOpt("Back");
+                                        videomenu->setopt(selected);
+                                        while (videomenu->navigate()) {
+                                            if (songs[menumusic]->isFinished()) {
+                                                songs[menumusic]->unload();
+                                                menumusic=rand()%nSongs;
+                                                songs[menumusic]->load(1.0, 3);
+                                                songs[menumusic]->play(0.5);
+                                                }
+                                            }
+                                        selected=videomenu->opt();
+                                        if (!videomenu->cancel()) {
+                                            switch (videomenu->opt()) {
+                                                case 1:
+                                                    fullscreen^=1;
+                                                    delete screen;
+                                                    if (fullscreen) {
+                                                        video.sizex=video.resolutionx;
+                                                        video.sizey=video.resolutiony;
+                                                        screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE | SDL_FULLSCREEN);
+                                                        }
+                                                    else {
+                                                        video.sizex=1600>video.resolutionx?video.resolutionx:1600;
+                                                        video.sizey=850>video.resolutiony?video.resolutiony:850;
+                                                        screen = new CDrawer(SIZEX, SIZEY, 32, SDL_HWSURFACE );
+                                                        }
+                                                    screen->setcolor(0, 0, 0);
+                                                    screen->load_background(wallpaper);
+                                                    delete startmenu;
+                                                    startmenu=new CMenu(screen, " - Main Menu");
+                                                    startmenu->addOpt("Singleplayer");
+                                                    startmenu->addOpt("Multiplayer");
+                                                    startmenu->addOpt("Practice");
+                                                    startmenu->addOpt("Options");
+                                                    startmenu->addOpt("Exit");
+                                                    break;
+                                                case 2: CSprite::active^=1; break;
+                                                case 3: donevideo=1; break;
+                                                }
+                                            }
+                                        else donevideo=1;
+                                        delete videomenu;
+                                        }
                                 }
 
                             case 'B': doneopt=1; break;
@@ -946,10 +1024,23 @@ int main (int argc, char *argv[]) {
     FILE *writer;
     writer=fopen(FilePath("SAVEDATA/", "data", ".dat"), "wb");
     if (writer!=NULL) {
-        fwrite(playersfret, sizeof(char), 4*6, writer);
+        for (int i=0;i<4;i++) {
+            for (int j=0;j<6;j++) {
+                playersfret[i][j]^='c';
+                }
+            }
+        for (int i=0;i<4;i++) playerssp[i]^='c';
+        for (int i=0;i<4;i++) {
+            for (int j=0;j<2;j++) {
+                playerspick[i][j]^='c';
+                }
+            }
+        fwrite(playersfret, sizeof(char), 4*5, writer);
         fwrite(playerssp, sizeof(char), 4, writer);
-        fwrite(playerspick, sizeof(char), 4*3, writer);
+        fwrite(playerspick, sizeof(char), 4*2, writer);
         fwrite(playersextras, sizeof(char), 4*10, writer);
+        fwrite(&fullscreen, sizeof(bool), 1, writer);
+        fwrite(&CSprite::active, sizeof(bool), 1, writer);
         fclose(writer);
         }
 
