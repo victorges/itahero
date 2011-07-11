@@ -280,7 +280,7 @@ int main (int argc, char *argv[]) {
     char string[200];
     int nSongs;
 
-    CMusic* songs[nSongs];
+    CMusic** songs;
     
     char playersfret[4][5]={{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b}, {SDLK_g, SDLK_h, SDLK_j, SDLK_k, SDLK_l}, {SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t}}; //extras: hyperspeed[0], precision mode[1], godmode[2], always hopo[3], practice[9]
     char playerssp[4]={SDLK_SPACE, SDLK_RETURN, SDLK_TAB};
@@ -296,6 +296,7 @@ int main (int argc, char *argv[]) {
         sfscanf (reader, "[SONGS=");
         fscanf (reader, "%d", &nSongs);
         sfscanf (reader, "]\n");
+        songs=new CMusic*[nSongs];
 
         for (int i=0;i<nSongs-1;i++) {
             songs[i]=new CMusic (reader, engine);
