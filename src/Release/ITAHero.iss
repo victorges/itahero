@@ -33,11 +33,12 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Types]
 Name: "full"; Description: "Full installation"
+Name: "fulls"; Description: "Full installation with source"
 Name: "custom"; Description: "Custom installation"; Flags: iscustom
 
 [Components]
-Name: "program"; Description: "Program Files"; Types: full custom; Flags: fixed
-Name: "source"; Description: "Source Files";
+Name: "program"; Description: "Program Files"; Types: full fulls custom; Flags: fixed
+Name: "source"; Description: "Source Files"; Types: fulls
 
 [Dirs]
 Name: "{app}\Chart"
