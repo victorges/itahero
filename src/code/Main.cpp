@@ -789,7 +789,7 @@ int main (int argc, char *argv[]) {
                 break;
             case 'O':
                 {
-                   CMenu *options=new CMenu(screen, " - Options");
+                    CMenu *options=new CMenu(screen, " - Options");
                     options->addOpt("Controls");
                     options->addOpt("Extras");
                     options->addOpt("Video");
@@ -950,6 +950,7 @@ int main (int argc, char *argv[]) {
                                         }
                                     delete ordmenu;
                                 }
+                                break;
                             case 'V':
                                 {
                                     CMenu *videomenu;
@@ -997,6 +998,12 @@ int main (int argc, char *argv[]) {
                                                     startmenu->addOpt("Practice");
                                                     startmenu->addOpt("Options");
                                                     startmenu->addOpt("Exit");
+                                                    delete options;
+                                                    options=new CMenu(screen, " - Options");
+                                                    options->addOpt("Controls");
+                                                    options->addOpt("Extras");
+                                                    options->addOpt("Video");
+                                                    options->addOpt("Back");
                                                     break;
                                                 case 2: CSprite::active^=1; break;
                                                 case 3: donevideo=1; break;
@@ -1006,6 +1013,7 @@ int main (int argc, char *argv[]) {
                                         delete videomenu;
                                         }
                                 }
+                                break;
 
                             case 'B': doneopt=1; break;
                             }
