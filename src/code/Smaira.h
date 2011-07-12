@@ -22,7 +22,7 @@ void strcpy(char olds[], char news[]){
     }
     olds[i] = 0;
 }
-
+/*
 CNet::~CNet(){
     SDLNet_Quit();
 }
@@ -86,7 +86,7 @@ void CNet::writemessage(char *message){
 			exit(1);
 		}
 }
-
+*/
 CDrawer::~CDrawer (){
     SDL_FreeSurface ( surface );
     TTF_CloseFont(font);

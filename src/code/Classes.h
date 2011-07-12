@@ -192,7 +192,7 @@ class CSprite {
       void letgo(int fret);
       void starpower();
     };
-
+/*
 class CNet {
     private:
       IPaddress ip, *remoteip, clientip;
@@ -209,3 +209,4 @@ class CNet {
       void writemessage(char *message);
       bool readmessage();
     };
+*/
