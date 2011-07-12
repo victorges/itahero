@@ -56,14 +56,7 @@ Source: "..\..\FX\*"; DestDir: "{app}\FX"; Flags: ignoreversion recursesubdirs c
 Source: "..\..\Image\*"; DestDir: "{app}\Image"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "originals,\Sprite\*.rar,.svn"   
 Source: "..\..\Sound\*"; DestDir: "{app}\Sound"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: ".svn"
 Source: "..\..\src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program; Excludes: "*.o,ITA_Hero_private*,ITAHero.iss,Release,*.win,*.layout,Libraries dev packs,object,.svn"
-Source: "..\..\irrKlang.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program 
-Source: "..\..\libfreetype-6.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program 
-Source: "..\..\libpng12-0.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program 
-Source: "..\..\SDL.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program 
-Source: "..\..\SDL_image.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program
-Source: "..\..\SDL_net.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program 
-Source: "..\..\SDL_ttf.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program
-Source: "..\..\zlib1.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program 
+Source: "..\..\*.dll"; DestDir: "{sys}"; Flags: sharedfile; Components: program; Excludes: "jpeg.dll,libtiff-3.dll,smpeg.dll"
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
