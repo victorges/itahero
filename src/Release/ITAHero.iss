@@ -19,7 +19,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={src}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 OutputDir=..\Release
 OutputBaseFilename=ITA Hero
@@ -32,8 +32,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Types]
-Name: "full"; Description: "Full installation"
-Name: "fulls"; Description: "Full installation with source"
+Name: "fulls"; Description: "Full installation"
+Name: "full"; Description: "Full, without source code"
 Name: "custom"; Description: "Custom installation"; Flags: iscustom
 
 [Components]
