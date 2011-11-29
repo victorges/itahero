@@ -1,4 +1,4 @@
-[SONGS=7]
+[SONGS=8]
 FILE=escape
 TITLE=Escape Me
 ARTIST=Tiesto (feat. Cc Sheffield)
@@ -26,4 +26,8 @@ ARTIST=David Guetta (feat. Chris Willis)
 FILE=paisefilhos
 TITLE=Pais e Filhos
 ARTIST=Legião Urbana
+~
+FILE=batcountry
+TITLE=Bat Country
+ARTIST=Avenged Sevenfold
 [/SONGS]
