@@ -1,0 +1,29 @@
+
+# /
+/GuITAr Hero.dev
+/GuITAr Hero.exe
+/ITA Hero.dev
+/ITA Hero.exe
+/stdout.txt
+
+# /Font/
+
+# /SAVEDATA/
+
+# /src/
+/src/ITA Hero.layout
+/src/ITA_Hero_private.h
+/src/ITA_Hero_private.rc
+/src/Makefile.win
+/src/Release
+/src/object
+
+# /src/object/
+/src/object/ITA_Hero_private.res
+/src/object/Main.o
+
+# /testes/
+
+# /testes/server/
+
+# /testes/server/data/
